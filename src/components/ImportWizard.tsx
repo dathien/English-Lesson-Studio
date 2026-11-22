@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -7,6 +7,7 @@ import {
   ChevronUp,
   ClipboardPaste,
   FileText,
+  Headphones,
   Image as ImageIcon,
   Layers,
   Loader2,
@@ -17,13 +18,20 @@ import {
 } from 'lucide-react';
 import type {
   ActivityType,
+  EducationLevel,
   Grade,
   LessonProject,
   ParsedDocumentDraft,
   QuestionType,
   SkillCategory,
 } from '../types/lesson';
-import {SKILL_LABELS} from '../types/lesson';
+import {
+  ACTIVITY_LABELS,
+  EDUCATION_LEVEL_SHORT,
+  getEducationLevelFromGrade,
+  GRADES_BY_LEVEL,
+  SKILL_LABELS,
+} from '../types/lesson';
 import {
   convertDraftToLesson,
   parseStructuredEnglishText,
@@ -48,10 +56,18 @@ const LESSON_TYPE_OPTIONS: Array<{value: '' | ActivityType; label: string}> = [
   {value: 'grammar_mcq', label: 'Luyện tập Ngữ pháp'},
   {value: 'pron_ed_s', label: 'Phát âm gạch chân / Trọng âm'},
   {value: 'vocab_flashcards', label: 'Từ vựng & Flashcards IPA'},
+  {value: 'vocab_matching', label: 'Ghép từ / Nối cặp (Matching)'},
+  {value: 'writing_word_order', label: 'Kéo thả sắp xếp từ / câu'},
   {value: 'review_mixed', label: 'Đề ôn tập / Kiểm tra tổng hợp'},
 ];
 
-const SAMPLE_PASTE_TEXT = `UNIT 1: PRONUNCIATION & READING PRACTICE
+const LEVEL_TABS: Array<{id: EducationLevel; label: string; range: string}> = [
+  {id: 'primary', label: 'Tiểu học', range: 'Lớp 1–5'},
+  {id: 'secondary', label: 'THCS', range: 'Lớp 6–9'},
+  {id: 'high_school', label: 'THPT', range: 'Lớp 10–12'},
+];
+
+const SAMPLE_PASTE_TEXT = `UNIT 1: PRONUNCIATION & READING PRACTICE (Tiếng Anh 10)
 Read the following passage and mark the letter A, B, C, or D on your answer sheet.
 Urban rooftop gardens are transforming crowded high-rise districts into cooler, greener neighbourhoods. By collecting rainwater and shading concrete roofs, these shared spaces lower indoor temperatures during hot summer afternoons while giving students hands-on lessons in sustainable food growing.
 
@@ -81,7 +97,13 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
   const [pastedText, setPastedText] = useState('');
   const [pasteOpen, setPasteOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Default strictly prioritizes THPT (High School) while supporting Primary (1–5) & Secondary (6–9)
+  const initialLevel = getEducationLevelFromGrade(defaultGrade);
+  const [educationLevel, setEducationLevel] = useState<EducationLevel>(initialLevel);
   const [grade, setGrade] = useState<Grade>(defaultGrade);
+  const [autoDetectGrade, setAutoDetectGrade] = useState(true);
+
   const [skillHint, setSkillHint] = useState<SkillCategory | ''>(defaultSkill || '');
   const [activityHint, setActivityHint] = useState<'' | ActivityType>('');
   const [useAIRefinement, setUseAIRefinement] = useState(false);
@@ -89,17 +111,46 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
   const [processingStage, setProcessingStage] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [draft, setDraft] = useState<ParsedDocumentDraft | null>(null);
+  const [gradeConfirmed, setGradeConfirmed] = useState(true);
+
+  useEffect(() => {
+    // Keep THPT default synced if settings update before user uploads
+    if (step === 1 && selectedFiles.length === 0) {
+      setGrade(defaultGrade);
+      setEducationLevel(getEducationLevelFromGrade(defaultGrade));
+    }
+  }, [defaultGrade, step, selectedFiles.length]);
+
+  const handleSelectLevel = (lvl: EducationLevel) => {
+    setEducationLevel(lvl);
+    const firstGradeInLevel = GRADES_BY_LEVEL[lvl][0];
+    setGrade(firstGradeInLevel);
+    if (lvl === 'high_school') {
+      onGradeChange?.(firstGradeInLevel);
+    }
+  };
+
+  const handleSelectGrade = (g: Grade) => {
+    setGrade(g);
+    setEducationLevel(getEducationLevelFromGrade(g));
+    if (g >= 10) {
+      onGradeChange?.(g);
+    }
+  };
 
   const handleFilesAdded = (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
     const valid = Array.from(fileList).filter(
       (f) =>
-        /\.(docx|pdf|jpe?g|png|webp)$/i.test(f.name) ||
+        /\.(docx|pdf|jpe?g|png|webp|mp3|wav|ogg|m4a)$/i.test(f.name) ||
         /^image\/(jpeg|png|webp)$/i.test(f.type) ||
+        /^audio\//i.test(f.type) ||
         f.type === 'application/pdf',
     );
     if (valid.length === 0) {
-      setErrorMsg('Định dạng tệp chưa được hỗ trợ. Vui lòng chọn DOCX, PDF hoặc ảnh JPG/PNG/WebP.');
+      setErrorMsg(
+        'Định dạng tệp chưa được hỗ trợ. Vui lòng chọn DOCX, PDF, ảnh JPG/PNG/WebP hoặc tệp âm thanh MP3/WAV.',
+      );
       return;
     }
     setSelectedFiles((prev) => [...prev, ...valid]);
@@ -122,22 +173,25 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
       let result: ParsedDocumentDraft;
       if (selectedFiles.length > 0) {
         setProcessingStage(
-          `Đang trích xuất nội dung từ ${selectedFiles.length} tệp (${selectedFiles.map((f) => f.name).join(', ')})...`,
+          `Đang trích xuất & nhận diện cấu trúc từ ${selectedFiles.length} tệp (${selectedFiles.map((f) => f.name).join(', ')})...`,
         );
         result = await processUploadedFiles(
           selectedFiles,
           grade,
           skillHint || undefined,
           useAIRefinement && aiAvailable,
+          {gradeManuallyLocked: !autoDetectGrade},
         );
       } else {
-        setProcessingStage('Đang phân tích cấu trúc đoạn văn, câu hỏi và đáp án từ văn bản dán...');
+        setProcessingStage('Đang phân tích cấu trúc đoạn văn, câu hỏi, cấp học và đáp án...');
         result = parseStructuredEnglishText(pastedText, {
           grade,
+          gradeManuallyLocked: !autoDetectGrade,
           skillHint: skillHint || undefined,
         });
       }
       setDraft(result);
+      setGradeConfirmed(!result.gradeNeedsConfirmation);
       setStep(3);
     } catch (err) {
       setErrorMsg(
@@ -152,9 +206,29 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
     }
   };
 
+  const handleAttachAudioInStep3 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !draft) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setDraft({
+        ...draft,
+        attachedAudioDataUrl: String(reader.result || ''),
+        attachedAudioName: file.name,
+        attachedAudioMimeType: file.type || 'audio/mpeg',
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const handleCreateLesson = (mode: 'editor' | 'present') => {
     if (!draft) return;
-    const lesson = convertDraftToLesson(draft);
+    const finalDraft: ParsedDocumentDraft = {
+      ...draft,
+      educationLevel: getEducationLevelFromGrade(draft.grade),
+    };
+    const lesson = convertDraftToLesson(finalDraft);
     if (activityHint) {
       lesson.activityFocus = activityHint;
     }
@@ -190,9 +264,11 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
     });
   };
 
+  const levelGrades = GRADES_BY_LEVEL[educationLevel];
+
   return (
     <div className="h-full flex flex-col">
-      {/* STEP 1: Elevated Hero Upload & Conversion Studio Card */}
+      {/* STEP 1: Elevated Hero Upload & Conversion Studio Card (Supports Grades 1–12, THPT Default) */}
       {step === 1 && (
         <div className="h-full rounded-[20px] border border-slate-200/90 bg-white p-5 sm:p-6 shadow-lg shadow-blue-950/5 flex flex-col justify-between gap-4">
           <div className="space-y-4">
@@ -202,7 +278,7 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
                   Tải tài liệu &amp; Tạo bài trình chiếu
                 </h2>
                 <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
-                  Hỗ trợ Word (.docx), PDF và nhiều ảnh chụp đề bài
+                  Hỗ trợ Tiếng Anh Lớp 1–12 (Tiểu học · THCS · THPT) — ưu tiên THPT
                 </p>
               </div>
               <span className="text-xs font-semibold text-[#2563EB] shrink-0">
@@ -236,13 +312,13 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
                 Kéo thả tệp vào đây hoặc nhấn để chọn tệp
               </div>
               <p className="text-xs text-[#475569] leading-relaxed">
-                DOCX giữ nguyên gạch chân <code className="font-mono-tabular">&lt;u&gt;</code> và đoạn đọc hiểu · PDF &amp; ảnh chụp JPG/PNG/WebP
+                Word (.docx), PDF nhiều trang, ảnh chụp JPG/PNG/WebP · Kèm tệp nghe MP3/WAV (tùy chọn)
               </p>
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept=".docx,.pdf,image/jpeg,image/png,image/webp"
+                accept=".docx,.pdf,image/jpeg,image/png,image/webp,audio/mpeg,audio/wav,.mp3,.wav,.m4a"
                 onChange={(e) => handleFilesAdded(e.target.files)}
                 className="hidden"
               />
@@ -259,6 +335,8 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
                     <div className="flex items-center gap-2 min-w-0">
                       {f.type.startsWith('image/') ? (
                         <ImageIcon className="w-4 h-4 text-[#06B6D4] shrink-0" />
+                      ) : f.type.startsWith('audio/') || /\.(mp3|wav|m4a|ogg)$/i.test(f.name) ? (
+                        <Headphones className="w-4 h-4 text-[#10B981] shrink-0" />
                       ) : (
                         <FileText className="w-4 h-4 text-[#2563EB] shrink-0" />
                       )}
@@ -321,24 +399,66 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
               )}
             </div>
 
-            {/* Grade Selector */}
-            <div>
-              <label className="text-xs font-semibold text-[#475569] block mb-1.5">
-                Chọn khối lớp
-              </label>
+            {/* Education Level & Grade Selector (Tiểu học 1-5 · THCS 6-9 · THPT 10-12, default THPT) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-semibold text-[#475569]">
+                  Cấp học &amp; Khối lớp
+                </label>
+                <label className="inline-flex items-center gap-1.5 text-xs text-[#2563EB] font-medium cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoDetectGrade}
+                    onChange={(e) => setAutoDetectGrade(e.target.checked)}
+                    className="accent-[#2563EB]"
+                  />
+                  <span>Tự đề xuất lớp theo tài liệu</span>
+                </label>
+              </div>
+
+              {/* 3 Education Level Tabs */}
               <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                {([10, 11, 12] as Grade[]).map((g) => (
+                {LEVEL_TABS.map((tab) => {
+                  const active = educationLevel === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => handleSelectLevel(tab.id)}
+                      className={`py-2 px-2 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+                        active
+                          ? 'bg-white text-[#2563EB] shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>{tab.label}</span>
+                      <span className="hidden sm:inline text-[11px] font-normal opacity-75 ml-1">
+                        ({tab.range.replace('Lớp ', '')})
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Grade Buttons for Selected Level */}
+              <div
+                className={`grid gap-1.5 ${
+                  levelGrades.length === 5
+                    ? 'grid-cols-5'
+                    : levelGrades.length === 4
+                      ? 'grid-cols-4'
+                      : 'grid-cols-3'
+                }`}
+              >
+                {levelGrades.map((g) => (
                   <button
                     key={g}
                     type="button"
-                    onClick={() => {
-                      setGrade(g);
-                      onGradeChange?.(g);
-                    }}
-                    className={`py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+                    onClick={() => handleSelectGrade(g)}
+                    className={`py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all whitespace-nowrap ${
                       grade === g
-                        ? 'bg-white text-[#2563EB] shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'border-[#2563EB] bg-blue-50 text-[#1E40AF] shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
                     }`}
                   >
                     Lớp {g}
@@ -432,11 +552,10 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
               Đang xử lý tài liệu thực tế...
             </h3>
             <p className="text-sm text-[#475569] max-w-md mx-auto">
-              {processingStage || 'Hệ thống đang trích xuất tiêu đề, bài đọc, gạch chân phát âm và danh sách câu hỏi.'}
+              {processingStage || 'Hệ thống đang phân tích cấp học, khối lớp, bài đọc, hình ảnh và danh sách câu hỏi.'}
             </p>
           </div>
 
-          {/* Genuine Skeleton Preview while waiting for async parser/OCR */}
           <div className="space-y-3 pt-2">
             <div className="h-4 w-2/5 rounded-lg studio-skeleton" />
             <div className="h-16 w-full rounded-2xl studio-skeleton" />
@@ -448,19 +567,21 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
         </div>
       )}
 
-      {/* STEP 3: Verification & Direct Editing before Generating Slides */}
+      {/* STEP 3: Smart Recognition Verification & Teacher Override before Creating Slides */}
       {step === 3 && draft && (
         <div className="rounded-[20px] border border-slate-200 bg-white p-5 sm:p-6 shadow-lg shadow-blue-950/5 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
-              <div className="text-xs font-bold text-[#2563EB]">Bước 3 / 3 · Xác nhận nội dung</div>
+              <div className="text-xs font-bold text-[#2563EB]">Bước 3 / 3 · Xác nhận nhận diện &amp; nội dung</div>
               <h3 className="text-lg font-bold text-[#0F172A] mt-0.5">
-                Kiểm tra &amp; Chỉnh sửa nội dung trích xuất
+                Kiểm tra đề xuất cấp học, khối lớp &amp; câu hỏi
               </h3>
               <p className="text-xs text-[#475569] mt-0.5">
-                {draft.sourceFiles.join(', ')} · {draft.passages.length} bài đọc ·{' '}
-                {draft.questions.length} câu hỏi ·{' '}
-                {draft.usedAI ? 'Phân tích AI thị giác/ngôn ngữ' : 'Phân tích cấu trúc cục bộ'}
+                {draft.sourceFiles.join(', ')}
+                {draft.pageCount && draft.pageCount > 1 ? ` · ${draft.pageCount} trang` : ''}
+                {draft.extractedImages.length > 0 ? ` · ${draft.extractedImages.length} ảnh` : ''}
+                {' · '}
+                {draft.passages.length} bài đọc · {draft.questions.length} câu hỏi
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -474,7 +595,8 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
               <button
                 type="button"
                 onClick={() => handleCreateLesson('editor')}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#2563EB] px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#2563EB] hover:bg-blue-50 whitespace-nowrap"
+                disabled={!gradeConfirmed}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#2563EB] px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#2563EB] hover:bg-blue-50 disabled:opacity-40 whitespace-nowrap"
               >
                 <Layers className="w-4 h-4" />
                 Mở Biên tập
@@ -482,11 +604,115 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
               <button
                 type="button"
                 onClick={() => handleCreateLesson('present')}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#1E40AF] px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:opacity-95 whitespace-nowrap"
+                disabled={!gradeConfirmed}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#1E40AF] px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:opacity-95 disabled:opacity-40 whitespace-nowrap"
               >
                 Trình chiếu ngay
                 <ArrowRight className="w-4 h-4" />
               </button>
+            </div>
+          </div>
+
+          {/* Smart Grade / Level / Skill Recognition Panel (Always Editable, Honest When Uncertain) */}
+          <div
+            className={`rounded-2xl border p-4 space-y-3 ${
+              !gradeConfirmed
+                ? 'border-amber-300 bg-amber-50/70'
+                : 'border-blue-200 bg-blue-50/50'
+            }`}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#0F172A]">
+                  {!gradeConfirmed ? (
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
+                  )}
+                  <span>
+                    {!gradeConfirmed
+                      ? 'Cần giáo viên xác nhận cấp học & khối lớp'
+                      : `Đề xuất nhận diện: ${EDUCATION_LEVEL_SHORT[draft.educationLevel]} · Lớp ${draft.grade}`}
+                  </span>
+                </div>
+                {draft.gradeEvidence && (
+                  <p className="text-xs text-[#475569] leading-relaxed">{draft.gradeEvidence}</p>
+                )}
+                {draft.detectedSkillEvidence && (
+                  <p className="text-xs text-[#475569]">
+                    <span className="font-semibold text-[#0F172A]">Kỹ năng &amp; dạng bài: </span>
+                    {draft.detectedSkillEvidence}
+                    {draft.detectedActivityType ? ` (${ACTIVITY_LABELS[draft.detectedActivityType]})` : ''}
+                  </p>
+                )}
+              </div>
+
+              {!gradeConfirmed && (
+                <button
+                  type="button"
+                  onClick={() => setGradeConfirmed(true)}
+                  className="rounded-xl bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#1E40AF] whitespace-nowrap shrink-0"
+                >
+                  Xác nhận Lớp {draft.grade}
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <div>
+                <label className="text-xs font-semibold text-[#475569] block mb-1">Cấp học</label>
+                <select
+                  value={draft.educationLevel}
+                  onChange={(e) => {
+                    const nextLvl = e.target.value as EducationLevel;
+                    const nextGrade = GRADES_BY_LEVEL[nextLvl][0];
+                    setDraft({...draft, educationLevel: nextLvl, grade: nextGrade, gradeNeedsConfirmation: false});
+                    setGradeConfirmed(true);
+                  }}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs sm:text-sm font-medium outline-none focus:border-[#2563EB]"
+                >
+                  <option value="primary">Tiểu học (Lớp 1–5)</option>
+                  <option value="secondary">THCS (Lớp 6–9)</option>
+                  <option value="high_school">THPT (Lớp 10–12)</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[#475569] block mb-1">Khối lớp</label>
+                <select
+                  value={draft.grade}
+                  onChange={(e) => {
+                    const g = Number(e.target.value) as Grade;
+                    setDraft({
+                      ...draft,
+                      grade: g,
+                      educationLevel: getEducationLevelFromGrade(g),
+                      gradeNeedsConfirmation: false,
+                    });
+                    setGradeConfirmed(true);
+                  }}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs sm:text-sm font-semibold outline-none focus:border-[#2563EB]"
+                >
+                  {GRADES_BY_LEVEL[draft.educationLevel].map((g) => (
+                    <option key={g} value={g}>
+                      Lớp {g}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[#475569] block mb-1">Kỹ năng chính</label>
+                <select
+                  value={draft.skill}
+                  onChange={(e) => setDraft({...draft, skill: e.target.value as SkillCategory})}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs sm:text-sm font-medium outline-none focus:border-[#2563EB]"
+                >
+                  {(Object.keys(SKILL_LABELS) as SkillCategory[]).map((sk) => (
+                    <option key={sk} value={sk}>
+                      {SKILL_LABELS[sk]}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -504,38 +730,55 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
             </div>
           )}
 
-          {/* Metadata Edit */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <label className="text-xs font-semibold text-[#475569] block mb-1">Tiêu đề bài giảng</label>
-              <input
-                type="text"
-                value={draft.title}
-                onChange={(e) => setDraft({...draft, title: e.target.value})}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium outline-none focus:border-[#2563EB]"
+          {/* Title Edit */}
+          <div>
+            <label className="text-xs font-semibold text-[#475569] block mb-1">Tiêu đề bài giảng</label>
+            <input
+              type="text"
+              value={draft.title}
+              onChange={(e) => setDraft({...draft, title: e.target.value})}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium outline-none focus:border-[#2563EB]"
+            />
+          </div>
+
+          {/* Optional Listening Audio & Transcript Panel (Never fabricates transcript, never forces upload) */}
+          {(draft.skill === 'listening' || draft.transcript.trim().length > 0 || draft.attachedAudioDataUrl) && (
+            <div className="rounded-2xl border border-cyan-200 bg-cyan-50/40 p-3.5 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0E7490]">
+                  <Headphones className="w-4 h-4" />
+                  Cấu hình âm thanh &amp; Transcript Listening (tùy chọn)
+                </span>
+                <label className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-300 bg-white px-2.5 py-1 text-xs font-semibold text-[#0E7490] hover:bg-cyan-50 cursor-pointer">
+                  <span>{draft.attachedAudioName ? 'Đổi tệp âm thanh' : 'Tải MP3/WAV (tùy chọn)'}</span>
+                  <input
+                    type="file"
+                    accept="audio/*,.mp3,.wav,.m4a,.ogg"
+                    onChange={handleAttachAudioInStep3}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              {draft.attachedAudioName && (
+                <p className="text-xs text-emerald-700 font-semibold">
+                  Đã đính kèm tệp âm thanh: {draft.attachedAudioName}
+                </p>
+              )}
+              <textarea
+                rows={3}
+                value={draft.transcript}
+                onChange={(e) => setDraft({...draft, transcript: e.target.value})}
+                placeholder="Transcript trích xuất từ tài liệu (nếu có). Hệ thống không tự tạo transcript — giáo viên có thể dán transcript tại đây để phát giọng đọc hoặc bỏ trống."
+                className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs leading-relaxed outline-none focus:border-[#2563EB]"
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-[#475569] block mb-1">Kỹ năng chính</label>
-              <select
-                value={draft.skill}
-                onChange={(e) => setDraft({...draft, skill: e.target.value as SkillCategory})}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#2563EB]"
-              >
-                {(Object.keys(SKILL_LABELS) as SkillCategory[]).map((sk) => (
-                  <option key={sk} value={sk}>
-                    {SKILL_LABELS[sk]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
           {/* Extracted Images Preview */}
           {draft.extractedImages.length > 0 && (
             <div className="space-y-2">
               <span className="text-xs font-semibold text-[#475569]">
-                Hình ảnh trích xuất ({draft.extractedImages.length}):
+                Hình ảnh trích xuất ({draft.extractedImages.length} ảnh — sẽ được chèn trực quan vào slide):
               </span>
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {draft.extractedImages.map((img, idx) => (
@@ -647,9 +890,11 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
                           <option value="pronunciation_underlined">Phát âm gạch chân</option>
                           <option value="true_false">True / False</option>
                           <option value="gap_fill">Điền từ</option>
+                          <option value="matching">Ghép từ / Nối cặp</option>
+                          <option value="ordering">Kéo thả sắp xếp</option>
+                          <option value="word_order">Sắp xếp từ</option>
                           <option value="transformation">Viết lại câu</option>
                           <option value="error_correction">Tìm lỗi sai</option>
-                          <option value="word_order">Sắp xếp từ</option>
                           <option value="short_answer">Trả lời ngắn</option>
                         </select>
                         <button

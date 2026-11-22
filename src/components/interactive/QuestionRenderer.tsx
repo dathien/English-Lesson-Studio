@@ -8,7 +8,7 @@ import {
   Volume2,
   XCircle,
 } from 'lucide-react';
-import type {QuestionItem} from '../../types/lesson';
+import type {EducationLevel, QuestionItem} from '../../types/lesson';
 import {RenderFormattedText, stripFormattingTags} from '../../utils/richText';
 
 export interface QuestionAnswerMap {
@@ -26,6 +26,7 @@ interface QuestionRendererProps {
   darkSurface?: boolean;
   fontScale?: number;
   presenterMode?: boolean;
+  educationLevel?: EducationLevel;
 }
 
 const PASTEL_OPTIONS = [
@@ -105,9 +106,11 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   darkSurface = false,
   fontScale = 1,
   presenterMode = false,
+  educationLevel = 'high_school',
 }) => {
   const [selectedLeftMap, setSelectedLeftMap] = useState<Record<string, string>>({});
   const [dragState, setDragState] = useState<{qId: string; index: number} | null>(null);
+  const isPrimary = educationLevel === 'primary';
 
   const shuffledDefaults = useMemo(() => {
     const out: Record<string, string[]> = {};
@@ -129,10 +132,14 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
 
   const cardBg = darkSurface
     ? 'bg-slate-800/90 border-slate-700 text-slate-100 shadow-sm'
-    : 'bg-white border-slate-200/90 text-[#0F172A] shadow-xs';
+    : isPrimary
+      ? 'bg-white border-sky-200/90 text-[#0F172A] shadow-md shadow-sky-900/5'
+      : 'bg-white border-slate-200/90 text-[#0F172A] shadow-xs';
   const mutedText = darkSurface ? 'text-slate-300' : 'text-[#475569]';
 
-  const baseFontPx = presenterMode ? Math.round(17 * fontScale) : Math.round(15.5 * fontScale);
+  const baseFontPx = presenterMode
+    ? Math.round((isPrimary ? 20 : 17) * fontScale)
+    : Math.round((isPrimary ? 17.5 : 15.5) * fontScale);
 
   return (
     <div className={presenterMode ? 'space-y-5' : 'space-y-4'} style={{fontSize: `${baseFontPx}px`}}>
@@ -143,23 +150,34 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
         return (
           <div
             key={q.id}
-            className={`rounded-[18px] border transition-all duration-200 ${
+            className={`${isPrimary ? 'rounded-[24px] border-2' : 'rounded-[18px] border'} transition-all duration-200 ${
               presenterMode ? 'p-5 sm:p-6' : 'p-4 sm:p-5'
             } ${cardBg}`}
           >
             <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-              <div className="flex-1 min-w-0 leading-relaxed font-medium">
+              <div className="flex-1 min-w-0 leading-relaxed font-semibold">
                 <span
-                  className={`font-bold mr-2 tabular-nums ${
-                    darkSurface ? 'text-sky-300' : 'text-[#2563EB]'
+                  className={`font-extrabold mr-2 tabular-nums ${
+                    darkSurface ? 'text-sky-300' : isPrimary ? 'text-[#F97316]' : 'text-[#2563EB]'
                   }`}
                 >
-                  Question {q.number}.
+                  {isPrimary ? `Câu ${q.number}.` : `Question ${q.number}.`}
                 </span>
                 <RenderFormattedText text={q.prompt} />
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                {isPrimary && (
+                  <button
+                    type="button"
+                    onClick={() => speakWord(q.prompt)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-[#EA580C] hover:bg-orange-100 whitespace-nowrap transition-colors"
+                    title="Nghe đọc câu hỏi"
+                  >
+                    <Volume2 className="w-4 h-4" />
+                    <span>Nghe đọc</span>
+                  </button>
+                )}
                 {typeof q.timestampSec === 'number' && onJumpToTimestamp && (
                   <button
                     type="button"
@@ -237,16 +255,29 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                         <button
                           type="button"
                           onClick={() => onChangeAnswer(q.id, opt.label)}
-                          className={`flex-1 flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all duration-200 active:scale-[0.99] ${optStyle}`}
+                          className={`flex-1 flex items-center justify-between gap-3 ${
+                            isPrimary ? 'rounded-3xl border-2 px-5 py-4' : 'rounded-2xl border px-4 py-3'
+                          } text-left transition-all duration-200 active:scale-[0.99] ${optStyle}`}
                         >
                           <span className="flex items-center gap-3 min-w-0">
                             <span
-                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${badgeStyle}`}
+                              className={`${
+                                isPrimary ? 'w-10 h-10 text-base' : 'w-8 h-8 text-sm'
+                              } rounded-full flex items-center justify-center font-bold shrink-0 transition-colors ${badgeStyle}`}
                             >
                               {opt.label}
                             </span>
-                            <span className="font-medium leading-snug">
-                              <RenderFormattedText text={opt.text} />
+                            <span className="flex flex-col gap-1.5 min-w-0">
+                              {opt.imageUrl && (
+                                <img
+                                  src={opt.imageUrl}
+                                  alt={opt.text || opt.label}
+                                  className="h-24 w-32 object-cover rounded-xl border border-slate-200"
+                                />
+                              )}
+                              <span className={`${isPrimary ? 'font-bold' : 'font-medium'} leading-snug`}>
+                                <RenderFormattedText text={opt.text} />
+                              </span>
                             </span>
                           </span>
                           <span className="flex items-center gap-2 shrink-0">
@@ -263,7 +294,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                             )}
                           </span>
                         </button>
-                        {q.type === 'pronunciation_underlined' && (
+                        {(isPrimary || q.type === 'pronunciation_underlined') && (
                           <button
                             type="button"
                             onClick={() => speakWord(opt.text)}

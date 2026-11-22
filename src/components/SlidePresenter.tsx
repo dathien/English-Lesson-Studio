@@ -17,8 +17,13 @@ import {
   RotateCcw,
   X,
 } from 'lucide-react';
-import type {LessonProject, SlideThemeId} from '../types/lesson';
-import {ACTIVITY_LABELS, SKILL_SHORT_LABELS} from '../types/lesson';
+import type {EducationLevel, LessonProject, SlideThemeId} from '../types/lesson';
+import {
+  ACTIVITY_LABELS,
+  EDUCATION_LEVEL_SHORT,
+  getEducationLevelFromGrade,
+  SKILL_SHORT_LABELS,
+} from '../types/lesson';
 import {RenderFormattedText} from '../utils/richText';
 import {ListeningWidget} from './interactive/ListeningWidget';
 import {
@@ -181,6 +186,14 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
   const [timerRunning, setTimerRunning] = useState(false);
 
   const currentSlide = lesson.slides[slideIdx];
+  const educationLevel: EducationLevel =
+    lesson.educationLevel || getEducationLevelFromGrade(lesson.grade);
+  const isPrimary = educationLevel === 'primary';
+  const isSecondary = educationLevel === 'secondary';
+  const effectiveFontScale = isPrimary
+    ? Math.min(1.4, Number((fontScale * 1.12).toFixed(2)))
+    : fontScale;
+
   const theme = PRESENTER_THEMES[themeId] || PRESENTER_THEMES.light_classroom;
   const isColoredTopBar =
     themeId === 'ocean_blue' ||
@@ -333,7 +346,9 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
 
           <div className="min-w-0 hidden sm:block">
             <div className="text-xs opacity-80 flex items-center gap-1.5 truncate">
-              <span className="font-semibold">Lớp {lesson.grade}</span>
+              <span className="font-semibold">
+                {EDUCATION_LEVEL_SHORT[educationLevel]} · Lớp {lesson.grade}
+              </span>
               <span aria-hidden="true">·</span>
               <span>{SKILL_SHORT_LABELS[currentSlide.skill]}</span>
               <span aria-hidden="true">·</span>
@@ -477,17 +492,25 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
               isReadingLayout || isWideActivity ? 'max-w-[1380px]' : 'max-w-[1060px]'
             }`}
           >
-            {/* Large Centered Luminous Content Card */}
+            {/* Large Centered Luminous Content Card (Adaptive by Education Level) */}
             <div
-              className={`rounded-[20px] border p-5 sm:p-7 lg:p-8 space-y-6 ${theme.cardStage}`}
+              className={`${
+                isPrimary
+                  ? 'rounded-[26px] border-2 p-6 sm:p-8 lg:p-9 space-y-6'
+                  : 'rounded-[20px] border p-5 sm:p-7 lg:p-8 space-y-6'
+              } ${theme.cardStage}`}
             >
               {/* Slide Title & Context Header */}
               <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/70 dark:border-slate-800 pb-4">
                 <div className="space-y-1 min-w-0">
                   <div
-                    className={`text-xs sm:text-sm font-semibold flex flex-wrap items-center gap-2 ${theme.accentText}`}
+                    className={`text-xs sm:text-sm font-semibold flex flex-wrap items-center gap-2 ${
+                      isPrimary && !theme.dark ? 'text-[#EA580C]' : theme.accentText
+                    }`}
                   >
-                    <span>Tiếng Anh Lớp {lesson.grade}</span>
+                    <span>
+                      Tiếng Anh {EDUCATION_LEVEL_SHORT[educationLevel]} · Lớp {lesson.grade}
+                    </span>
                     <span aria-hidden="true">·</span>
                     <span>{SKILL_SHORT_LABELS[currentSlide.skill]}</span>
                     <span aria-hidden="true">·</span>
@@ -495,7 +518,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                   </div>
                   <h2
                     className="font-display font-bold tracking-tight leading-snug"
-                    style={{fontSize: `${Math.round(24 * fontScale)}px`}}
+                    style={{fontSize: `${Math.round((isPrimary ? 28 : 24) * fontScale)}px`}}
                   >
                     {currentSlide.title}
                   </h2>
@@ -534,11 +557,21 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                   className={`rounded-2xl border px-4 py-3.5 leading-relaxed ${
                     theme.dark
                       ? 'border-slate-700 bg-slate-800/80 text-slate-200'
-                      : 'border-blue-100 bg-[#EFF6FF]/70 text-[#0F172A]'
+                      : isPrimary
+                        ? 'border-orange-200 bg-[#FFF7ED] text-[#0F172A]'
+                        : isSecondary
+                          ? 'border-cyan-200 bg-[#ECFEFF]/70 text-[#0F172A]'
+                          : 'border-blue-100 bg-[#EFF6FF]/70 text-[#0F172A]'
                   }`}
-                  style={{fontSize: `${Math.round(15.5 * fontScale)}px`}}
+                  style={{fontSize: `${Math.round(15.5 * effectiveFontScale)}px`}}
                 >
-                  <span className={`font-bold mr-1.5 ${theme.accentText}`}>Yêu cầu:</span>
+                  <span
+                    className={`font-bold mr-1.5 ${
+                      isPrimary && !theme.dark ? 'text-[#EA580C]' : theme.accentText
+                    }`}
+                  >
+                    Yêu cầu:
+                  </span>
                   <RenderFormattedText text={currentSlide.instruction} />
                 </div>
               )}
@@ -629,6 +662,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                   showExplanations={isShowExplanations}
                   darkSurface={theme.dark}
                   fontScale={fontScale}
+                  educationLevel={educationLevel}
                 />
               )}
 
@@ -662,6 +696,31 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                 />
               )}
 
+              {/* Standalone Illustration on Question / Listening Slides (Especially vivid for Primary & Secondary) */}
+              {currentSlide.imageUrl &&
+                (!currentSlide.bullets || currentSlide.bullets.length === 0) &&
+                !currentSlide.passage &&
+                !currentSlide.speakingTask &&
+                !currentSlide.writingTask && (
+                  <figure className="mx-auto max-w-2xl space-y-2 text-center">
+                    <img
+                      src={currentSlide.imageUrl}
+                      alt={currentSlide.imageCaption || currentSlide.title}
+                      referrerPolicy="no-referrer"
+                      className={`mx-auto rounded-2xl border object-contain shadow-sm ${
+                        isPrimary
+                          ? 'max-h-72 border-sky-200 bg-sky-50/40 p-2'
+                          : 'max-h-64 border-slate-200 bg-slate-50 p-1.5'
+                      }`}
+                    />
+                    {currentSlide.imageCaption && (
+                      <figcaption className="text-xs opacity-75">
+                        {currentSlide.imageCaption}
+                      </figcaption>
+                    )}
+                  </figure>
+                )}
+
               {/* Centered Questions (when not already inside ReadingSplitView) */}
               {!currentSlide.passage && currentSlide.questions && currentSlide.questions.length > 0 && (
                 <QuestionRenderer
@@ -674,6 +733,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                   onJumpToTimestamp={(sec) => setJumpAudioSec(sec)}
                   darkSurface={theme.dark}
                   fontScale={fontScale}
+                  educationLevel={educationLevel}
                   presenterMode
                 />
               )}

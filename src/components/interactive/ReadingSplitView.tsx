@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Highlighter, Maximize2, Minimize2, RotateCcw} from 'lucide-react';
-import type {QuestionItem, ReadingPassage} from '../../types/lesson';
+import type {EducationLevel, QuestionItem, ReadingPassage} from '../../types/lesson';
 import {RenderFormattedText} from '../../utils/richText';
 import {QuestionRenderer, type QuestionAnswerMap} from './QuestionRenderer';
 
@@ -16,6 +16,7 @@ interface ReadingSplitViewProps {
   showExplanations: boolean;
   darkSurface?: boolean;
   fontScale?: number;
+  educationLevel?: EducationLevel;
 }
 
 export const ReadingSplitView: React.FC<ReadingSplitViewProps> = ({
@@ -30,6 +31,7 @@ export const ReadingSplitView: React.FC<ReadingSplitViewProps> = ({
   showExplanations,
   darkSurface = false,
   fontScale = 1,
+  educationLevel = 'high_school',
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [highlightMode, setHighlightMode] = useState(false);
@@ -177,6 +179,7 @@ export const ReadingSplitView: React.FC<ReadingSplitViewProps> = ({
             showExplanations={showExplanations}
             darkSurface={darkSurface}
             fontScale={fontScale}
+            educationLevel={educationLevel}
           />
         </div>
       )}

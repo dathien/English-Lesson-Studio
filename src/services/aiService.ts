@@ -27,7 +27,11 @@ export interface AIDocumentResponse {
   data?: {
     title?: string;
     instructions?: string;
+    detectedGrade?: number;
+    detectedLevel?: string;
+    gradeEvidence?: string;
     detectedSkill?: string;
+    detectedActivityType?: string;
     passages?: Array<{title?: string; paragraphs: string[]}>;
     transcript?: string;
     questions?: Array<{
@@ -46,7 +50,7 @@ export interface AIDocumentResponse {
 
 export async function ocrImagesWithAI(
   images: Array<{mimeType: string; data: string; name?: string}>,
-  grade: Grade,
+  grade?: Grade | null,
   skillHint?: string,
 ): Promise<AIDocumentResponse> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -60,7 +64,7 @@ export async function ocrImagesWithAI(
     const res = await fetch('/api/ai/ocr-images', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({images, grade, skillHint}),
+      body: JSON.stringify({images, grade: grade ?? undefined, skillHint}),
     });
     const data = await res.json();
     return data;
@@ -75,7 +79,7 @@ export async function ocrImagesWithAI(
 
 export async function refineDocumentWithAI(
   rawText: string,
-  grade: Grade,
+  grade?: Grade | null,
   skillHint?: string,
 ): Promise<AIDocumentResponse> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -89,7 +93,7 @@ export async function refineDocumentWithAI(
     const res = await fetch('/api/ai/analyze-document', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({rawText, grade, skillHint}),
+      body: JSON.stringify({rawText, grade: grade ?? undefined, skillHint}),
     });
     return await res.json();
   } catch {

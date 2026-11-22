@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {GoogleGenAI, Type} from '@google/genai';
+import {GoogleGenAI, ThinkingLevel, Type} from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -92,16 +92,27 @@ async function createServer() {
         },
       }));
 
-      const prompt = `Bạn là chuyên gia số hóa đề và tài liệu Tiếng Anh THPT (Chương trình GDPT 2018, Lớp ${grade || 10}).
+      const levelText =
+        typeof grade === 'number'
+          ? grade <= 5
+            ? `Tiểu học (Lớp ${grade})`
+            : grade <= 9
+              ? `THCS (Lớp ${grade})`
+              : `THPT (Lớp ${grade})`
+          : 'Lớp 1–12 (tự nhận diện nếu có căn cứ rõ)';
+
+      const prompt = `Bạn là chuyên gia số hóa đề và tài liệu Tiếng Anh phổ thông Việt Nam (Lớp 1–12: Tiểu học, THCS, THPT theo Chương trình GDPT 2018; gợi ý ban đầu: ${levelText}).
 Hãy trích xuất CHÍNH XÁC nội dung từ các hình ảnh tài liệu đính kèm thành JSON có cấu trúc.
 
 QUY TẮC BẮT BUỘC:
-1. Giữ nguyên văn đoạn đọc hiểu (không cắt nhỏ làm đổi nghĩa).
-2. Giữ nguyên số thứ tự câu hỏi gốc.
-3. Với bài phát âm hoặc ngữ âm có chữ cái/nhóm chữ cái được gạch chân trong ảnh, BẮT BUỘC bọc đúng phần gạch chân bằng thẻ <u>...</u> (ví dụ: cook<u>ed</u>, play<u>ed</u>). Không được tự ý đổi vị trí gạch chân.
-4. Giữ liên kết câu hỏi chùm với bài đọc hoặc đoạn transcript đi kèm.
-5. Nếu chữ mờ hoặc không chắc chắn, đặt uncertain = true cho câu hỏi đó và giữ nội dung gần nhất.
-6. Không tự bịa thêm câu hỏi không có trong ảnh. Gợi ý kỹ năng ưu tiên: ${skillHint || 'tự nhận diện'}.`;
+1. KHÔNG tự ý sửa đổi, viết lại hay cắt bỏ nội dung tài liệu gốc. Giữ nguyên văn đoạn đọc hiểu và số thứ tự câu hỏi gốc.
+2. Với bài phát âm hoặc ngữ âm có chữ cái/nhóm chữ cái được gạch chân trong ảnh, BẮT BUỘC bọc đúng phần gạch chân bằng thẻ <u>...</u> (ví dụ: cook<u>ed</u>, play<u>ed</u>). Không được tự ý đổi vị trí gạch chân.
+3. Giữ liên kết câu hỏi chùm với bài đọc hoặc đoạn transcript đi kèm.
+4. KHÔNG tự bịa thêm câu hỏi và KHÔNG tự tạo transcript nếu tài liệu ảnh không có transcript (trả transcript = "").
+5. Nhận diện khối lớp trung thực:
+   - Nếu trong tài liệu có căn cứ rõ ràng về lớp (ví dụ "Tiếng Anh 4", "Grade 7", "Global Success 10", "Lớp 8"...), đặt detectedGrade = số lớp (1..12), detectedLevel = "primary" | "secondary" | "high_school", và nêu rõ bằng chứng trong gradeEvidence.
+   - Nếu KHÔNG đủ căn cứ xác định lớp, BẮT BUỘC đặt detectedGrade = 0 (không đoán mò), detectedLevel = "unknown" (hoặc cấp học nếu có bằng chứng rõ ràng về cấp), và ghi rõ lý do trong gradeEvidence.
+6. Nếu chữ mờ hoặc chưa có đáp án trong tài liệu, đặt uncertain = true cho câu hỏi đó. Gợi ý kỹ năng ưu tiên: ${skillHint || 'tự nhận diện'}.`;
 
       const response = await ai.models.generateContent({
         model: MODEL_NAME,
@@ -109,13 +120,19 @@ QUY TẮC BẮT BUỘC:
           parts: [...imageParts, {text: prompt}],
         },
         config: {
+          thinkingConfig: {thinkingLevel: ThinkingLevel.LOW},
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
+            required: ['title', 'detectedGrade', 'detectedLevel', 'gradeEvidence', 'detectedSkill', 'questions'],
             properties: {
               title: {type: Type.STRING},
               instructions: {type: Type.STRING},
+              detectedGrade: {type: Type.INTEGER},
+              detectedLevel: {type: Type.STRING},
+              gradeEvidence: {type: Type.STRING},
               detectedSkill: {type: Type.STRING},
+              detectedActivityType: {type: Type.STRING},
               passages: {
                 type: Type.ARRAY,
                 items: {
@@ -190,12 +207,24 @@ QUY TẮC BẮT BUỘC:
         return;
       }
 
-      const prompt = `Phân tích tài liệu Tiếng Anh THPT (Lớp ${grade || 10}, kỹ năng gợi ý: ${skillHint || 'tự động'}) thành cấu trúc bài giảng JSON.
-QUY TẮC:
+      const levelText =
+        typeof grade === 'number'
+          ? grade <= 5
+            ? `Tiểu học (Lớp ${grade})`
+            : grade <= 9
+              ? `THCS (Lớp ${grade})`
+              : `THPT (Lớp ${grade})`
+          : 'Lớp 1–12 (tự nhận diện nếu có căn cứ rõ)';
+
+      const prompt = `Phân tích tài liệu Tiếng Anh phổ thông Việt Nam (${levelText}, kỹ năng gợi ý: ${skillHint || 'tự động'}) thành cấu trúc bài giảng JSON.
+QUY TẮC BẮT BUỘC:
+- KHÔNG tự ý thay đổi hay viết lại nội dung văn bản gốc.
 - Giữ nguyên thẻ <u>...</u> nếu có trong văn bản gốc (đặc biệt với bài phát âm).
 - Giữ nguyên đoạn văn đọc hiểu và số thứ tự câu hỏi.
-- Phân loại đúng dạng câu hỏi: mcq, true_false, gap_fill, matching, ordering, error_correction, transformation, short_answer, pronunciation_underlined.
-- Không biến câu tự luận hoặc điền từ thành trắc nghiệm.
+- KHÔNG tự tạo transcript nếu tài liệu gốc không có transcript (trả transcript = "").
+- Nhận diện khối lớp trung thực: chỉ trả detectedGrade (1..12) khi văn bản có căn cứ rõ ràng (nêu trong gradeEvidence). Nếu không đủ căn cứ xác định lớp, đặt detectedGrade = 0 và detectedLevel = "unknown".
+- Phân loại đúng dạng câu hỏi: mcq, true_false, gap_fill, matching, ordering, word_order, error_correction, transformation, short_answer, pronunciation_underlined.
+- Không biến câu tự luận, nối cặp, sắp xếp hoặc điền từ thành trắc nghiệm.
 - Đánh dấu uncertain = true nếu đáp án chưa có trong tài liệu gốc.
 
 VĂN BẢN GỐC:
@@ -205,13 +234,19 @@ ${rawText.slice(0, 18000)}`;
         model: MODEL_NAME,
         contents: prompt,
         config: {
+          thinkingConfig: {thinkingLevel: ThinkingLevel.LOW},
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
+            required: ['title', 'detectedGrade', 'detectedLevel', 'gradeEvidence', 'detectedSkill', 'questions'],
             properties: {
               title: {type: Type.STRING},
               instructions: {type: Type.STRING},
+              detectedGrade: {type: Type.INTEGER},
+              detectedLevel: {type: Type.STRING},
+              gradeEvidence: {type: Type.STRING},
               detectedSkill: {type: Type.STRING},
+              detectedActivityType: {type: Type.STRING},
               passages: {
                 type: Type.ARRAY,
                 items: {
@@ -362,10 +397,12 @@ ${transcript.slice(0, 10000)}`;
         return;
       }
 
-      const systemInstruction = `Bạn là trợ lý chấm bài viết Tiếng Anh THPT lớp ${grade || 10} theo Chương trình GDPT 2018.
+      const gradeNum = Number(grade || 10);
+      const levelName = gradeNum <= 5 ? 'Tiểu học' : gradeNum <= 9 ? 'THCS' : 'THPT';
+      const systemInstruction = `Bạn là trợ lý chấm bài viết Tiếng Anh ${levelName} lớp ${gradeNum} theo Chương trình GDPT 2018.
 NGUYÊN TẮC BẮT BUỘC:
 - KHÔNG BAO GIỜ viết lại toàn bộ bài văn thay cho học sinh.
-- Chỉ chỉ ra điểm mạnh, lỗi ngữ pháp cụ thể, gợi ý nâng cấp từ vựng, nhận xét bố cục/mạch lạc và 2-3 hướng cải thiện để học sinh tự sửa.
+- Chỉ chỉ ra điểm mạnh, lỗi ngữ pháp cụ thể, gợi ý nâng cấp từ vựng phù hợp lứa tuổi lớp ${gradeNum}, nhận xét bố cục/mạch lạc và 2-3 hướng cải thiện để học sinh tự sửa.
 - Phản hồi rõ ràng bằng tiếng Việt kết hợp ví dụ sửa từng cụm/câu ngắn bằng tiếng Anh.`;
 
       const response = await ai.models.generateContent({
@@ -431,8 +468,8 @@ NGUYÊN TẮC BẮT BUỘC:
       const isBritish = accent !== 'en-US';
       const voiceName = isBritish ? 'Kore' : 'Puck';
       const accentInstruction = isBritish
-        ? 'Read the following high-school English listening passage clearly with a natural British English accent at a steady classroom pace:'
-        : 'Read the following high-school English listening passage clearly with a natural American English accent at a steady classroom pace:';
+        ? 'Read the following English classroom listening passage clearly with a natural British English accent at a steady, easy-to-follow pace:'
+        : 'Read the following English classroom listening passage clearly with a natural American English accent at a steady, easy-to-follow pace:';
 
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash-lite-tts',

@@ -108,7 +108,12 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiStatusMsg, setAiStatusMsg] = useState<string | null>(null);
 
-  const hasNativeAudio = Boolean(audioConfig.dataUrl);
+  // Optional session-local audio upload fallback (works even in Presenter mode if teacher picks MP3/WAV live)
+  const [sessionAudio, setSessionAudio] = useState<{dataUrl: string; fileName: string} | null>(null);
+
+  const effectiveAudioUrl = audioConfig.dataUrl || sessionAudio?.dataUrl;
+  const effectiveAudioFileName = audioConfig.fileName || sessionAudio?.fileName;
+  const hasNativeAudio = Boolean(effectiveAudioUrl);
   const transcriptSegments = useMemo(
     () => splitTranscriptToSegments(audioConfig.transcript || ''),
     [audioConfig.transcript],
@@ -323,19 +328,24 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
 
   const handleUploadAudio = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !onUpdateAudio) return;
+    if (!file) return;
     const hadTimestamps = Boolean(audioConfig.timestamps && audioConfig.timestamps.length > 0);
     const reader = new FileReader();
     reader.onload = () => {
-      onUpdateAudio({
-        ...audioConfig,
-        sourceMode: 'uploaded',
-        dataUrl: String(reader.result || ''),
-        fileName: file.name,
-        mimeType: file.type,
-        isSynthesized: false,
-        timestampsNeedReview: hadTimestamps,
-      });
+      const dataUrl = String(reader.result || '');
+      if (onUpdateAudio) {
+        onUpdateAudio({
+          ...audioConfig,
+          sourceMode: 'uploaded',
+          dataUrl,
+          fileName: file.name,
+          mimeType: file.type,
+          isSynthesized: false,
+          timestampsNeedReview: hadTimestamps,
+        });
+      } else {
+        setSessionAudio({dataUrl, fileName: file.name});
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -470,12 +480,14 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
   const mutedText = darkSurface ? 'text-slate-300' : 'text-slate-600';
 
   const sourceDescriptor = hasNativeAudio
-    ? audioConfig.isSynthesized
+    ? audioConfig.isSynthesized && !sessionAudio
       ? `Giọng đọc tổng hợp (WAV · ${accent === 'en-GB' ? 'Anh-Anh' : 'Anh-Mỹ'})`
-      : `Âm thanh giáo viên tải lên (${audioConfig.fileName || 'Audio'})`
-    : `Giọng đọc tổng hợp có sẵn (${accent === 'en-GB' ? 'Anh-Anh' : 'Anh-Mỹ'}${
-        activeBrowserVoice ? ` · ${activeBrowserVoice.name}` : ''
-      })`;
+      : `Âm thanh giáo viên tải lên (${effectiveAudioFileName || 'Audio'})`
+    : transcriptSegments.length > 0
+      ? `Giọng đọc tổng hợp có sẵn (${accent === 'en-GB' ? 'Anh-Anh' : 'Anh-Mỹ'}${
+          activeBrowserVoice ? ` · ${activeBrowserVoice.name}` : ''
+        })`
+      : 'Tài liệu chưa kèm âm thanh hoặc transcript gốc (tùy chọn bổ sung)';
 
   const canPlayAnything = hasNativeAudio || transcriptSegments.length > 0;
 
@@ -484,8 +496,8 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
       {/* Standardized Listening Header */}
       <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-slate-200/70">
         <div className="space-y-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#0F4C81]">
-            <Headphones className="w-4 h-4 text-[#0284C7] shrink-0" />
+          <div className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#2563EB]">
+            <Headphones className="w-4 h-4 text-[#06B6D4] shrink-0" />
             <span>LISTENING – LUYỆN NGHE</span>
           </div>
 
@@ -494,7 +506,9 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
           )}
 
           <div className={`flex flex-wrap items-center gap-2 text-xs ${mutedText}`}>
-            <span className="font-semibold text-[#0F4C81]">Lớp {grade}</span>
+            <span className="font-semibold text-[#1E40AF]">
+              {grade <= 5 ? 'Tiểu học' : grade <= 9 ? 'THCS' : 'THPT'} · Lớp {grade}
+            </span>
             {topic && (
               <>
                 <span aria-hidden="true">·</span>
@@ -533,6 +547,32 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
         </button>
       </div>
 
+      {/* Honest Optional Audio / Transcript Helper when Imported Doc has neither */}
+      {!canPlayAnything && (
+        <div
+          className={`rounded-xl border p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs ${
+            darkSurface
+              ? 'border-slate-700 bg-slate-900/70 text-slate-200'
+              : 'border-blue-200 bg-blue-50/70 text-slate-700'
+          }`}
+        >
+          <p className="leading-relaxed max-w-xl">
+            Tài liệu gốc chưa kèm file âm thanh hoặc transcript. Giáo viên có thể{' '}
+            <strong>tải tệp MP3/WAV trực tiếp</strong> hoặc nhập transcript trong Trình biên tập để tạo giọng đọc — không bắt buộc tải tệp để trình chiếu câu hỏi.
+          </p>
+          <label className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#1E40AF] cursor-pointer whitespace-nowrap shrink-0">
+            <Upload className="w-3.5 h-3.5" />
+            <span>Tải âm thanh MP3/WAV</span>
+            <input
+              type="file"
+              accept="audio/*,.mp3,.wav,.m4a,.ogg"
+              onChange={handleUploadAudio}
+              className="hidden"
+            />
+          </label>
+        </div>
+      )}
+
       {/* Unified Ready-to-Play Audio Player (Works immediately for Built-in, Uploaded, and TTS WAV) */}
       <div
         className={`rounded-xl border p-3.5 space-y-3 ${
@@ -542,7 +582,7 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
         {hasNativeAudio && (
           <audio
             ref={audioRef}
-            src={audioConfig.dataUrl}
+            src={effectiveAudioUrl}
             onLoadedMetadata={(e) => {
               setDuration(e.currentTarget.duration);
               e.currentTarget.playbackRate = playbackRate;

@@ -21,7 +21,8 @@ import {
   Upload,
   Volume2,
 } from 'lucide-react';
-import type {Grade, LessonProject, SkillCategory} from '../types/lesson';
+import type {EducationLevel, Grade, LessonProject, SkillCategory} from '../types/lesson';
+import {EDUCATION_LEVEL_SHORT, getEducationLevelFromGrade} from '../types/lesson';
 import {SKILL_SHORT_LABELS} from '../types/lesson';
 import {
   exportLessonToPowerPoint,
@@ -147,6 +148,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   const [tab, setTab] = useState<'samples' | 'saved'>(initialTab);
   const [skillFilter, setSkillFilter] = useState<SkillCategory | 'all'>('all');
   const [gradeScope, setGradeScope] = useState<Grade | 'all'>('all');
+  const [savedLevelFilter, setSavedLevelFilter] = useState<EducationLevel | 'all'>('all');
   const [query, setQuery] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -160,7 +162,14 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
 
   const filtered = useMemo(() => {
     return sourceList.filter((item) => {
-      if (gradeScope !== 'all' && item.grade !== gradeScope) return false;
+      if (tab === 'samples') {
+        if (gradeScope !== 'all' && item.grade !== gradeScope) return false;
+      } else {
+        if (savedLevelFilter !== 'all') {
+          const itemLevel = item.educationLevel || getEducationLevelFromGrade(item.grade);
+          if (itemLevel !== savedLevelFilter) return false;
+        }
+      }
       if (skillFilter !== 'all' && item.skill !== skillFilter) return false;
       if (
         query.trim() &&
@@ -172,7 +181,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
       }
       return true;
     });
-  }, [sourceList, gradeScope, skillFilter, query]);
+  }, [sourceList, tab, gradeScope, savedLevelFilter, skillFilter, query]);
 
   const handleJsonUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -284,36 +293,62 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
               </button>
             </div>
 
-            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setGradeScope('all')}
-                className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
-                  gradeScope === 'all'
-                    ? 'bg-white text-[#0F172A] shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Tất cả
-              </button>
-              {([10, 11, 12] as Grade[]).map((g) => (
+            {tab === 'samples' ? (
+              <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
                 <button
-                  key={g}
                   type="button"
-                  onClick={() => {
-                    setGradeScope(g);
-                    onSelectGrade(g);
-                  }}
+                  onClick={() => setGradeScope('all')}
                   className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
-                    gradeScope === g
-                      ? 'bg-white text-[#2563EB] shadow-xs'
+                    gradeScope === 'all'
+                      ? 'bg-white text-[#0F172A] shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  Lớp {g}
+                  Tất cả
                 </button>
-              ))}
-            </div>
+                {([10, 11, 12] as Grade[]).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => {
+                      setGradeScope(g);
+                      onSelectGrade(g);
+                    }}
+                    className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+                      gradeScope === g
+                        ? 'bg-white text-[#2563EB] shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Lớp {g}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+                {(
+                  [
+                    {id: 'all', label: 'Tất cả cấp'},
+                    {id: 'high_school', label: 'THPT (10–12)'},
+                    {id: 'secondary', label: 'THCS (6–9)'},
+                    {id: 'primary', label: 'Tiểu học (1–5)'},
+                  ] as Array<{id: EducationLevel | 'all'; label: string}>
+                ).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setSavedLevelFilter(opt.id)}
+                    className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+                      savedLevelFilter === opt.id
+                        ? 'bg-white text-[#2563EB] shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Search Input */}
@@ -426,7 +461,9 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-[#475569] truncate">
-                      <span className="text-[#2563EB]">Lớp {lesson.grade}</span>
+                      <span className="text-[#2563EB]">
+                        {EDUCATION_LEVEL_SHORT[lesson.educationLevel || getEducationLevelFromGrade(lesson.grade)]} · Lớp {lesson.grade}
+                      </span>
                       <span aria-hidden="true">·</span>
                       <span>{SKILL_SHORT_LABELS[lesson.skill]}</span>
                       <span aria-hidden="true">·</span>

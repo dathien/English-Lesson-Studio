@@ -1,9 +1,9 @@
-import type {Grade, LessonProject, QuestionItem, SkillCategory} from '../../types/lesson';
+import type {Grade, HighSchoolGrade, LessonProject, QuestionItem, SkillCategory} from '../../types/lesson';
 import {GRADE_10_SAMPLES} from './grade10';
 import {GRADE_11_SAMPLES} from './grade11';
 import {GRADE_12_SAMPLES} from './grade12';
 
-export const SAMPLE_LESSONS_BY_GRADE: Record<Grade, LessonProject[]> = {
+export const SAMPLE_LESSONS_BY_GRADE: Record<HighSchoolGrade, LessonProject[]> = {
   10: GRADE_10_SAMPLES,
   11: GRADE_11_SAMPLES,
   12: GRADE_12_SAMPLES,

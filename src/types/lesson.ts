@@ -1,4 +1,32 @@
-export type Grade = 10 | 11 | 12;
+export type HighSchoolGrade = 10 | 11 | 12;
+export type Grade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type EducationLevel = 'primary' | 'secondary' | 'high_school';
+
+export const EDUCATION_LEVEL_LABELS: Record<EducationLevel, string> = {
+  primary: 'Tiểu học (Lớp 1–5)',
+  secondary: 'THCS (Lớp 6–9)',
+  high_school: 'THPT (Lớp 10–12)',
+};
+
+export const EDUCATION_LEVEL_SHORT: Record<EducationLevel, string> = {
+  primary: 'Tiểu học',
+  secondary: 'THCS',
+  high_school: 'THPT',
+};
+
+export const GRADES_BY_LEVEL: Record<EducationLevel, Grade[]> = {
+  primary: [1, 2, 3, 4, 5],
+  secondary: [6, 7, 8, 9],
+  high_school: [10, 11, 12],
+};
+
+export const ALL_GRADES: Grade[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+export function getEducationLevelFromGrade(grade: Grade): EducationLevel {
+  if (grade <= 5) return 'primary';
+  if (grade <= 9) return 'secondary';
+  return 'high_school';
+}
 
 export type SkillCategory =
   | 'listening'
@@ -106,6 +134,7 @@ export interface QuestionOption {
   label: string;
   text: string;
   ipa?: string;
+  imageUrl?: string;
 }
 
 export interface MatchingPair {
@@ -235,6 +264,7 @@ export interface LessonProject {
   id: string;
   title: string;
   grade: Grade;
+  educationLevel?: EducationLevel;
   skill: SkillCategory;
   activityFocus?: ActivityType;
   topic: string;
@@ -292,12 +322,24 @@ export interface ParsedDocumentDraft {
   sourceFiles: string[];
   title: string;
   grade: Grade;
+  educationLevel: EducationLevel;
+  detectedGrade: Grade | null;
+  detectedLevel: EducationLevel | null;
+  gradeConfidence: 'high' | 'medium' | 'none';
+  gradeEvidence?: string;
+  gradeNeedsConfirmation: boolean;
   skill: SkillCategory;
+  detectedActivityType?: ActivityType;
+  detectedSkillEvidence?: string;
   instructions: string;
   passages: ReadingPassage[];
   transcript: string;
+  attachedAudioDataUrl?: string;
+  attachedAudioName?: string;
+  attachedAudioMimeType?: string;
   questions: Array<QuestionItem & {passageIndex?: number}>;
   extractedImages: Array<{name: string; dataUrl: string}>;
+  pageCount?: number;
   warnings: string[];
   usedAI: boolean;
 }

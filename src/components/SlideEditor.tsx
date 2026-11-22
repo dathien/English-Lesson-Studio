@@ -44,6 +44,7 @@ import {
   ACTIVITY_LABELS,
   DEFAULT_SPEAKING_RUBRIC,
   DEFAULT_WRITING_RUBRIC,
+  getEducationLevelFromGrade,
   SKILL_LABELS,
   SKILL_SHORT_LABELS,
 } from '../types/lesson';
@@ -498,13 +499,35 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
 
           <select
             value={draft.grade}
-            onChange={(e) => commitChange((p) => ({...p, grade: Number(e.target.value) as Grade}))}
+            onChange={(e) => {
+              const g = Number(e.target.value) as Grade;
+              commitChange((p) => ({
+                ...p,
+                grade: g,
+                educationLevel: getEducationLevelFromGrade(g),
+              }));
+            }}
             aria-label="Khối lớp"
             className="rounded-xl border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-sm font-semibold text-[#0F172A]"
           >
-            <option value={10}>Lớp 10</option>
-            <option value={11}>Lớp 11</option>
-            <option value={12}>Lớp 12</option>
+            <optgroup label="THPT (Lớp 10–12)">
+              <option value={10}>Lớp 10</option>
+              <option value={11}>Lớp 11</option>
+              <option value={12}>Lớp 12</option>
+            </optgroup>
+            <optgroup label="THCS (Lớp 6–9)">
+              <option value={6}>Lớp 6</option>
+              <option value={7}>Lớp 7</option>
+              <option value={8}>Lớp 8</option>
+              <option value={9}>Lớp 9</option>
+            </optgroup>
+            <optgroup label="Tiểu học (Lớp 1–5)">
+              <option value={1}>Lớp 1</option>
+              <option value={2}>Lớp 2</option>
+              <option value={3}>Lớp 3</option>
+              <option value={4}>Lớp 4</option>
+              <option value={5}>Lớp 5</option>
+            </optgroup>
           </select>
         </div>
 
