@@ -1,0 +1,6 @@
+{
+  "name": "English Slide Studio",
+  "description": "Hệ thống soạn bài và trình chiếu Tiếng Anh tương tác THPT lớp 10, 11, 12 theo Chương trình GDPT 2018 — hỗ trợ đủ 4 kỹ năng, Vocabulary, Grammar, Pronunciation, chuyển tài liệu thành slide, kiểm tra đánh giá, xuất Word/PDF/PowerPoint và hoạt động offline (PWA).",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

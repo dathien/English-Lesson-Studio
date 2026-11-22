@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Fraunces', 'Plus Jakarta Sans', Georgia, serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-size: 15px;
+    line-height: 1.6;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    margin: 0;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Underlined pronunciation letter emphasis */
+.pron-underline {
+  text-decoration: underline;
+  text-decoration-thickness: 2.5px;
+  text-underline-offset: 4px;
+  text-decoration-color: #0284C7;
+  font-weight: 700;
+}
+
+/* Subtle scrollbar for reading panes and slide lists */
+.studio-scroll::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.studio-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.studio-scroll::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+}
+
+.studio-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
