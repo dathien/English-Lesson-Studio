@@ -158,6 +158,7 @@ export interface ListeningAudioConfig {
   voiceAccent?: VoiceAccent;
   isSynthesized?: boolean;
   skillObjective?: string;
+  durationSec?: number;
   timestamps?: AudioTimestamp[];
   timestampsNeedReview?: boolean;
 }
@@ -198,7 +199,14 @@ export interface WritingTaskConfig {
   rubricCriteria: RubricCriterion[];
 }
 
-export type SlideThemeId = 'light_classroom' | 'projector_contrast' | 'warm_paper' | 'dark_theater';
+export type SlideThemeId =
+  | 'light_classroom'
+  | 'dark_theater'
+  | 'ocean_blue'
+  | 'emerald_fresh'
+  | 'bright_orange'
+  | 'projector_contrast'
+  | 'warm_paper';
 
 export interface Slide {
   id: string;

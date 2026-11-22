@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {AnimatePresence, motion} from 'motion/react';
 import {
-  BookOpenCheck,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -12,11 +12,9 @@ import {
   ListChecks,
   Maximize,
   Minimize,
-  Palette,
   Pause,
   Play,
   RotateCcw,
-  Type,
   X,
 } from 'lucide-react';
 import type {LessonProject, SlideThemeId} from '../types/lesson';
@@ -38,44 +36,125 @@ interface SlidePresenterProps {
   initialSlideIndex?: number;
   initialFontScale?: number;
   initialShowNotes?: boolean;
+  initialTheme?: SlideThemeId;
   onExit: () => void;
 }
 
-const THEME_CONFIG: Record<
-  SlideThemeId,
-  {label: string; stage: string; header: string; dark: boolean}
-> = {
+interface PresenterThemeSpec {
+  id: SlideThemeId;
+  label: string;
+  swatch: string;
+  outerBg: string;
+  topBar: string;
+  bottomBar: string;
+  cardStage: string;
+  accentText: string;
+  primaryBtn: string;
+  dark: boolean;
+}
+
+const PRESENTER_THEMES: Record<SlideThemeId, PresenterThemeSpec> = {
   light_classroom: {
-    label: 'Sáng lớp học',
-    stage: 'bg-[#F8FAFC] text-[#0F172A] border-slate-200',
-    header: 'bg-[#0F4C81] text-white',
-    dark: false,
-  },
-  projector_contrast: {
-    label: 'Máy chiếu tương phản cao',
-    stage: 'bg-white text-slate-950 border-slate-300',
-    header: 'bg-slate-950 text-white',
-    dark: false,
-  },
-  warm_paper: {
-    label: 'Giấy ấm dịu mắt',
-    stage: 'bg-[#FAF7F2] text-stone-900 border-stone-200',
-    header: 'bg-[#1E3A5F] text-white',
+    id: 'light_classroom',
+    label: 'Sáng',
+    swatch: '#FFFFFF',
+    outerBg: 'bg-gradient-to-br from-[#F8FAFC] via-[#EFF6FF]/60 to-[#F1F5F9] text-[#0F172A]',
+    topBar: 'bg-white/95 border-slate-200/90 text-[#0F172A]',
+    bottomBar: 'bg-white/95 border-slate-200/90 text-[#0F172A]',
+    cardStage: 'bg-white border-slate-200/90 text-[#0F172A] shadow-lg shadow-slate-900/5',
+    accentText: 'text-[#2563EB]',
+    primaryBtn: 'bg-gradient-to-r from-[#2563EB] to-[#1E40AF] text-white',
     dark: false,
   },
   dark_theater: {
-    label: 'Trình chiếu tối',
-    stage: 'bg-slate-950 text-slate-100 border-slate-800',
-    header: 'bg-slate-900 text-slate-100 border-b border-slate-800',
+    id: 'dark_theater',
+    label: 'Tối',
+    swatch: '#0F172A',
+    outerBg: 'bg-[#0B1120] text-slate-100',
+    topBar: 'bg-slate-900/95 border-slate-800 text-slate-100',
+    bottomBar: 'bg-slate-900/95 border-slate-800 text-slate-100',
+    cardStage: 'bg-slate-900 border-slate-800 text-slate-100 shadow-2xl shadow-black/40',
+    accentText: 'text-sky-300',
+    primaryBtn: 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white',
     dark: true,
   },
+  ocean_blue: {
+    id: 'ocean_blue',
+    label: 'Xanh biển',
+    swatch: '#2563EB',
+    outerBg: 'bg-gradient-to-br from-[#DBEAFE] via-[#EFF6FF] to-[#CFFAFE] text-[#0F172A]',
+    topBar: 'bg-gradient-to-r from-[#1E40AF] via-[#2563EB] to-[#0284C7] border-blue-700/30 text-white',
+    bottomBar: 'bg-white/95 border-blue-200 text-[#0F172A]',
+    cardStage: 'bg-white/98 border-blue-200/90 text-[#0F172A] shadow-xl shadow-blue-900/10',
+    accentText: 'text-[#2563EB]',
+    primaryBtn: 'bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white',
+    dark: false,
+  },
+  emerald_fresh: {
+    id: 'emerald_fresh',
+    label: 'Xanh lá',
+    swatch: '#10B981',
+    outerBg: 'bg-gradient-to-br from-[#D1FAE5] via-[#ECFDF5] to-[#F0FDF4] text-[#0F172A]',
+    topBar: 'bg-gradient-to-r from-[#047857] via-[#059669] to-[#10B981] border-emerald-700/30 text-white',
+    bottomBar: 'bg-white/95 border-emerald-200 text-[#0F172A]',
+    cardStage: 'bg-white/98 border-emerald-200/90 text-[#0F172A] shadow-xl shadow-emerald-900/10',
+    accentText: 'text-[#059669]',
+    primaryBtn: 'bg-gradient-to-r from-[#059669] to-[#10B981] text-white',
+    dark: false,
+  },
+  bright_orange: {
+    id: 'bright_orange',
+    label: 'Cam sáng',
+    swatch: '#F97316',
+    outerBg: 'bg-gradient-to-br from-[#FFEDD5] via-[#FFF7ED] to-[#FEF3C7] text-[#0F172A]',
+    topBar: 'bg-gradient-to-r from-[#C2410C] via-[#EA580C] to-[#F97316] border-orange-700/30 text-white',
+    bottomBar: 'bg-white/95 border-orange-200 text-[#0F172A]',
+    cardStage: 'bg-white/98 border-orange-200/90 text-[#0F172A] shadow-xl shadow-orange-900/10',
+    accentText: 'text-[#EA580C]',
+    primaryBtn: 'bg-gradient-to-r from-[#EA580C] to-[#F97316] text-white',
+    dark: false,
+  },
+  // Legacy compatibility mappings
+  projector_contrast: {
+    id: 'projector_contrast',
+    label: 'Sáng',
+    swatch: '#FFFFFF',
+    outerBg: 'bg-white text-slate-950',
+    topBar: 'bg-slate-950 border-slate-800 text-white',
+    bottomBar: 'bg-white border-slate-300 text-slate-950',
+    cardStage: 'bg-white border-slate-300 text-slate-950 shadow-md',
+    accentText: 'text-[#1E40AF]',
+    primaryBtn: 'bg-[#1E40AF] text-white',
+    dark: false,
+  },
+  warm_paper: {
+    id: 'warm_paper',
+    label: 'Sáng',
+    swatch: '#FAF7F2',
+    outerBg: 'bg-[#FAF7F2] text-stone-900',
+    topBar: 'bg-white/95 border-stone-200 text-stone-900',
+    bottomBar: 'bg-white/95 border-stone-200 text-stone-900',
+    cardStage: 'bg-white border-stone-200 text-stone-900 shadow-md',
+    accentText: 'text-[#2563EB]',
+    primaryBtn: 'bg-[#2563EB] text-white',
+    dark: false,
+  },
 };
+
+const SELECTABLE_THEME_IDS: SlideThemeId[] = [
+  'light_classroom',
+  'dark_theater',
+  'ocean_blue',
+  'emerald_fresh',
+  'bright_orange',
+];
 
 export const SlidePresenter: React.FC<SlidePresenterProps> = ({
   lesson,
   initialSlideIndex = 0,
   initialFontScale = 1,
   initialShowNotes = false,
+  initialTheme,
   onExit,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -87,7 +166,9 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
   const [showAnswersSlides, setShowAnswersSlides] = useState<Record<string, boolean>>({});
   const [showExplanationsSlides, setShowExplanationsSlides] = useState<Record<string, boolean>>({});
 
-  const [themeId, setThemeId] = useState<SlideThemeId>(lesson.themeId || 'light_classroom');
+  const [themeId, setThemeId] = useState<SlideThemeId>(
+    initialTheme || lesson.themeId || 'light_classroom',
+  );
   const [fontScale, setFontScale] = useState(initialFontScale);
   const [showNotes, setShowNotes] = useState(initialShowNotes);
   const [showOutline, setShowOutline] = useState(false);
@@ -100,7 +181,13 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
   const [timerRunning, setTimerRunning] = useState(false);
 
   const currentSlide = lesson.slides[slideIdx];
-  const theme = THEME_CONFIG[themeId];
+  const theme = PRESENTER_THEMES[themeId] || PRESENTER_THEMES.light_classroom;
+  const isColoredTopBar =
+    themeId === 'ocean_blue' ||
+    themeId === 'emerald_fresh' ||
+    themeId === 'bright_orange' ||
+    themeId === 'dark_theater' ||
+    themeId === 'projector_contrast';
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -168,6 +255,14 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
   const isShowExplanations = currentSlide ? Boolean(showExplanationsSlides[currentSlide.id]) : false;
 
   const hasQuestions = Boolean(currentSlide?.questions && currentSlide.questions.length > 0);
+  const isReadingLayout = Boolean(currentSlide?.passage);
+  const isWideActivity = Boolean(
+    currentSlide?.passage ||
+      currentSlide?.speakingTask ||
+      currentSlide?.writingTask ||
+      currentSlide?.audio ||
+      (currentSlide?.vocabItems && currentSlide.vocabItems.length > 0),
+  );
 
   const scoreSummary = useMemo(() => {
     if (!currentSlide?.questions || !isChecked) return null;
@@ -199,12 +294,6 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
     setShowExplanationsSlides((prev) => ({...prev, [currentSlide.id]: false}));
   };
 
-  const cycleTheme = () => {
-    const keys: SlideThemeId[] = ['light_classroom', 'projector_contrast', 'warm_paper', 'dark_theater'];
-    const nextIdx = (keys.indexOf(themeId) + 1) % keys.length;
-    setThemeId(keys[nextIdx]);
-  };
-
   if (!currentSlide) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 text-white p-6">
@@ -212,7 +301,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
         <button
           type="button"
           onClick={onExit}
-          className="rounded-lg bg-white px-4 py-2 text-slate-900 font-medium"
+          className="rounded-xl bg-white px-5 py-2.5 text-slate-900 font-semibold"
         >
           Quay lại
         </button>
@@ -220,218 +309,401 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
     );
   }
 
-  return (
-    <div
-      ref={containerRef}
-      className={`fixed inset-0 z-50 flex flex-col ${
-        theme.dark ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'
-      }`}
-    >
-      {/* Main 16:9 Presentation Viewport (never obscured by toolbars) */}
-      <div className="flex-1 min-h-0 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-        <div
-          className={`w-full max-w-[1440px] h-full max-h-full aspect-video rounded-2xl border shadow-lg flex flex-col overflow-hidden ${theme.stage}`}
-        >
-          {/* Slide Header Band */}
-          <div className={`px-5 py-3 flex items-center justify-between gap-4 shrink-0 ${theme.header}`}>
-            <div className="min-w-0">
-              <div className="text-xs opacity-80 flex items-center gap-2">
-                <span>Tiếng Anh Lớp {lesson.grade}</span>
-                <span aria-hidden="true">·</span>
-                <span>{SKILL_SHORT_LABELS[currentSlide.skill]}</span>
-                <span aria-hidden="true">·</span>
-                <span>{ACTIVITY_LABELS[currentSlide.activityType]}</span>
-              </div>
-              <h2 className="text-lg sm:text-xl font-bold truncate mt-0.5">{currentSlide.title}</h2>
-            </div>
+  const topBtnClass = isColoredTopBar
+    ? 'border-white/25 bg-white/10 text-white hover:bg-white/20'
+    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100';
 
-            <div className="flex items-center gap-3 shrink-0">
-              {scoreSummary && (
-                <div className="rounded-lg bg-emerald-600 px-3 py-1 text-xs sm:text-sm font-semibold text-white tabular-nums whitespace-nowrap">
-                  Kết quả: {scoreSummary.correct}/{scoreSummary.total}
-                </div>
-              )}
-              <span className="font-mono-tabular text-sm opacity-90 whitespace-nowrap">
-                Slide {slideIdx + 1} / {lesson.slides.length}
+  return (
+    <div ref={containerRef} className={`fixed inset-0 z-50 flex flex-col ${theme.outerBg}`}>
+      {/* COMPACT TOP CONTROL TOOLBAR (Never covers slide content) */}
+      <header
+        className={`shrink-0 border-b px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5 backdrop-blur-sm ${theme.topBar}`}
+      >
+        {/* Left: Lesson info + Questions List button */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
+            onClick={() => setShowOutline((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 ${topBtnClass}`}
+            title="Mở danh sách slide và câu hỏi"
+          >
+            <ListChecks className="w-4 h-4" />
+            <span>Danh sách</span>
+          </button>
+
+          <div className="min-w-0 hidden sm:block">
+            <div className="text-xs opacity-80 flex items-center gap-1.5 truncate">
+              <span className="font-semibold">Lớp {lesson.grade}</span>
+              <span aria-hidden="true">·</span>
+              <span>{SKILL_SHORT_LABELS[currentSlide.skill]}</span>
+              <span aria-hidden="true">·</span>
+              <span className="font-mono-tabular font-semibold">
+                Slide {slideIdx + 1}/{lesson.slides.length}
               </span>
             </div>
-          </div>
-
-          {/* Slide Scrollable Stage Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto studio-scroll p-5 sm:p-7 space-y-5">
-            {currentSlide.subtitle && (
-              <p className={`text-base font-medium ${theme.dark ? 'text-sky-300' : 'text-[#0284C7]'}`}>
-                {currentSlide.subtitle}
-              </p>
-            )}
-
-            {currentSlide.instruction && (
-              <div
-                className={`rounded-xl border px-4 py-3 text-sm leading-relaxed ${
-                  theme.dark
-                    ? 'border-slate-700 bg-slate-900/70 text-slate-200'
-                    : 'border-sky-200 bg-sky-50/70 text-slate-800'
-                }`}
-                style={{fontSize: `${Math.round(15 * fontScale)}px`}}
-              >
-                <span className="font-semibold text-[#0284C7] mr-1.5">Hướng dẫn:</span>
-                <RenderFormattedText text={currentSlide.instruction} />
-              </div>
-            )}
-
-            {/* Cover / Theory Bullets + Optional Image */}
-            {currentSlide.bullets && currentSlide.bullets.length > 0 && (
-              <div
-                className={`grid gap-6 items-center ${
-                  currentSlide.imageUrl ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'
-                }`}
-              >
-                <ul
-                  className={`${
-                    currentSlide.imageUrl ? 'lg:col-span-7' : 'col-span-1'
-                  } space-y-3 leading-relaxed`}
-                  style={{fontSize: `${Math.round(17 * fontScale)}px`}}
-                >
-                  {currentSlide.bullets.map((b, idx) => (
-                    <li
-                      key={idx}
-                      className={`rounded-xl border p-3.5 flex items-start gap-3 ${
-                        theme.dark ? 'border-slate-800 bg-slate-900/60' : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <span className="font-mono-tabular text-sm font-bold text-[#0284C7] shrink-0 mt-0.5">
-                        0{idx + 1}.
-                      </span>
-                      <span>
-                        <RenderFormattedText text={b} />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                {currentSlide.imageUrl && (
-                  <figure className="lg:col-span-5 space-y-1.5">
-                    <img
-                      src={currentSlide.imageUrl}
-                      alt={currentSlide.imageCaption || currentSlide.title}
-                      referrerPolicy="no-referrer"
-                      className="w-full rounded-xl border border-slate-200 object-cover max-h-80"
-                    />
-                    {currentSlide.imageCaption && (
-                      <figcaption className="text-xs text-slate-500">{currentSlide.imageCaption}</figcaption>
-                    )}
-                  </figure>
-                )}
-              </div>
-            )}
-
-            {/* Embedded Video if present */}
-            {currentSlide.videoUrl && (
-              <div className="rounded-xl overflow-hidden border border-slate-200 max-w-2xl">
-                <video controls src={currentSlide.videoUrl} className="w-full max-h-72 bg-black" />
-              </div>
-            )}
-
-            {/* Listening Audio Bar (linked with questions below) */}
-            {currentSlide.audio && (
-              <ListeningWidget
-                audioConfig={currentSlide.audio}
-                grade={lesson.grade}
-                lessonTitle={lesson.title}
-                topic={lesson.topic}
-                jumpRequestSec={jumpAudioSec}
-                darkSurface={theme.dark}
-                readOnly
-              />
-            )}
-
-            {/* Reading Split View (Intact Passage Left + Grouped Questions Right) */}
-            {currentSlide.passage && (
-              <ReadingSplitView
-                passage={currentSlide.passage}
-                questions={currentSlide.questions}
-                imageUrl={currentSlide.imageUrl}
-                imageCaption={currentSlide.imageCaption}
-                answers={slideAnswers}
-                onChangeAnswer={handleAnswerChange}
-                checked={isChecked}
-                showAnswers={isShowAnswers}
-                showExplanations={isShowExplanations}
-                darkSurface={theme.dark}
-                fontScale={fontScale}
-              />
-            )}
-
-            {/* Vocabulary Flashcards */}
-            {currentSlide.vocabItems && currentSlide.vocabItems.length > 0 && (
-              <VocabFlashcards items={currentSlide.vocabItems} darkSurface={theme.dark} />
-            )}
-
-            {/* Speaking Interactive Studio */}
-            {currentSlide.speakingTask && (
-              <SpeakingWidget
-                lessonId={lesson.id}
-                slideId={currentSlide.id}
-                task={currentSlide.speakingTask}
-                imageUrl={currentSlide.imageUrl}
-                imageCaption={currentSlide.imageCaption}
-                darkSurface={theme.dark}
-              />
-            )}
-
-            {/* Writing Interactive Studio */}
-            {currentSlide.writingTask && (
-              <WritingWidget
-                lessonId={lesson.id}
-                slideId={currentSlide.id}
-                grade={lesson.grade}
-                task={currentSlide.writingTask}
-                imageUrl={currentSlide.imageUrl}
-                imageCaption={currentSlide.imageCaption}
-                darkSurface={theme.dark}
-              />
-            )}
-
-            {/* Standalone Questions (when not already rendered inside ReadingSplitView) */}
-            {!currentSlide.passage && currentSlide.questions && currentSlide.questions.length > 0 && (
-              <QuestionRenderer
-                questions={currentSlide.questions}
-                answers={slideAnswers}
-                onChangeAnswer={handleAnswerChange}
-                checked={isChecked}
-                showAnswers={isShowAnswers}
-                showExplanations={isShowExplanations}
-                onJumpToTimestamp={(sec) => setJumpAudioSec(sec)}
-                darkSurface={theme.dark}
-                fontScale={fontScale}
-              />
-            )}
-
-            {/* Teacher Notes Panel (Toggleable) */}
-            {showNotes && (
-              <div
-                className={`rounded-xl border p-4 text-sm ${
-                  theme.dark
-                    ? 'border-amber-700/60 bg-amber-950/30 text-amber-100'
-                    : 'border-amber-200 bg-amber-50 text-amber-950'
-                }`}
-              >
-                <div className="font-semibold mb-1">Ghi chú dành cho Giáo viên (Teacher Notes)</div>
-                <p>
-                  {currentSlide.teacherNotes ||
-                    'Chưa có ghi chú riêng cho slide này. Giáo viên có thể thêm ghi chú trong Trình biên tập.'}
-                </p>
-              </div>
-            )}
+            <div className="text-sm font-bold truncate max-w-[260px] lg:max-w-[360px]">
+              {lesson.title}
+            </div>
           </div>
         </div>
+
+        {/* Center: 5 Direct Theme Buttons */}
+        <div
+          className={`flex items-center gap-1 p-1 rounded-xl border ${
+            isColoredTopBar
+              ? 'border-white/20 bg-black/15'
+              : 'border-slate-200 bg-slate-100/90'
+          }`}
+          role="group"
+          aria-label="Chọn giao diện trình chiếu"
+        >
+          {SELECTABLE_THEME_IDS.map((tId) => {
+            const spec = PRESENTER_THEMES[tId];
+            const active = themeId === tId;
+            return (
+              <button
+                key={tId}
+                type="button"
+                onClick={() => setThemeId(tId)}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all whitespace-nowrap ${
+                  active
+                    ? isColoredTopBar
+                      ? 'bg-white text-[#0F172A] shadow-xs'
+                      : 'bg-white text-[#2563EB] shadow-xs'
+                    : isColoredTopBar
+                      ? 'text-white/85 hover:text-white hover:bg-white/10'
+                      : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title={`Giao diện ${spec.label}`}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full border border-slate-300 shrink-0"
+                  style={{backgroundColor: spec.swatch}}
+                  aria-hidden="true"
+                />
+                <span className="hidden md:inline">{spec.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right: Font Scale, Timer, Notes, Fullscreen, Exit */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div
+            className={`inline-flex items-center rounded-xl border overflow-hidden ${
+              isColoredTopBar ? 'border-white/25 bg-white/10' : 'border-slate-200 bg-slate-50'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setFontScale((s) => Math.max(0.85, Number((s - 0.1).toFixed(2))))}
+              className="px-2.5 py-1.5 text-xs font-bold hover:opacity-80 transition-opacity"
+              title="Giảm cỡ chữ"
+            >
+              A-
+            </button>
+            <span className="px-1.5 text-xs opacity-70 font-mono-tabular hidden sm:inline">
+              {Math.round(fontScale * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={() => setFontScale((s) => Math.min(1.35, Number((s + 0.1).toFixed(2))))}
+              className="px-2.5 py-1.5 text-xs font-bold hover:opacity-80 transition-opacity"
+              title="Tăng cỡ chữ"
+            >
+              A+
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setTimerOpen((v) => !v)}
+            className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
+              timerRunning ? 'border-amber-400 bg-amber-400 text-slate-950' : topBtnClass
+            }`}
+            title="Đồng hồ bấm giờ"
+          >
+            <Clock className="w-4 h-4" />
+            <span className="font-mono-tabular hidden sm:inline">
+              {timerRunning
+                ? `${Math.floor(timerSec / 60)}:${String(timerSec % 60).padStart(2, '0')}`
+                : 'Timer'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowNotes((v) => !v)}
+            className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
+              showNotes ? 'border-amber-400 bg-amber-100 text-amber-950' : topBtnClass
+            }`}
+            title="Ghi chú giáo viên"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden xl:inline">Notes</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${topBtnClass}`}
+            title="Toàn màn hình"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            <span className="hidden xl:inline">Toàn màn hình</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onExit}
+            className="inline-flex items-center gap-1 rounded-xl bg-rose-600 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white hover:bg-rose-700 transition-colors whitespace-nowrap"
+          >
+            <X className="w-4 h-4" />
+            <span>Thoát</span>
+          </button>
+        </div>
+      </header>
+
+      {/* CENTERPIECE PRESENTATION STAGE */}
+      <div className="flex-1 min-h-0 overflow-y-auto studio-scroll px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide.id}
+            initial={{opacity: 0, y: 10}}
+            animate={{opacity: 1, y: 0}}
+            exit={{opacity: 0, y: -8}}
+            transition={{duration: 0.2, ease: [0.16, 1, 0.3, 1]}}
+            className={`mx-auto w-full ${
+              isReadingLayout || isWideActivity ? 'max-w-[1380px]' : 'max-w-[1060px]'
+            }`}
+          >
+            {/* Large Centered Luminous Content Card */}
+            <div
+              className={`rounded-[20px] border p-5 sm:p-7 lg:p-8 space-y-6 ${theme.cardStage}`}
+            >
+              {/* Slide Title & Context Header */}
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/70 dark:border-slate-800 pb-4">
+                <div className="space-y-1 min-w-0">
+                  <div
+                    className={`text-xs sm:text-sm font-semibold flex flex-wrap items-center gap-2 ${theme.accentText}`}
+                  >
+                    <span>Tiếng Anh Lớp {lesson.grade}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{SKILL_SHORT_LABELS[currentSlide.skill]}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{ACTIVITY_LABELS[currentSlide.activityType]}</span>
+                  </div>
+                  <h2
+                    className="font-display font-bold tracking-tight leading-snug"
+                    style={{fontSize: `${Math.round(24 * fontScale)}px`}}
+                  >
+                    {currentSlide.title}
+                  </h2>
+                  {currentSlide.subtitle && (
+                    <p
+                      className={`text-sm sm:text-base font-medium ${
+                        theme.dark ? 'text-slate-300' : 'text-[#475569]'
+                      }`}
+                    >
+                      {currentSlide.subtitle}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2.5 shrink-0">
+                  {scoreSummary && (
+                    <div className="rounded-xl bg-[#10B981] px-3.5 py-1.5 text-sm font-bold text-white tabular-nums shadow-xs">
+                      Đúng {scoreSummary.correct}/{scoreSummary.total} câu
+                    </div>
+                  )}
+                  <span
+                    className={`font-mono-tabular text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl border ${
+                      theme.dark
+                        ? 'border-slate-700 bg-slate-800 text-slate-200'
+                        : 'border-slate-200 bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    {slideIdx + 1} / {lesson.slides.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Instruction Callout */}
+              {currentSlide.instruction && (
+                <div
+                  className={`rounded-2xl border px-4 py-3.5 leading-relaxed ${
+                    theme.dark
+                      ? 'border-slate-700 bg-slate-800/80 text-slate-200'
+                      : 'border-blue-100 bg-[#EFF6FF]/70 text-[#0F172A]'
+                  }`}
+                  style={{fontSize: `${Math.round(15.5 * fontScale)}px`}}
+                >
+                  <span className={`font-bold mr-1.5 ${theme.accentText}`}>Yêu cầu:</span>
+                  <RenderFormattedText text={currentSlide.instruction} />
+                </div>
+              )}
+
+              {/* Cover / Theory Bullets + Optional Image */}
+              {currentSlide.bullets && currentSlide.bullets.length > 0 && (
+                <div
+                  className={`grid gap-6 items-center ${
+                    currentSlide.imageUrl ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'
+                  }`}
+                >
+                  <ul
+                    className={`${
+                      currentSlide.imageUrl ? 'lg:col-span-7' : 'col-span-1'
+                    } space-y-3 leading-relaxed`}
+                    style={{fontSize: `${Math.round(17 * fontScale)}px`}}
+                  >
+                    {currentSlide.bullets.map((b, idx) => (
+                      <li
+                        key={idx}
+                        className={`rounded-2xl border p-4 flex items-start gap-3.5 ${
+                          theme.dark
+                            ? 'border-slate-800 bg-slate-800/60'
+                            : 'border-slate-200/90 bg-[#F8FAFC]'
+                        }`}
+                      >
+                        <span
+                          className={`font-mono-tabular text-sm font-bold shrink-0 mt-0.5 ${theme.accentText}`}
+                        >
+                          0{idx + 1}.
+                        </span>
+                        <span>
+                          <RenderFormattedText text={b} />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {currentSlide.imageUrl && (
+                    <figure className="lg:col-span-5 space-y-2">
+                      <img
+                        src={currentSlide.imageUrl}
+                        alt={currentSlide.imageCaption || currentSlide.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full rounded-2xl border border-slate-200 object-cover max-h-80 shadow-xs"
+                      />
+                      {currentSlide.imageCaption && (
+                        <figcaption className="text-xs opacity-75">
+                          {currentSlide.imageCaption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  )}
+                </div>
+              )}
+
+              {/* Embedded Video if present */}
+              {currentSlide.videoUrl && (
+                <div className="rounded-2xl overflow-hidden border border-slate-200 max-w-2xl mx-auto">
+                  <video controls src={currentSlide.videoUrl} className="w-full max-h-80 bg-black" />
+                </div>
+              )}
+
+              {/* Dedicated Listening Layout */}
+              {currentSlide.audio && (
+                <ListeningWidget
+                  audioConfig={currentSlide.audio}
+                  grade={lesson.grade}
+                  lessonTitle={lesson.title}
+                  topic={lesson.topic}
+                  jumpRequestSec={jumpAudioSec}
+                  darkSurface={theme.dark}
+                  readOnly
+                />
+              )}
+
+              {/* Dedicated Reading Split View (Passage intact left + Questions right) */}
+              {currentSlide.passage && (
+                <ReadingSplitView
+                  passage={currentSlide.passage}
+                  questions={currentSlide.questions}
+                  imageUrl={currentSlide.imageUrl}
+                  imageCaption={currentSlide.imageCaption}
+                  answers={slideAnswers}
+                  onChangeAnswer={handleAnswerChange}
+                  checked={isChecked}
+                  showAnswers={isShowAnswers}
+                  showExplanations={isShowExplanations}
+                  darkSurface={theme.dark}
+                  fontScale={fontScale}
+                />
+              )}
+
+              {/* Vocabulary Flashcards */}
+              {currentSlide.vocabItems && currentSlide.vocabItems.length > 0 && (
+                <VocabFlashcards items={currentSlide.vocabItems} darkSurface={theme.dark} />
+              )}
+
+              {/* Dedicated Speaking Studio */}
+              {currentSlide.speakingTask && (
+                <SpeakingWidget
+                  lessonId={lesson.id}
+                  slideId={currentSlide.id}
+                  task={currentSlide.speakingTask}
+                  imageUrl={currentSlide.imageUrl}
+                  imageCaption={currentSlide.imageCaption}
+                  darkSurface={theme.dark}
+                />
+              )}
+
+              {/* Dedicated Writing Studio */}
+              {currentSlide.writingTask && (
+                <WritingWidget
+                  lessonId={lesson.id}
+                  slideId={currentSlide.id}
+                  grade={lesson.grade}
+                  task={currentSlide.writingTask}
+                  imageUrl={currentSlide.imageUrl}
+                  imageCaption={currentSlide.imageCaption}
+                  darkSurface={theme.dark}
+                />
+              )}
+
+              {/* Centered Questions (when not already inside ReadingSplitView) */}
+              {!currentSlide.passage && currentSlide.questions && currentSlide.questions.length > 0 && (
+                <QuestionRenderer
+                  questions={currentSlide.questions}
+                  answers={slideAnswers}
+                  onChangeAnswer={handleAnswerChange}
+                  checked={isChecked}
+                  showAnswers={isShowAnswers}
+                  showExplanations={isShowExplanations}
+                  onJumpToTimestamp={(sec) => setJumpAudioSec(sec)}
+                  darkSurface={theme.dark}
+                  fontScale={fontScale}
+                  presenterMode
+                />
+              )}
+
+              {/* Teacher Notes Panel */}
+              {showNotes && (
+                <div
+                  className={`rounded-2xl border p-4 text-sm ${
+                    theme.dark
+                      ? 'border-amber-700/60 bg-amber-950/40 text-amber-100'
+                      : 'border-amber-200 bg-amber-50 text-amber-950'
+                  }`}
+                >
+                  <div className="font-bold mb-1">Ghi chú dành cho Giáo viên (Teacher Notes)</div>
+                  <p>
+                    {currentSlide.teacherNotes ||
+                      'Chưa có ghi chú riêng cho slide này. Giáo viên có thể thêm ghi chú trong Trình biên tập.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Classroom Timer Popover */}
+      {/* Classroom Timer Floating Card */}
       {timerOpen && (
-        <div className="fixed bottom-20 right-4 z-50 w-72 rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-xl space-y-3">
+        <div className="fixed top-16 right-4 z-50 w-72 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-sm">Đồng hồ lớp học (Timer)</span>
+            <span className="font-bold text-sm">Đồng hồ lớp học (Timer)</span>
             <button
               type="button"
               onClick={() => setTimerOpen(false)}
@@ -440,7 +712,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="text-center font-mono-tabular text-4xl font-bold text-[#0F4C81]">
+          <div className="text-center font-mono-tabular text-4xl font-bold text-[#2563EB]">
             {Math.floor(timerSec / 60)}:{String(timerSec % 60).padStart(2, '0')}
           </div>
           <div className="flex items-center justify-center gap-1.5">
@@ -452,7 +724,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                   setTimerRunning(false);
                   setTimerSec(preset);
                 }}
-                className="rounded border border-slate-200 px-2 py-1 text-xs hover:bg-slate-100 font-mono-tabular"
+                className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold hover:bg-slate-100 font-mono-tabular"
               >
                 {preset / 60}p
               </button>
@@ -462,7 +734,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
             <button
               type="button"
               onClick={() => setTimerRunning((v) => !v)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#0F4C81] py-2 text-xs font-medium text-white hover:bg-[#0B3A63]"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#2563EB] py-2 text-xs font-semibold text-white hover:bg-[#1E40AF]"
             >
               {timerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               {timerRunning ? 'Tạm dừng' : 'Bắt đầu'}
@@ -473,7 +745,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                 setTimerRunning(false);
                 setTimerSec(180);
               }}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold hover:bg-slate-50"
             >
               Đặt lại
             </button>
@@ -481,11 +753,11 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
         </div>
       )}
 
-      {/* Slide / Questions Outline Drawer */}
+      {/* Slide & Question Outline Drawer */}
       {showOutline && (
-        <div className="fixed bottom-20 left-4 z-50 w-80 max-h-80 overflow-y-auto studio-scroll rounded-xl border border-slate-200 bg-white p-3 text-slate-900 shadow-xl space-y-1.5">
+        <div className="fixed top-16 left-4 z-50 w-80 max-h-[70vh] overflow-y-auto studio-scroll rounded-2xl border border-slate-200 bg-white p-3 text-slate-900 shadow-2xl space-y-1.5">
           <div className="flex items-center justify-between px-1 pb-2 border-b border-slate-200">
-            <span className="font-semibold text-sm">Danh sách Slide &amp; Câu hỏi</span>
+            <span className="font-bold text-sm">Danh sách Slide &amp; Câu hỏi</span>
             <button
               type="button"
               onClick={() => setShowOutline(false)}
@@ -502,16 +774,16 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                 setSlideIdx(i);
                 setShowOutline(false);
               }}
-              className={`w-full text-left rounded-lg px-3 py-2 text-sm transition-colors ${
+              className={`w-full text-left rounded-xl px-3 py-2.5 text-sm transition-colors ${
                 i === slideIdx
-                  ? 'bg-sky-50 text-[#0F4C81] font-semibold'
+                  ? 'bg-blue-50 text-[#1E40AF] font-bold border border-blue-200'
                   : 'hover:bg-slate-100 text-slate-700'
               }`}
             >
               <div className="truncate">
                 {i + 1}. {s.title}
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-500 mt-0.5">
                 {SKILL_SHORT_LABELS[s.skill]}
                 {s.questions?.length ? ` · ${s.questions.length} câu hỏi` : ''}
               </div>
@@ -520,49 +792,45 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
         </div>
       )}
 
-      {/* Bottom Docked Control Toolbar (Never covers slide content) */}
-      <div
-        className={`shrink-0 border-t px-3 py-2.5 flex flex-wrap items-center justify-between gap-2 ${
-          theme.dark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'
-        }`}
+      {/* BOTTOM DOCKED NAVIGATION & GRADING BAR (Never covers questions or footer) */}
+      <footer
+        className={`shrink-0 border-t px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5 ${theme.bottomBar}`}
       >
-        {/* Navigation & Questions List */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={goPrev}
             disabled={slideIdx === 0}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap"
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold disabled:opacity-40 transition-colors whitespace-nowrap ${
+              theme.dark
+                ? 'border-slate-700 hover:bg-slate-800 text-slate-100'
+                : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-800'
+            }`}
           >
             <ChevronLeft className="w-4 h-4" />
-            Previous
+            <span>Trước</span>
           </button>
           <button
             type="button"
             onClick={goNext}
             disabled={slideIdx >= lesson.slides.length - 1}
-            className="inline-flex items-center gap-1 rounded-lg bg-[#0F4C81] px-3 py-2 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#0B3A63] whitespace-nowrap"
+            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-40 transition-opacity hover:opacity-95 whitespace-nowrap shadow-xs ${theme.primaryBtn}`}
           >
-            Next
+            <span>Tiếp theo</span>
             <ChevronRight className="w-4 h-4" />
           </button>
-          <button
-            type="button"
-            onClick={() => setShowOutline((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-100 whitespace-nowrap"
-          >
-            <ListChecks className="w-4 h-4" />
-            Questions
-          </button>
+          <span className="hidden lg:inline text-xs opacity-60 ml-1">
+            Phím mũi tên ← / →
+          </span>
         </div>
 
-        {/* Teacher-Controlled Interactive Grading Buttons */}
+        {/* Teacher-Controlled Grading Actions */}
         {hasQuestions && (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setCheckedSlides((p) => ({...p, [currentSlide.id]: true}))}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#10B981] px-4 py-2 text-sm font-semibold text-white hover:bg-[#059669] shadow-xs transition-colors whitespace-nowrap"
             >
               <CheckCircle2 className="w-4 h-4" />
               Check Answer
@@ -570,7 +838,11 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
             <button
               type="button"
               onClick={handleTryAgain}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-100 whitespace-nowrap"
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                theme.dark
+                  ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-100'
+                  : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-800'
+              }`}
             >
               <RotateCcw className="w-4 h-4" />
               Try Again
@@ -580,118 +852,36 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
               onClick={() =>
                 setShowAnswersSlides((p) => ({...p, [currentSlide.id]: !p[currentSlide.id]}))
               }
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                 isShowAnswers
-                  ? 'border-[#0284C7] bg-sky-50 text-[#0F4C81]'
-                  : 'border-slate-300 hover:bg-slate-100'
+                  ? 'border-[#2563EB] bg-blue-50 text-[#1E40AF]'
+                  : theme.dark
+                    ? 'border-slate-700 hover:bg-slate-800 text-slate-200'
+                    : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
               }`}
             >
               {isShowAnswers ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              Show Answer
+              Đáp án
             </button>
             <button
               type="button"
               onClick={() =>
                 setShowExplanationsSlides((p) => ({...p, [currentSlide.id]: !p[currentSlide.id]}))
               }
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                 isShowExplanations
-                  ? 'border-[#0284C7] bg-sky-50 text-[#0F4C81]'
-                  : 'border-slate-300 hover:bg-slate-100'
+                  ? 'border-[#2563EB] bg-blue-50 text-[#1E40AF]'
+                  : theme.dark
+                    ? 'border-slate-700 hover:bg-slate-800 text-slate-200'
+                    : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
               }`}
             >
               <HelpCircle className="w-4 h-4" />
-              Show Explanation
+              Lời giải
             </button>
           </div>
         )}
-
-        {/* Classroom Utilities: Font Size, Theme, Timer, Notes, Fullscreen, Exit */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <div className="inline-flex items-center rounded-lg border border-slate-300 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setFontScale((s) => Math.max(0.85, Number((s - 0.1).toFixed(2))))}
-              className="px-2.5 py-2 text-xs font-semibold hover:bg-slate-100"
-              title="Giảm cỡ chữ"
-            >
-              A-
-            </button>
-            <span className="px-1.5 text-xs text-slate-500 flex items-center gap-1">
-              <Type className="w-3.5 h-3.5" />
-            </span>
-            <button
-              type="button"
-              onClick={() => setFontScale((s) => Math.min(1.35, Number((s + 0.1).toFixed(2))))}
-              className="px-2.5 py-2 text-xs font-semibold hover:bg-slate-100"
-              title="Tăng cỡ chữ"
-            >
-              A+
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={cycleTheme}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-2.5 py-2 text-xs font-medium hover:bg-slate-100 whitespace-nowrap"
-            title={`Đổi giao diện: ${theme.label}`}
-          >
-            <Palette className="w-4 h-4" />
-            <span className="hidden xl:inline">{theme.label}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTimerOpen((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium whitespace-nowrap ${
-              timerRunning
-                ? 'border-amber-400 bg-amber-50 text-amber-900'
-                : 'border-slate-300 hover:bg-slate-100'
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            <span className="font-mono-tabular">
-              {timerRunning
-                ? `${Math.floor(timerSec / 60)}:${String(timerSec % 60).padStart(2, '0')}`
-                : 'Timer'}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowNotes((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium whitespace-nowrap ${
-              showNotes
-                ? 'border-amber-400 bg-amber-50 text-amber-900'
-                : 'border-slate-300 hover:bg-slate-100'
-            }`}
-            title="Ẩn/Hiện ghi chú giáo viên"
-          >
-            <FileText className="w-4 h-4" />
-            <span className="hidden lg:inline">Notes</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-2 text-xs font-medium hover:bg-slate-100 whitespace-nowrap"
-            title="Toàn màn hình"
-          >
-            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-            <span className="hidden xl:inline">Fullscreen</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onExit}
-            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 whitespace-nowrap"
-          >
-            <BookOpenCheck className="w-4 h-4 hidden" />
-            <X className="w-4 h-4" />
-            Exit
-          </button>
-        </div>
-      </div>
+      </footer>
     </div>
   );
 };

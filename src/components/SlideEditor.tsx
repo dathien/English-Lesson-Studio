@@ -6,11 +6,17 @@ import {
   CheckCircle2,
   Copy,
   Download,
+  Eye,
+  EyeOff,
   FileDown,
   GripVertical,
   Image as ImageIcon,
   Layers,
   Mic,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   PenLine,
   Play,
   Plus,
@@ -249,6 +255,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [leftOpen, setLeftOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(true);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const activeSlide = draft.slides[selectedIdx] || draft.slides[0];
 
@@ -447,18 +456,36 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
     setInspectorTab('vocab');
   };
 
+  const centerColClass =
+    leftOpen && rightOpen
+      ? 'lg:col-span-5 xl:col-span-6'
+      : leftOpen && !rightOpen
+        ? 'lg:col-span-9 xl:col-span-10'
+        : !leftOpen && rightOpen
+          ? 'lg:col-span-8'
+          : 'lg:col-span-12';
+
   return (
-    <div className="flex flex-col min-h-[calc(100vh-130px)] bg-[#F8FAFC]">
-      {/* Editor Top Command Bar (Single Clean Row, Zero Overlap) */}
-      <div className="border-b border-slate-200 bg-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
+    <div className="flex flex-col min-h-[calc(100vh-140px)] bg-[#F8FAFC]">
+      {/* Editor Top Command Bar (Single Clean Row, Complete Controls, Collapsible Sidebars) */}
+      <div className="border-b border-slate-200 bg-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 whitespace-nowrap"
           >
             <ArrowLeft className="w-4 h-4" />
-            Thoát biên tập
+            Quay lại
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setLeftOpen((v) => !v)}
+            title={leftOpen ? 'Thu gọn danh sách slide' : 'Mở danh sách slide'}
+            className="hidden lg:inline-flex items-center justify-center rounded-xl border border-slate-200 p-2 text-slate-600 hover:text-[#2563EB] hover:border-blue-200"
+          >
+            {leftOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
           </button>
 
           <input
@@ -466,14 +493,14 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             value={draft.title}
             onChange={(e) => commitChange((p) => ({...p, title: e.target.value}))}
             aria-label="Tiêu đề bài giảng"
-            className="min-w-[200px] sm:w-80 rounded-lg border border-transparent hover:border-slate-300 focus:border-[#0284C7] px-2.5 py-1.5 text-base font-semibold text-slate-900 outline-none"
+            className="min-w-[180px] sm:w-64 xl:w-72 rounded-xl border border-transparent hover:border-slate-300 focus:border-[#2563EB] px-2.5 py-1.5 text-[15px] font-bold text-[#0F172A] outline-none"
           />
 
           <select
             value={draft.grade}
             onChange={(e) => commitChange((p) => ({...p, grade: Number(e.target.value) as Grade}))}
             aria-label="Khối lớp"
-            className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm font-medium text-slate-800"
+            className="rounded-xl border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-sm font-semibold text-[#0F172A]"
           >
             <option value={10}>Lớp 10</option>
             <option value={11}>Lớp 11</option>
@@ -481,8 +508,44 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           </select>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Quick Slide Actions: Add, Duplicate, Delete */}
+          <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <button
+              type="button"
+              onClick={() => {
+                setLeftOpen(true);
+                setShowAddMenu((v) => !v);
+              }}
+              title="Thêm slide mới"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#2563EB] hover:bg-blue-50 whitespace-nowrap"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Thêm
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDuplicateSlide(selectedIdx)}
+              title="Nhân bản slide đang chọn"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 border-l border-slate-200 whitespace-nowrap"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">Nhân bản</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeleteSlide(selectedIdx)}
+              disabled={draft.slides.length <= 1}
+              title="Xóa slide đang chọn"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-35 border-l border-slate-200 whitespace-nowrap"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">Xóa</span>
+            </button>
+          </div>
+
+          {/* Undo / Redo */}
+          <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden">
             <button
               type="button"
               onClick={handleUndo}
@@ -507,32 +570,46 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             type="button"
             onClick={handleSaveClick}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-[#0F172A] hover:bg-slate-50 whitespace-nowrap"
           >
-            <Save className="w-4 h-4" />
-            {saving ? 'Đang lưu...' : 'Lưu bài'}
+            <Save className="w-4 h-4 text-[#10B981]" />
+            {saving ? 'Đang lưu...' : 'Lưu'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPreviewMode((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors ${
+              previewMode
+                ? 'border-[#2563EB] bg-blue-50 text-[#1E40AF]'
+                : 'border-slate-300 bg-white text-[#0F172A] hover:bg-slate-50'
+            }`}
+            title="Chuyển chế độ Xem trước trực tiếp trên canvas"
+          >
+            {previewMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-[#2563EB]" />}
+            Xem trước
           </button>
 
           <div className="relative">
             <button
               type="button"
               onClick={() => setExportMenuOpen((v) => !v)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-[#0F172A] hover:bg-slate-50 whitespace-nowrap"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 text-[#0891B2]" />
               Xuất file
             </button>
             {exportMenuOpen && (
-              <div className="absolute right-0 mt-1.5 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg z-30 space-y-0.5 text-sm">
+              <div className="absolute right-0 mt-1.5 w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl z-30 space-y-0.5 text-sm">
                 <button
                   type="button"
                   onClick={() => {
                     setExportMenuOpen(false);
                     exportLessonToPowerPoint(draft);
                   }}
-                  className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-slate-50"
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left hover:bg-slate-50 font-medium"
                 >
-                  <FileDown className="w-4 h-4 text-[#0F4C81]" />
+                  <FileDown className="w-4 h-4 text-[#2563EB]" />
                   Xuất PowerPoint (.pptx)
                 </button>
                 <button
@@ -541,9 +618,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     setExportMenuOpen(false);
                     exportLessonToWord(draft, {includeAnswers: true});
                   }}
-                  className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-slate-50"
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left hover:bg-slate-50 font-medium"
                 >
-                  <FileDown className="w-4 h-4 text-[#0284C7]" />
+                  <FileDown className="w-4 h-4 text-[#0891B2]" />
                   Xuất Word (.docx)
                 </button>
                 <button
@@ -552,7 +629,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     setExportMenuOpen(false);
                     printLessonAsPDF(draft, {includeAnswers: true});
                   }}
-                  className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-slate-50"
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left hover:bg-slate-50 font-medium"
                 >
                   <Printer className="w-4 h-4 text-slate-600" />
                   Xuất PDF / In bài tập
@@ -563,9 +640,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     setExportMenuOpen(false);
                     exportLessonAsJson(draft);
                   }}
-                  className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-slate-50"
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left hover:bg-slate-50 font-medium"
                 >
-                  <Download className="w-4 h-4 text-emerald-700" />
+                  <Download className="w-4 h-4 text-[#10B981]" />
                   Xuất JSON dự án (.ess.json)
                 </button>
               </div>
@@ -575,33 +652,43 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           <button
             type="button"
             onClick={() => onPresent(draft, selectedIdx)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F4C81] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#0B3A63] whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#1E40AF] px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 whitespace-nowrap"
           >
             <Play className="w-4 h-4" />
-            Trình chiếu 16:9
+            Trình chiếu
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRightOpen((v) => !v)}
+            title={rightOpen ? 'Thu gọn bảng thuộc tính' : 'Mở bảng thuộc tính'}
+            className="hidden lg:inline-flex items-center justify-center rounded-xl border border-slate-200 p-2 text-slate-600 hover:text-[#2563EB] hover:border-blue-200"
+          >
+            {rightOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
       {statusMessage && (
         <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2 text-sm text-emerald-900 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
           {statusMessage}
         </div>
       )}
 
       {/* 3-Pane Studio Workspace: Left Slides | Center Canvas | Right Object Inspector */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0">
-        {/* LEFT PANE: Slide List with Drag-and-Drop Reorder */}
+        {/* LEFT PANE: Collapsible Slide List with Drag-and-Drop Reorder */}
+        {leftOpen && (
         <aside className="lg:col-span-3 xl:col-span-2 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white flex flex-col max-h-[300px] lg:max-h-[calc(100vh-190px)]">
           <div className="p-3 border-b border-slate-200 flex items-center justify-between gap-2 relative">
-            <span className="text-sm font-semibold text-slate-900">
+            <span className="text-sm font-bold text-[#0F172A]">
               Slide ({draft.slides.length})
             </span>
             <button
               type="button"
               onClick={() => setShowAddMenu((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-lg bg-[#0F4C81] px-2.5 py-1.5 text-xs font-medium text-white hover:bg-[#0B3A63] whitespace-nowrap"
+              className="inline-flex items-center gap-1 rounded-xl bg-[#2563EB] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#1E40AF] whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5" />
               Thêm slide
@@ -720,14 +807,16 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             ))}
           </div>
         </aside>
+        )}
 
         {/* CENTER PANE: Live Editable Slide Canvas */}
-        <main className="lg:col-span-5 xl:col-span-6 p-4 sm:p-6 overflow-y-auto studio-scroll max-h-[calc(100vh-190px)]">
+        <main className={`${centerColClass} p-4 sm:p-6 overflow-y-auto studio-scroll max-h-[calc(100vh-190px)]`}>
           {activeSlide && (
             <div className="max-w-4xl mx-auto space-y-4">
-              {/* Quick Object Insert Strip */}
+              {/* Quick Object Insert Strip (hidden in clean Preview Mode) */}
+              {!previewMode && (
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="text-slate-500 font-medium">Chèn nhanh vào slide:</span>
+                <span className="text-slate-500 font-semibold">Chèn nhanh vào slide:</span>
                 <button
                   type="button"
                   onClick={() => addQuestionToSlide('mcq')}
@@ -797,11 +886,12 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                   + Flashcard IPA
                 </button>
               </div>
+              )}
 
               {/* 16:9 Live Preview Canvas */}
               <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <div className="bg-[#0F4C81] px-5 py-3.5 text-white">
-                  <div className="text-xs text-sky-200 mb-1">
+                <div className="bg-gradient-to-r from-[#2563EB] to-[#1E40AF] px-5 py-3.5 text-white">
+                  <div className="text-xs text-blue-100 mb-1">
                     Slide {selectedIdx + 1} · {SKILL_SHORT_LABELS[activeSlide.skill]} ·{' '}
                     {ACTIVITY_LABELS[activeSlide.activityType]}
                   </div>
@@ -970,7 +1060,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
           )}
         </main>
 
-        {/* RIGHT PANE: Context-Sensitive Object Inspector */}
+        {/* RIGHT PANE: Collapsible Context-Sensitive Object Inspector */}
+        {rightOpen && (
         <aside className="lg:col-span-4 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col max-h-[calc(100vh-190px)]">
           {/* Inspector Object Selector Tabs */}
           <div className="p-2 border-b border-slate-200 flex flex-wrap gap-1 bg-slate-50">
@@ -994,7 +1085,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                   onClick={() => setInspectorTab(tab.id)}
                   className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
                     inspectorTab === tab.id
-                      ? 'bg-white text-[#0F4C81] shadow-xs border border-slate-200'
+                      ? 'bg-white text-[#2563EB] shadow-xs border border-blue-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -1048,10 +1139,13 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     }
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                   >
-                    <option value="light_classroom">Sáng lớp học</option>
+                    <option value="light_classroom">Giao diện sáng</option>
+                    <option value="dark_theater">Giao diện tối</option>
+                    <option value="ocean_blue">Xanh biển</option>
+                    <option value="emerald_fresh">Xanh lá</option>
+                    <option value="bright_orange">Cam sáng</option>
                     <option value="projector_contrast">Máy chiếu tương phản cao</option>
                     <option value="warm_paper">Giấy ấm dịu mắt</option>
-                    <option value="dark_theater">Trình chiếu tối</option>
                   </select>
                 </div>
 
@@ -1112,7 +1206,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                   <button
                     type="button"
                     onClick={() => addQuestionToSlide('mcq')}
-                    className="rounded-lg bg-[#0F4C81] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#0B3A63]"
+                    className="rounded-lg bg-[#2563EB] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#1E40AF]"
                   >
                     + Thêm câu
                   </button>
@@ -1125,7 +1219,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 {(activeSlide.questions || []).map((q, qIdx) => (
                   <div key={q.id} className="rounded-xl border border-slate-200 p-3 space-y-2.5 bg-slate-50/50">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-[#0F4C81] text-xs">Câu #{q.number}</span>
+                      <span className="font-semibold text-[#2563EB] text-xs">Câu #{q.number}</span>
                       <div className="flex items-center gap-1.5">
                         <select
                           value={q.type}
@@ -1638,6 +1732,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             )}
           </div>
         </aside>
+        )}
       </div>
     </div>
   );

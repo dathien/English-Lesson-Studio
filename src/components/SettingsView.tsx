@@ -99,12 +99,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <select
               value={form.defaultTheme}
               onChange={(e) => setForm({...form, defaultTheme: e.target.value as SlideThemeId})}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#2563EB] outline-none"
             >
-              <option value="light_classroom">Sáng lớp học</option>
-              <option value="projector_contrast">Máy chiếu tương phản cao</option>
-              <option value="warm_paper">Giấy ấm dịu mắt</option>
-              <option value="dark_theater">Trình chiếu tối</option>
+              <option value="light_classroom">Giao diện sáng</option>
+              <option value="dark_theater">Giao diện tối</option>
+              <option value="ocean_blue">Xanh biển</option>
+              <option value="emerald_fresh">Xanh lá</option>
+              <option value="bright_orange">Cam sáng</option>
             </select>
           </div>
           <div>
@@ -118,7 +119,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               step={0.05}
               value={form.presenterFontScale}
               onChange={(e) => setForm({...form, presenterFontScale: Number(e.target.value)})}
-              className="w-full mt-2 accent-[#0284C7]"
+              className="w-full mt-2 accent-[#2563EB]"
             />
           </div>
         </div>
@@ -128,7 +129,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             type="checkbox"
             checked={form.showTeacherNotesByDefault}
             onChange={(e) => setForm({...form, showTeacherNotesByDefault: e.target.checked})}
-            className="accent-[#0284C7]"
+            className="accent-[#2563EB]"
           />
           Hiển thị sẵn khung Ghi chú giáo viên (Teacher Notes) khi bắt đầu trình chiếu
         </label>
@@ -136,13 +137,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#0F4C81] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B3A63]"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#1E40AF] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 transition-opacity"
           >
             <Save className="w-4 h-4" />
             Lưu cài đặt
           </button>
           {savedNotice && (
-            <span className="inline-flex items-center gap-1.5 text-sm text-emerald-700 font-medium">
+            <span className="inline-flex items-center gap-1.5 text-sm text-[#10B981] font-semibold">
               <CheckCircle2 className="w-4 h-4" />
               {savedNotice}
             </span>

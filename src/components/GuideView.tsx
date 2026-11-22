@@ -75,13 +75,13 @@ export const GuideView: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div className="border-b border-slate-200 pb-4">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
-          Hướng dẫn sử dụng English Slide Studio
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-6">
+      <div className="border-b border-slate-200 pb-5">
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
+          Hướng dẫn sử dụng English Lesson Studio
         </h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Quy trình thao tác nhanh, dễ hiểu dành cho giáo viên Tiếng Anh THPT lớp 10, 11, 12.
+        <p className="text-base text-[#475569] mt-1.5">
+          Quy trình thao tác nhanh, trực quan dành cho giáo viên Tiếng Anh THPT lớp 10, 11, 12.
         </p>
       </div>
 
@@ -91,15 +91,15 @@ export const GuideView: React.FC = () => {
           return (
             <section
               key={sec.title}
-              className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3"
+              className="edtech-card rounded-[18px] border border-slate-200/90 bg-white p-6 space-y-3.5 shadow-[0_4px_18px_-6px_rgba(15,23,42,0.06)]"
             >
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-sky-50 text-[#0F4C81] shrink-0">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center shrink-0">
                   <Icon className="w-5 h-5" />
                 </div>
-                <h2 className="font-semibold text-base text-slate-900 leading-snug">{sec.title}</h2>
+                <h2 className="font-bold text-lg text-[#0F172A] leading-snug pt-0.5">{sec.title}</h2>
               </div>
-              <ul className="list-disc pl-5 space-y-2 text-sm text-slate-700 leading-relaxed">
+              <ul className="list-disc pl-5 space-y-2 text-[15px] text-[#475569] leading-relaxed">
                 {sec.steps.map((s, idx) => (
                   <li key={idx}>{s}</li>
                 ))}
@@ -109,17 +109,19 @@ export const GuideView: React.FC = () => {
         })}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-700">
+      <div className="rounded-[18px] border border-slate-200/90 bg-white p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4 text-[15px] text-[#0F172A] shadow-xs">
         <div className="flex items-center gap-3">
-          <BookOpen className="w-5 h-5 text-[#0F4C81] shrink-0" />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5" />
+          </div>
           <span>
-            Phím tắt khi trình chiếu 16:9: <strong className="font-mono-tabular">← / →</strong> chuyển slide ·{' '}
-            <strong className="font-mono-tabular">Esc</strong> thoát chế độ trình chiếu.
+            Phím tắt khi trình chiếu: <strong className="font-mono-tabular text-[#2563EB]">← / →</strong> chuyển slide ·{' '}
+            <strong className="font-mono-tabular text-[#2563EB]">Esc</strong> thoát chế độ trình chiếu.
           </span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <Mic className="w-4 h-4" />
-          <PenTool className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-sm text-[#475569]">
+          <Mic className="w-4 h-4 text-[#2563EB]" />
+          <PenTool className="w-4 h-4 text-[#10B981]" />
           <span>Tương thích máy tính, bảng tương tác, máy chiếu &amp; điện thoại</span>
         </div>
       </div>

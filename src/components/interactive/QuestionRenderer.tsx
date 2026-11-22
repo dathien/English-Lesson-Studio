@@ -25,7 +25,27 @@ interface QuestionRendererProps {
   onJumpToTimestamp?: (sec: number) => void;
   darkSurface?: boolean;
   fontScale?: number;
+  presenterMode?: boolean;
 }
+
+const PASTEL_OPTIONS = [
+  {
+    base: 'bg-[#EFF6FF]/90 border-[#BFDBFE] hover:bg-[#DBEAFE]/80 hover:border-[#2563EB] text-[#0F172A]',
+    badge: 'bg-[#2563EB] text-white',
+  },
+  {
+    base: 'bg-[#ECFEFF]/90 border-[#A5F3FC] hover:bg-[#CFFAFE]/80 hover:border-[#06B6D4] text-[#0F172A]',
+    badge: 'bg-[#0891B2] text-white',
+  },
+  {
+    base: 'bg-[#ECFDF5]/90 border-[#A7F3D0] hover:bg-[#D1FAE5]/80 hover:border-[#10B981] text-[#0F172A]',
+    badge: 'bg-[#059669] text-white',
+  },
+  {
+    base: 'bg-[#FFF7ED]/90 border-[#FED7AA] hover:bg-[#FFEDD5]/80 hover:border-[#F97316] text-[#0F172A]',
+    badge: 'bg-[#EA580C] text-white',
+  },
+];
 
 function normalizeText(str: string): string {
   return str
@@ -84,17 +104,16 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   onJumpToTimestamp,
   darkSurface = false,
   fontScale = 1,
+  presenterMode = false,
 }) => {
   const [selectedLeftMap, setSelectedLeftMap] = useState<Record<string, string>>({});
   const [dragState, setDragState] = useState<{qId: string; index: number} | null>(null);
 
-  // Deterministic initial shuffle for ordering/matching so items aren't already solved on load
   const shuffledDefaults = useMemo(() => {
     const out: Record<string, string[]> = {};
     for (const q of questions) {
       if ((q.type === 'ordering' || q.type === 'word_order') && q.orderItems && q.orderItems.length > 1) {
         const items = [...q.orderItems];
-        // Deterministic rotation/interleave
         const rotated = items.map((_, i) => items[(i * 2 + 1) % items.length]);
         const same = rotated.every((v, idx) => v === items[idx]);
         out[q.id] = same ? [...items].reverse() : rotated;
@@ -109,21 +128,32 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   }, [questions]);
 
   const cardBg = darkSurface
-    ? 'bg-slate-800/80 border-slate-700 text-slate-100'
-    : 'bg-white border-slate-200 text-slate-900';
-  const mutedText = darkSurface ? 'text-slate-300' : 'text-slate-600';
+    ? 'bg-slate-800/90 border-slate-700 text-slate-100 shadow-sm'
+    : 'bg-white border-slate-200/90 text-[#0F172A] shadow-xs';
+  const mutedText = darkSurface ? 'text-slate-300' : 'text-[#475569]';
+
+  const baseFontPx = presenterMode ? Math.round(17 * fontScale) : Math.round(15.5 * fontScale);
 
   return (
-    <div className="space-y-4" style={{fontSize: `${Math.round(15.5 * fontScale)}px`}}>
+    <div className={presenterMode ? 'space-y-5' : 'space-y-4'} style={{fontSize: `${baseFontPx}px`}}>
       {questions.map((q) => {
         const userVal = answers[q.id];
         const isCorrect = checked ? evaluateQuestion(q, userVal) : null;
 
         return (
-          <div key={q.id} className={`rounded-xl border p-4 transition-colors ${cardBg}`}>
-            <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-              <div className="flex-1 min-w-0 leading-relaxed">
-                <span className="font-semibold text-[#0284C7] mr-2 tabular-nums">
+          <div
+            key={q.id}
+            className={`rounded-[18px] border transition-all duration-200 ${
+              presenterMode ? 'p-5 sm:p-6' : 'p-4 sm:p-5'
+            } ${cardBg}`}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+              <div className="flex-1 min-w-0 leading-relaxed font-medium">
+                <span
+                  className={`font-bold mr-2 tabular-nums ${
+                    darkSurface ? 'text-sky-300' : 'text-[#2563EB]'
+                  }`}
+                >
                   Question {q.number}.
                 </span>
                 <RenderFormattedText text={q.prompt} />
@@ -134,23 +164,24 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                   <button
                     type="button"
                     onClick={() => onJumpToTimestamp(q.timestampSec!)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-[#0F4C81] hover:bg-sky-100 whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-[#1E40AF] hover:bg-blue-100 whitespace-nowrap transition-colors"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
                     <span className="tabular-nums">
-                      {Math.floor(q.timestampSec / 60)}:{String(Math.floor(q.timestampSec % 60)).padStart(2, '0')}
+                      {Math.floor(q.timestampSec / 60)}:
+                      {String(Math.floor(q.timestampSec % 60)).padStart(2, '0')}
                     </span>
                   </button>
                 )}
 
                 {checked && isCorrect === true && (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">
                     <CheckCircle2 className="w-4 h-4" />
                     Chính xác
                   </span>
                 )}
                 {checked && isCorrect === false && (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 border border-rose-200 px-3 py-1 text-xs font-bold text-rose-700">
                     <XCircle className="w-4 h-4" />
                     Chưa đúng
                   </span>
@@ -165,54 +196,83 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               q.type === 'pronunciation_underlined') &&
               q.options && (
                 <div
-                  className={`grid gap-2.5 ${
-                    q.options.length === 2 ? 'grid-cols-2 max-w-md' : 'grid-cols-1 sm:grid-cols-2'
+                  className={`grid gap-3 ${
+                    q.options.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-lg' : 'grid-cols-1 md:grid-cols-2'
                   }`}
                 >
-                  {q.options.map((opt) => {
+                  {q.options.map((opt, optIdx) => {
                     const selected = userVal === opt.label;
                     const isRightOpt =
                       normalizeText(q.correctAnswer) === normalizeText(opt.label) ||
                       normalizeText(q.correctAnswer) === normalizeText(opt.text);
+                    const pastel = PASTEL_OPTIONS[optIdx % PASTEL_OPTIONS.length];
 
                     let optStyle = darkSurface
-                      ? 'border-slate-700 bg-slate-900/60 hover:border-sky-400 text-slate-100'
-                      : 'border-slate-200 bg-slate-50/70 hover:border-[#0284C7] hover:bg-white text-slate-900';
+                      ? 'border-slate-700 bg-slate-900/70 hover:border-blue-400 hover:bg-slate-800 text-slate-100'
+                      : pastel.base;
+                    let badgeStyle = darkSurface
+                      ? 'bg-slate-700 text-slate-100'
+                      : pastel.badge;
 
                     if (selected && !checked && !showAnswers) {
-                      optStyle = 'border-[#0284C7] bg-sky-50 text-[#0F4C81] ring-1 ring-[#0284C7]';
+                      optStyle = darkSurface
+                        ? 'border-[#38BDF8] bg-[#1E3A8A]/70 text-white ring-2 ring-[#38BDF8]/70 shadow-sm'
+                        : 'border-[#2563EB] bg-[#DBEAFE] text-[#1E3A8A] ring-2 ring-[#2563EB]/70 shadow-sm';
+                      badgeStyle = 'bg-[#1E40AF] text-white';
                     }
                     if ((checked || showAnswers) && isRightOpt) {
-                      optStyle = 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600';
+                      optStyle = darkSurface
+                        ? 'border-[#10B981] bg-emerald-950/70 text-emerald-100 ring-2 ring-[#10B981]'
+                        : 'border-[#10B981] bg-[#D1FAE5] text-emerald-950 ring-2 ring-[#10B981] shadow-sm';
+                      badgeStyle = 'bg-[#10B981] text-white';
                     } else if (checked && selected && !isRightOpt) {
-                      optStyle = 'border-rose-500 bg-rose-50 text-rose-950 ring-1 ring-rose-500';
+                      optStyle = darkSurface
+                        ? 'border-rose-500 bg-rose-950/70 text-rose-100 ring-2 ring-rose-500'
+                        : 'border-rose-500 bg-rose-50 text-rose-950 ring-2 ring-rose-500';
+                      badgeStyle = 'bg-rose-600 text-white';
                     }
 
                     return (
-                      <div key={opt.id} className="flex items-stretch gap-1.5">
+                      <div key={opt.id} className="flex items-stretch gap-2">
                         <button
                           type="button"
                           onClick={() => onChangeAnswer(q.id, opt.label)}
-                          className={`flex-1 flex items-center justify-between gap-2 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${optStyle}`}
+                          className={`flex-1 flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all duration-200 active:scale-[0.99] ${optStyle}`}
                         >
-                          <span className="flex items-baseline gap-2">
-                            <span className="font-semibold shrink-0">{opt.label}.</span>
-                            <span>
+                          <span className="flex items-center gap-3 min-w-0">
+                            <span
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${badgeStyle}`}
+                            >
+                              {opt.label}
+                            </span>
+                            <span className="font-medium leading-snug">
                               <RenderFormattedText text={opt.text} />
                             </span>
                           </span>
-                          {opt.ipa && (showAnswers || checked) && (
-                            <span className="font-mono-tabular text-xs text-slate-500 shrink-0">
-                              {opt.ipa}
-                            </span>
-                          )}
+                          <span className="flex items-center gap-2 shrink-0">
+                            {opt.ipa && (showAnswers || checked) && (
+                              <span className="font-mono-tabular text-xs opacity-75">
+                                {opt.ipa}
+                              </span>
+                            )}
+                            {(checked || showAnswers) && isRightOpt && (
+                              <CheckCircle2 className="w-5 h-5 text-[#10B981] shrink-0" />
+                            )}
+                            {checked && selected && !isRightOpt && (
+                              <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                            )}
+                          </span>
                         </button>
                         {q.type === 'pronunciation_underlined' && (
                           <button
                             type="button"
                             onClick={() => speakWord(opt.text)}
-                            title="Nghe phát âm mẫu trình duyệt"
-                            className="px-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-[#0284C7] hover:border-[#0284C7] transition-colors"
+                            title="Nghe phát âm mẫu"
+                            className={`px-3 rounded-2xl border transition-colors shrink-0 ${
+                              darkSurface
+                                ? 'border-slate-700 bg-slate-900 text-slate-300 hover:text-sky-300 hover:border-sky-400'
+                                : 'border-slate-200 bg-white text-slate-600 hover:text-[#2563EB] hover:border-[#2563EB]'
+                            }`}
                           >
                             <Volume2 className="w-4 h-4" />
                           </button>
@@ -235,10 +295,10 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                       ? 'Nhập câu viết lại hoàn chỉnh...'
                       : 'Nhập từ hoặc câu trả lời của bạn...'
                   }
-                  className={`w-full rounded-lg border px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#0284C7] ${
+                  className={`w-full rounded-xl border px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-[#2563EB] ${
                     darkSurface
                       ? 'border-slate-600 bg-slate-900 text-white placeholder:text-slate-400'
-                      : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
+                      : 'border-slate-300 bg-[#F8FAFC] focus:bg-white text-[#0F172A] placeholder:text-slate-400'
                   }`}
                 />
               </div>
@@ -247,11 +307,11 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             {/* Interactive Pair Matching */}
             {q.type === 'matching' && q.matchingPairs && (
               <div className="space-y-3">
-                <p className={`text-xs ${mutedText}`}>
+                <p className={`text-sm ${mutedText}`}>
                   Chọn một mục ở cột trái, sau đó chọn định nghĩa tương ứng ở cột phải để nối cặp.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div className="space-y-2.5">
                     {q.matchingPairs.map((pair, idx) => {
                       const currentMap =
                         typeof userVal === 'object' && !Array.isArray(userVal) ? userVal : {};
@@ -267,16 +327,16 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                           onClick={() =>
                             setSelectedLeftMap((prev) => ({...prev, [q.id]: pair.left}))
                           }
-                          className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                          className={`w-full rounded-2xl border px-4 py-3 text-left transition-all duration-200 ${
                             pairCorrect
-                              ? 'border-emerald-600 bg-emerald-50 text-emerald-950'
+                              ? 'border-[#10B981] bg-[#D1FAE5] text-emerald-950'
                               : pairWrong
                                 ? 'border-rose-500 bg-rose-50 text-rose-950'
                                 : isSelected
-                                  ? 'border-[#0284C7] bg-sky-50 text-[#0F4C81] ring-1 ring-[#0284C7]'
+                                  ? 'border-[#2563EB] bg-[#DBEAFE] text-[#1E40AF] ring-2 ring-[#2563EB]/60'
                                   : darkSurface
                                     ? 'border-slate-700 bg-slate-900/70 text-slate-100'
-                                    : 'border-slate-200 bg-slate-50 text-slate-900 hover:bg-white'
+                                    : 'border-blue-200/80 bg-[#EFF6FF]/60 text-[#0F172A] hover:bg-[#EFF6FF]'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-2">
@@ -284,21 +344,21 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                               {idx + 1}. {pair.left}
                             </span>
                             {matchedRight && (
-                              <span className="inline-flex items-center gap-1 text-xs text-[#0284C7]">
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#2563EB]">
                                 <Link2 className="w-3.5 h-3.5" />
                                 Đã nối
                               </span>
                             )}
                           </div>
                           {matchedRight && (
-                            <p className="mt-1 text-xs text-slate-600 truncate">→ {matchedRight}</p>
+                            <p className="mt-1 text-xs opacity-80 truncate">→ {matchedRight}</p>
                           )}
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {(shuffledDefaults[`match-${q.id}`] || q.matchingPairs.map((p) => p.right)).map(
                       (rightText, rIdx) => {
                         const currentMap =
@@ -322,20 +382,20 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                                 return copy;
                               });
                             }}
-                            className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                            className={`w-full rounded-2xl border px-4 py-3 text-left transition-all duration-200 ${
                               pairedLeft
-                                ? 'border-sky-300 bg-sky-50/70 text-slate-900'
+                                ? 'border-[#06B6D4] bg-[#ECFEFF] text-[#0F172A]'
                                 : darkSurface
                                   ? 'border-slate-700 bg-slate-900/70 text-slate-100 hover:border-sky-400'
-                                  : 'border-slate-200 bg-white text-slate-800 hover:border-[#0284C7]'
+                                  : 'border-slate-200 bg-white text-[#0F172A] hover:border-[#2563EB]'
                             }`}
                           >
-                            <span className="font-semibold text-slate-500 mr-2">
+                            <span className="font-bold text-[#2563EB] mr-2">
                               {String.fromCharCode(65 + rIdx)}.
                             </span>
                             <span>{rightText}</span>
                             {pairedLeft && (
-                              <span className="block mt-1 text-xs font-medium text-[#0F4C81]">
+                              <span className="block mt-1 text-xs font-semibold text-[#1E40AF]">
                                 Nối với: {pairedLeft}
                               </span>
                             )}
@@ -348,10 +408,10 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               </div>
             )}
 
-            {/* Drag-and-Drop & Button Reordering (Word Order / Listening Order / Dialogue Order) */}
+            {/* Drag-and-Drop & Button Reordering */}
             {(q.type === 'ordering' || q.type === 'word_order') && q.orderItems && (
-              <div className="space-y-2">
-                <p className={`text-xs ${mutedText}`}>
+              <div className="space-y-2.5">
+                <p className={`text-sm ${mutedText}`}>
                   Kéo thả thẻ hoặc bấm mũi tên Lên / Xuống để sắp xếp đúng thứ tự.
                 </p>
                 {(() => {
@@ -370,9 +430,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                   return (
                     <div
                       className={
-                        q.type === 'word_order'
-                          ? 'flex flex-wrap gap-2'
-                          : 'space-y-2'
+                        q.type === 'word_order' ? 'flex flex-wrap gap-2.5' : 'space-y-2.5'
                       }
                     >
                       {currentList.map((item, idx) => {
@@ -391,28 +449,28 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                               }
                               setDragState(null);
                             }}
-                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-grab active:cursor-grabbing transition-colors ${
+                            className={`flex items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 cursor-grab active:cursor-grabbing transition-all duration-200 ${
                               slotCorrect
-                                ? 'border-emerald-600 bg-emerald-50 text-emerald-950'
+                                ? 'border-[#10B981] bg-[#D1FAE5] text-emerald-950'
                                 : slotWrong
                                   ? 'border-rose-500 bg-rose-50 text-rose-950'
                                   : darkSurface
                                     ? 'border-slate-700 bg-slate-900 text-slate-100'
-                                    : 'border-slate-200 bg-slate-50 text-slate-900 hover:bg-white'
+                                    : 'border-slate-200 bg-[#F8FAFC] text-[#0F172A] hover:bg-white hover:border-[#2563EB]'
                             }`}
                           >
                             <GripVertical className="w-4 h-4 text-slate-400 shrink-0" />
-                            <span className="font-mono-tabular text-xs font-semibold text-[#0284C7] shrink-0">
+                            <span className="font-mono-tabular text-xs font-bold text-[#2563EB] shrink-0">
                               {idx + 1}.
                             </span>
-                            <span className="flex-1">{item}</span>
+                            <span className="flex-1 font-medium">{item}</span>
                             <div className="flex items-center gap-1 shrink-0">
                               <button
                                 type="button"
                                 onClick={() => moveItem(idx, idx - 1)}
                                 disabled={idx === 0}
                                 aria-label="Di chuyển lên"
-                                className="p-1 rounded hover:bg-slate-200/70 disabled:opacity-30"
+                                className="p-1.5 rounded-lg hover:bg-slate-200/70 disabled:opacity-30"
                               >
                                 <ArrowUp className="w-3.5 h-3.5" />
                               </button>
@@ -421,7 +479,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                                 onClick={() => moveItem(idx, idx + 1)}
                                 disabled={idx === currentList.length - 1}
                                 aria-label="Di chuyển xuống"
-                                className="p-1 rounded hover:bg-slate-200/70 disabled:opacity-30"
+                                className="p-1.5 rounded-lg hover:bg-slate-200/70 disabled:opacity-30"
                               >
                                 <ArrowDown className="w-3.5 h-3.5" />
                               </button>
@@ -435,18 +493,18 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               </div>
             )}
 
-            {/* Answer & Explanation Reveal (Teacher Controlled!) */}
+            {/* Teacher-Controlled Answer & Explanation Reveal */}
             {(showAnswers || showExplanations) && (
               <div
-                className={`mt-3 rounded-lg border px-3.5 py-2.5 text-sm space-y-1 ${
+                className={`mt-4 rounded-2xl border px-4 py-3 text-sm space-y-1.5 ${
                   darkSurface
-                    ? 'border-emerald-700/60 bg-emerald-950/40 text-emerald-100'
-                    : 'border-emerald-200 bg-emerald-50/70 text-emerald-950'
+                    ? 'border-emerald-700/60 bg-emerald-950/50 text-emerald-100'
+                    : 'border-emerald-200 bg-emerald-50/80 text-emerald-950'
                 }`}
               >
                 {showAnswers && (
                   <div>
-                    <span className="font-semibold">Đáp án: </span>
+                    <span className="font-bold">Đáp án đúng: </span>
                     {q.type === 'matching' && q.matchingPairs ? (
                       <span>
                         {q.matchingPairs.map((p) => `${p.left} → ${p.right}`).join(' · ')}
@@ -454,13 +512,15 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                     ) : (q.type === 'ordering' || q.type === 'word_order') && q.orderItems ? (
                       <span>{q.orderItems.join(q.type === 'word_order' ? ' ' : ' → ')}</span>
                     ) : (
-                      <span className="font-semibold">{q.correctAnswer || 'Chưa thiết lập'}</span>
+                      <span className="font-bold text-[#059669] dark:text-emerald-300">
+                        {q.correctAnswer || 'Chưa thiết lập'}
+                      </span>
                     )}
                   </div>
                 )}
                 {showExplanations && q.explanation && (
                   <div className={darkSurface ? 'text-slate-200' : 'text-slate-700'}>
-                    <span className="font-semibold">Giải thích: </span>
+                    <span className="font-bold">Lời giải: </span>
                     {q.explanation}
                   </div>
                 )}
