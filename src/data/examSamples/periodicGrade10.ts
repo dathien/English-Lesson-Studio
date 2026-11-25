@@ -1,0 +1,348 @@
+import {buildPeriodicSampleDossier} from './packBuilder';
+import type {ExamDossier} from '../../types/exam';
+
+export const PERIODIC_GRADE_10_PACKS: ExamDossier[] = [
+  // 1. Lớp 10 — Giữa HK I (Unit 1–3)
+  buildPeriodicSampleDossier({
+    id: 'sample-g10-midterm1',
+    grade: 10,
+    examType: 'midterm_1',
+    semester: 'hk1',
+    title: 'Đề kiểm tra Giữa học kỳ I — Tiếng Anh 10 (Unit 1–3)',
+    examTitleUpper: 'ĐỀ KIỂM TRA GIỮA HỌC KỲ I',
+    unitIds: ['gs10-u1', 'gs10-u2', 'gs10-u3'],
+    topicSummary: 'Unit 1: Family Life · Unit 2: Humans & Environment · Unit 3: Music',
+    listeningPart1Title: 'Sharing Household Chores at Home',
+    listeningPart1Transcript:
+      'Hi everyone, my name is Minh. In my family, all four members share household chores fairly. My father usually cooks dinner because he finishes work at five o’clock, while my mother handles the weekly grocery shopping on Saturday mornings. My younger sister, Lan, sets the table and washes the dishes after dinner. As for me, I take out the rubbish every evening and vacuum the living room every Sunday. Sharing chores not only keeps our house clean but also strengthens our family bonds.',
+    listeningPart1Items: [
+      {prompt: 'There are four members in Minh’s family who share household chores.', answer: 'T', explanation: 'Transcript: "all four members share household chores fairly."', level: 'recognition', unitId: 'gs10-u1'},
+      {prompt: 'Minh’s mother cooks dinner every evening after work.', answer: 'F', explanation: 'Transcript: bố của Minh nấu bữa tối ("My father usually cooks dinner"), không phải mẹ.', level: 'recognition', unitId: 'gs10-u1'},
+      {prompt: 'Lan is responsible for setting the table and washing the dishes.', answer: 'T', explanation: 'Transcript: "Lan, sets the table and washes the dishes after dinner."', level: 'comprehension', unitId: 'gs10-u1'},
+      {prompt: 'Minh thinks dividing housework reduces family happiness.', answer: 'F', explanation: 'Transcript: "strengthens our family bonds" (làm gắn kết tình cảm gia đình).', level: 'comprehension', unitId: 'gs10-u1'},
+    ],
+    listeningPart2Title: 'School Green Music Night',
+    listeningPart2Transcript:
+      'Welcome to the announcements for our annual School Green Music Night! This year’s charity concert will take place in the main auditorium on Friday, October 24th, starting at 6:30 p.m. Twelve student bands will perform both acoustic folk songs and modern pop hits. Instead of printed paper tickets, students will show digital QR passes on their phones to save paper. All ticket funds will be donated to plant three hundred native trees around our district.',
+    listeningPart2Items: [
+      {prompt: 'Where will the School Green Music Night be held?', options: ['In the school playground', 'In the main auditorium', 'At the city theatre', 'In the sports hall'], answer: 'B', explanation: 'Transcript: "will take place in the main auditorium".', level: 'recognition', unitId: 'gs10-u3'},
+      {prompt: 'How many student bands are scheduled to perform?', options: ['Ten', 'Eleven', 'Twelve', 'Twenty'], answer: 'C', explanation: 'Transcript: "Twelve student bands will perform".', level: 'recognition', unitId: 'gs10-u3'},
+      {prompt: 'Why is the school using digital QR passes instead of paper tickets?', options: ['To reduce ticket prices', 'To avoid wasting paper', 'To check student attendance faster', 'To advertise local sponsors'], answer: 'B', explanation: 'Transcript: "show digital QR passes on their phones to save paper."', level: 'comprehension', unitId: 'gs10-u2'},
+      {prompt: 'What will the money from the concert be used for?', options: ['Buying new musical instruments', 'Upgrading school classrooms', 'Planting 300 native trees', 'Supporting local singers'], answer: 'C', explanation: 'Transcript: "will be donated to plant three hundred native trees".', level: 'comprehension', unitId: 'gs10-u2'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>br</u>eadwinner', '<u>br</u>eakfast', '<u>pr</u>otect', '<u>br</u>other'], answer: 'C', explanation: '"protect" bắt đầu bằng cụm /pr/, ba từ còn lại bắt đầu bằng /br/.', level: 'recognition', unitId: 'gs10-u1', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['wash<u>ed</u>', 'cook<u>ed</u>', 'help<u>ed</u>', 'clean<u>ed</u>'], answer: 'D', explanation: '"cleaned" đọc đuôi /d/, ba từ còn lại đọc /t/.', level: 'recognition', unitId: 'gs10-u1', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['perform', 'single', 'talent', 'concert'], answer: 'A', explanation: '"perform" nhấn âm 2; "single, talent, concert" nhấn âm 1.', level: 'recognition', unitId: 'gs10-u3'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['rubbish', 'litter', 'adopt', 'carbon'], answer: 'C', explanation: '"adopt" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs10-u2'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'My father is the main ______ of our family, working hard to support everyone.', options: ['homemaker', 'breadwinner', 'housekeeper', 'volunteer'], answer: 'B', explanation: '"breadwinner" nghĩa là người trụ cột kiếm tiền trong gia đình.', level: 'recognition', unitId: 'gs10-u1'},
+      {prompt: 'Listen! The students ______ their favourite song for the music festival.', options: ['practise', 'practised', 'are practising', 'will practise'], answer: 'C', explanation: 'Có dấu hiệu "Listen!" → chia thì Hiện tại tiếp diễn (are practising).', level: 'recognition', unitId: 'gs10-u1'},
+      {prompt: 'Switching off electrical appliances when not in use helps reduce your carbon ______.', options: ['footprint', 'energy', 'resource', 'material'], answer: 'A', explanation: 'Collocation chuẩn Unit 2: "carbon footprint" (dấu chân carbon).', level: 'recognition', unitId: 'gs10-u2'},
+      {prompt: 'Look at those dark clouds! It ______ heavily in a few minutes.', options: ['will rain', 'is going to rain', 'rains', 'rained'], answer: 'B', explanation: 'Dự đoán có căn cứ rõ ràng ở hiện tại ("dark clouds") dùng "be going to".', level: 'comprehension', unitId: 'gs10-u2'},
+      {prompt: 'Plastic bottles ______ by the eco-club every Saturday afternoon.', options: ['collect', 'collected', 'are collected', 'have collected'], answer: 'C', explanation: 'Câu bị động thì Hiện tại đơn: S + is/are + V3/ed.', level: 'comprehension', unitId: 'gs10-u2'},
+      {prompt: 'She wanted to attend the live concert, ______ she had to revise for her exam.', options: ['and', 'so', 'but', 'or'], answer: 'C', explanation: 'Hai mệnh đề mang nghĩa tương phản → dùng liên từ "but".', level: 'comprehension', unitId: 'gs10-u3'},
+      {prompt: 'The music teacher encouraged all Grade 10 students ______ in the charity show.', options: ['participate', 'to participate', 'participating', 'participated'], answer: 'B', explanation: 'Cấu trúc: encourage sb + to-infinitive.', level: 'application', unitId: 'gs10-u3'},
+      {prompt: 'The judges let the young guitarist ______ one more song after the applause.', options: ['play', 'to play', 'playing', 'played'], answer: 'A', explanation: 'Cấu trúc: let + sb + V-infinitive (nguyên mẫu không "to").', level: 'application', unitId: 'gs10-u3'},
+    ],
+    clozeTitle: 'Living Green at School',
+    clozeParagraphs: [
+      'Creating a green school environment starts with simple habits that every student can (21) ______ daily. First, bringing a reusable water bottle reduces the amount of single-use plastic (22) ______ ends up in landfills. Second, classrooms should save electricity (23) ______ turning off fans and projectors during breaks. Many student clubs also organize monthly clean-up days (24) ______ raise awareness among teenagers. When young people work together, their collective actions make a (25) ______ difference to the planet.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['adopt', 'adapt', 'accept', 'afford'], answer: 'A', explanation: 'Collocation: "adopt a habit / green lifestyle" (áp dụng thói quen).', level: 'recognition', unitId: 'gs10-u2'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['who', 'whom', 'which', 'whose'], answer: 'C', explanation: 'Đại từ quan hệ "which" thay thế cho danh từ chỉ vật "single-use plastic".', level: 'recognition', unitId: 'gs10-u2'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['on', 'by', 'at', 'with'], answer: 'B', explanation: '"by + V-ing" diễn tả cách thức thực hiện hành động.', level: 'comprehension', unitId: 'gs10-u2'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['so that', 'in order to', 'because of', 'although'], answer: 'B', explanation: '"in order to + V-inf" chỉ mục đích.', level: 'comprehension', unitId: 'gs10-u2'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['meaning', 'meaningfully', 'meaningful', 'mean'], answer: 'C', explanation: 'Trước danh từ "difference" cần tính từ "meaningful".', level: 'application', unitId: 'gs10-u2'},
+    ],
+    readingTitle: 'Why Family Meals Matter',
+    readingParagraphs: [
+      'In today’s fast-paced world, parents and teenagers often have busy schedules, making it difficult to sit down together for dinner. However, educational researchers emphasize that regular family meals play a vital role in a teenager’s emotional and academic development.',
+      'During shared dinners, family members talk about their daily experiences, listen to one another’s challenges, and offer timely encouragement. Studies show that teenagers who eat with their families at least four times a week tend to have stronger communication skills and lower stress levels. They are also more likely to develop healthier eating habits because home-cooked meals usually contain more fresh vegetables and less processed sugar.',
+      'To keep this valuable routine alive, families do not need elaborate dishes. Even a simple 30-minute meal without smartphones on the table can turn an ordinary evening into meaningful quality time.',
+    ],
+    readingItems: [
+      {prompt: 'What is the main idea of the passage?', options: ['Teenagers prefer eating fast food with friends', 'Regular family meals bring significant benefits to teenagers', 'Cooking elaborate dishes takes too much time', 'Smartphones help families communicate better'], answer: 'B', explanation: 'Toàn bài nhấn mạnh tầm quan trọng và lợi ích của bữa cơm gia đình thường xuyên.', level: 'comprehension', unitId: 'gs10-u1'},
+      {prompt: 'According to paragraph 2, teenagers who have regular family meals tend to ______.', options: ['spend more money on food', 'sleep fewer hours every night', 'communicate better and feel less stressed', 'avoid doing household chores'], answer: 'C', explanation: 'Đoạn 2: "tend to have stronger communication skills and lower stress levels."', level: 'recognition', unitId: 'gs10-u1'},
+      {prompt: 'The word "They" in paragraph 2 refers to ______.', options: ['studies', 'teenagers', 'skills', 'vegetables'], answer: 'B', explanation: '"They" thay thế cho chủ ngữ "teenagers" ở câu liền trước.', level: 'comprehension', unitId: 'gs10-u1'},
+      {prompt: 'The word "vital" in paragraph 1 is closest in meaning to ______.', options: ['essential', 'optional', 'expensive', 'temporary'], answer: 'A', explanation: '"vital" = essential (rất quan trọng, thiết yếu).', level: 'application', unitId: 'gs10-u1'},
+      {prompt: 'What does the author suggest in the final paragraph to maintain family meals?', options: ['Hiring a private chef on weekends', 'Preparing complicated traditional banquets', 'Having simple device-free meals together', 'Allowing teenagers to eat while texting'], answer: 'C', explanation: 'Đoạn 3: "a simple 30-minute meal without smartphones on the table".', level: 'application', unitId: 'gs10-u1'},
+    ],
+    transformationItems: [
+      {prompt: 'Students plant dozens of trees in the school yard every spring. (Change into passive voice)', answer: 'Dozens of trees are planted in the school yard by students every spring.', acceptedAnswers: ['Dozens of trees are planted in the school yard every spring by students.'], explanation: 'Bị động hiện tại đơn: O + are + V3/ed (+ by S).', level: 'comprehension', unitId: 'gs10-u2'},
+      {prompt: 'They plan to organize a charity concert next month. (Rewrite using "be going to")', answer: 'They are going to organize a charity concert next month.', acceptedAnswers: ['They are going to organise a charity concert next month.'], explanation: 'Diễn tả kế hoạch đã định dùng "be going to + V".', level: 'comprehension', unitId: 'gs10-u2'},
+      {prompt: 'Nam loves traditional music. He also enjoys playing the guitar. (Combine using a compound sentence)', answer: 'Nam loves traditional music, and he also enjoys playing the guitar.', acceptedAnswers: ['Nam loves traditional music, and he enjoys playing the guitar.'], explanation: 'Câu ghép dùng liên từ đẳng lập ", and".', level: 'application', unitId: 'gs10-u3'},
+      {prompt: 'My parents do not allow me to stay up past 11 p.m. (Rewrite using "let")', answer: 'My parents do not let me stay up past 11 p.m.', acceptedAnswers: ["My parents don't let me stay up past 11 p.m."], explanation: 'Cấu trúc: let + sb + V-bare.', level: 'application', unitId: 'gs10-u3'},
+    ],
+    essayPrompt: 'Write a paragraph (120–150 words) about ways you and your family share household chores and how this helps strengthen family relationships.',
+    essayOutline: [
+      'Topic sentence: Introduce how your family divides chores fairly.',
+      'Supporting idea 1: Describe specific chores each member does.',
+      'Supporting idea 2: Explain the benefits (less stress, more free time, closer bonds).',
+      'Concluding sentence: Summarize why sharing housework matters.',
+    ],
+    essaySample:
+      'In my family, sharing household chores is an important daily routine that brings everyone closer together. Because both my parents work full-time, we divide tasks fairly based on each person’s schedule. My mother usually prepares breakfast and plans healthy weekly menus, while my father cooks dinner and takes care of heavy repairs. As for me, I wash the dishes after meals, sweep the floor, and take out the rubbish every evening. On weekends, we clean the whole house together while listening to music. Dividing housework not only lightens my parents’ burden but also teaches me responsibility and essential life skills. Most importantly, working side by side gives us extra time to chat and laugh together. In short, sharing chores creates a warm, supportive, and happy home for all of us.',
+    essayUnitId: 'gs10-u1',
+  }),
+
+  // 2. Lớp 10 — Cuối HK I (Unit 1–5)
+  buildPeriodicSampleDossier({
+    id: 'sample-g10-final1',
+    grade: 10,
+    examType: 'final_1',
+    semester: 'hk1',
+    title: 'Đề kiểm tra Cuối học kỳ I — Tiếng Anh 10 (Unit 1–5)',
+    examTitleUpper: 'ĐỀ KIỂM TRA CUỐI HỌC KỲ I',
+    unitIds: ['gs10-u1', 'gs10-u2', 'gs10-u3', 'gs10-u4', 'gs10-u5'],
+    topicSummary: 'Unit 1–5 (Family, Environment, Music, Community, Inventions)',
+    listeningPart1Title: 'Volunteering at the Youth Reading Centre',
+    listeningPart1Transcript:
+      'Hello, I’m Hoa, a Grade 10 volunteer at the District Youth Reading Centre. I joined the centre six months ago after seeing a poster at my school. Every Sunday morning from eight to eleven, I help primary school children practise reading English stories and organize donated picture books on the shelves. Last month, while we were sorting books, a local bookstore donated two hundred brand-new dictionaries. Volunteering here has made me much more confident and patient.',
+    listeningPart1Items: [
+      {prompt: 'Hoa started volunteering at the Youth Reading Centre six months ago.', answer: 'T', explanation: 'Transcript: "I joined the centre six months ago."', level: 'recognition', unitId: 'gs10-u4'},
+      {prompt: 'She volunteers at the centre on Saturday afternoons.', answer: 'F', explanation: 'Transcript: "Every Sunday morning from eight to eleven."', level: 'recognition', unitId: 'gs10-u4'},
+      {prompt: 'A local bookstore gave the centre two hundred new dictionaries last month.', answer: 'T', explanation: 'Transcript: "a local bookstore donated two hundred brand-new dictionaries."', level: 'comprehension', unitId: 'gs10-u4'},
+      {prompt: 'Hoa feels that volunteering has wasted her study time.', answer: 'F', explanation: 'Transcript: "has made me much more confident and patient."', level: 'comprehension', unitId: 'gs10-u4'},
+    ],
+    listeningPart2Title: 'Smart Devices in Everyday Learning',
+    listeningPart2Transcript:
+      'Today on Tech Talk, we look at how smartphones and tablets have transformed high school learning over the past decade. Educational apps allow students to look up pronunciation instantly, create digital flashcards, and collaborate on group presentations from home. However, Dr. Tran warns that using screens right before bedtime can harm sleep quality. He advises teenagers to turn off study notifications at least forty-five minutes before going to sleep.',
+    listeningPart2Items: [
+      {prompt: 'What is the main topic of the Tech Talk segment?', options: ['Repairing old computers', 'How smart devices influence high school learning', 'Designing video games', 'Buying affordable tablets'], answer: 'B', explanation: 'Transcript: "how smartphones and tablets have transformed high school learning".', level: 'recognition', unitId: 'gs10-u5'},
+      {prompt: 'Which study benefit is mentioned in the talk?', options: ['Printing textbooks for free', 'Checking pronunciation and making flashcards', 'Replacing classroom teachers completely', 'Taking exams without internet'], answer: 'B', explanation: 'Transcript: "look up pronunciation instantly, create digital flashcards".', level: 'recognition', unitId: 'gs10-u5'},
+      {prompt: 'What concern does Dr. Tran raise?', options: ['Apps are too expensive', 'Late-night screen use affects sleep quality', 'Tablets are too heavy to carry', 'Students forget passwords'], answer: 'B', explanation: 'Transcript: "using screens right before bedtime can harm sleep quality."', level: 'comprehension', unitId: 'gs10-u5'},
+      {prompt: 'When does Dr. Tran advise turning off notifications?', options: ['15 minutes before bed', '30 minutes before bed', 'At least 45 minutes before bed', 'Right after school'], answer: 'C', explanation: 'Transcript: "at least forty-five minutes before going to sleep."', level: 'comprehension', unitId: 'gs10-u5'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['inven<u>t</u>ion', 'func<u>t</u>ion', 'ques<u>t</u>ion', 'solu<u>t</u>ion'], answer: 'C', explanation: '"question" phát âm /tʃən/, ba từ còn lại phát âm /ʃən/.', level: 'recognition', unitId: 'gs10-u5', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['donat<u>ed</u>', 'need<u>ed</u>', 'start<u>ed</u>', 'help<u>ed</u>'], answer: 'D', explanation: '"helped" đọc đuôi /t/, ba từ còn lại đọc /ɪd/.', level: 'recognition', unitId: 'gs10-u4', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['invention', 'computer', 'advantage', 'holiday'], answer: 'D', explanation: '"holiday" nhấn âm 1; ba từ còn lại nhấn âm 2.', level: 'recognition', unitId: 'gs10-u5'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['volunteer', 'charity', 'benefit', 'orphanage'], answer: 'A', explanation: '"volunteer" nhấn âm 3; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs10-u4'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'The charity club raised funds to support ______ children in mountainous areas.', options: ['disadvantaged', 'useless', 'careless', 'bored'], answer: 'A', explanation: '"disadvantaged children" = trẻ em có hoàn cảnh khó khăn.', level: 'recognition', unitId: 'gs10-u4'},
+      {prompt: 'While we ______ old clothes for the donation drive, it suddenly started to rain.', options: ['collect', 'collected', 'were collecting', 'have collected'], answer: 'C', explanation: 'Hành động đang diễn ra trong quá khứ (While + Past Continuous) thì hành động khác xen vào (Past Simple).', level: 'recognition', unitId: 'gs10-u4'},
+      {prompt: 'The Internet is one of the most ______ inventions in human history.', options: ['valuable', 'value', 'valuably', 'valueless'], answer: 'A', explanation: 'Cần tính từ mang nghĩa tích cực "valuable" bổ nghĩa cho "inventions".', level: 'recognition', unitId: 'gs10-u5'},
+      {prompt: 'Scientists ______ several eco-friendly batteries since 2020.', options: ['developed', 'have developed', 'develop', 'were developing'], answer: 'B', explanation: 'Dấu hiệu "since 2020" → chia thì Hiện tại hoàn thành.', level: 'comprehension', unitId: 'gs10-u5'},
+      {prompt: 'Many teenagers feel ______ when they see their community project succeed.', options: ['exciting', 'excited', 'excite', 'excitement'], answer: 'B', explanation: 'Tính từ đuôi -ed ("excited") diễn tả cảm xúc của con người.', level: 'comprehension', unitId: 'gs10-u4'},
+      {prompt: '______ a 3D printer allows designers to build prototypes quickly.', options: ['Use', 'Used', 'Using', 'Uses'], answer: 'C', explanation: 'Danh động từ (Gerund: Using...) đóng vai trò làm chủ ngữ của câu.', level: 'comprehension', unitId: 'gs10-u5'},
+      {prompt: 'This solar-powered lamp is designed ______ light to off-grid villages.', options: ['provide', 'providing', 'to provide', 'provided'], answer: 'C', explanation: 'Cấu trúc: be designed + to-infinitive (được thiết kế để...).', level: 'application', unitId: 'gs10-u5'},
+      {prompt: 'We decided ______ a weekend clean-up campaign along the local river.', options: ['launch', 'launching', 'to launch', 'launched'], answer: 'C', explanation: 'Cấu trúc: decide + to-infinitive.', level: 'application', unitId: 'gs10-u4'},
+    ],
+    clozeTitle: 'Youth Volunteering in Modern Cities',
+    clozeParagraphs: [
+      'Volunteering gives high school students a wonderful opportunity to gain real-world experience while helping those in (21) ______. Many teenagers join weekend clubs that tutor younger pupils or distribute meals to hospital patients. Since our school club was founded three years ago, over four hundred students (22) ______ at least one community event. Volunteers say that (23) ______ with people from diverse backgrounds makes them more empathetic. Moreover, community service looks (24) ______ on scholarship applications (25) ______ it demonstrates teamwork and leadership.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['need', 'lack', 'short', 'want'], answer: 'A', explanation: 'Cụm từ cố định: "those in need" (những người gặp khó khăn).', level: 'recognition', unitId: 'gs10-u4'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['join', 'joined', 'have joined', 'were joining'], answer: 'C', explanation: 'Mệnh đề với "Since + mốc quá khứ" → chia Hiện tại hoàn thành.', level: 'recognition', unitId: 'gs10-u5'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['work', 'worked', 'working', 'works'], answer: 'C', explanation: 'Danh động từ "working" làm chủ ngữ trong mệnh đề sau "that".', level: 'comprehension', unitId: 'gs10-u5'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['impressive', 'impress', 'impression', 'impressively'], answer: 'A', explanation: 'Sau động từ nối "look" dùng tính từ "impressive".', level: 'comprehension', unitId: 'gs10-u4'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['although', 'because', 'despite', 'however'], answer: 'B', explanation: 'Chỉ nguyên nhân với một mệnh đề đầy đủ → dùng "because".', level: 'application', unitId: 'gs10-u4'},
+    ],
+    readingTitle: 'How Artificial Intelligence Supports Everyday Life',
+    readingParagraphs: [
+      'Artificial Intelligence (AI) is no longer limited to science fiction movies; it has quietly become part of our everyday tools. Navigation apps use AI to predict traffic jams in real time, while translation tools help travellers read street signs in unfamiliar languages within seconds.',
+      'In healthcare, AI systems analyze thousands of medical scans to help doctors detect illnesses much earlier than before. Similarly, in agriculture, smart sensors powered by AI monitor soil moisture and advise farmers on the exact amount of water their crops need, reducing waste during dry seasons.',
+      'Despite these impressive advantages, experts remind users that AI should serve as an assistant rather than a replacement for human judgement. Responsible users verify important information and protect their personal privacy when using intelligent applications.',
+    ],
+    readingItems: [
+      {prompt: 'Which field is NOT mentioned as using AI in the passage?', options: ['Navigation and travel', 'Healthcare', 'Agriculture', 'Space tourism'], answer: 'D', explanation: 'Bài đọc đề cập giao thông/du lịch, y tế, nông nghiệp; không đề cập du lịch vũ trụ.', level: 'recognition', unitId: 'gs10-u5'},
+      {prompt: 'How do AI-powered sensors assist farmers?', options: ['By harvesting crops automatically', 'By tracking soil moisture to save water', 'By selling produce online', 'By predicting market prices'], answer: 'B', explanation: 'Đoạn 2: "monitor soil moisture and advise farmers on the exact amount of water".', level: 'comprehension', unitId: 'gs10-u5'},
+      {prompt: 'The word "their" in paragraph 2 refers to ______.', options: ['sensors', 'doctors', 'farmers', 'seasons'], answer: 'C', explanation: '"their crops" = cây trồng của những người nông dân (farmers).', level: 'comprehension', unitId: 'gs10-u5'},
+      {prompt: 'The word "verify" in paragraph 3 is closest in meaning to ______.', options: ['check carefully', 'delete quickly', 'ignore completely', 'copy directly'], answer: 'A', explanation: '"verify" = kiểm chứng, xác minh cẩn thận.', level: 'application', unitId: 'gs10-u5'},
+      {prompt: 'What is the author’s main message in paragraph 3?', options: ['People should stop using AI tools immediately', 'AI will replace all human doctors soon', 'Humans must use AI responsibly as a supportive tool', 'Privacy is no longer important online'], answer: 'C', explanation: 'Đoạn 3 khuyên dùng AI như công cụ hỗ trợ và sử dụng có trách nhiệm.', level: 'application', unitId: 'gs10-u5'},
+    ],
+    transformationItems: [
+      {prompt: 'We started working on this community project two months ago. (Rewrite using Present Perfect)', answer: 'We have worked on this community project for two months.', acceptedAnswers: ['We have been working on this community project for two months.'], explanation: 'Chuyển từ Past Simple + ago sang Present Perfect + for.', level: 'comprehension', unitId: 'gs10-u5'},
+      {prompt: 'He was walking home. He met his former English teacher. (Combine using "While")', answer: 'While he was walking home, he met his former English teacher.', acceptedAnswers: ['He met his former English teacher while he was walking home.'], explanation: 'Dùng "While + Past Continuous, Past Simple".', level: 'comprehension', unitId: 'gs10-u4'},
+      {prompt: 'Learning a foreign language with educational apps is very convenient. (Rewrite starting with "It is...")', answer: 'It is very convenient to learn a foreign language with educational apps.', acceptedAnswers: ['It is very convenient to use educational apps to learn a foreign language.'], explanation: 'Chuyển V-ing làm chủ ngữ sang cấu trúc "It is + adj + to-V".', level: 'application', unitId: 'gs10-u5'},
+      {prompt: 'The last time she visited the local orphanage was in January. (Rewrite using "has not")', answer: 'She has not visited the local orphanage since January.', acceptedAnswers: ["She hasn't visited the local orphanage since January."], explanation: 'Cấu trúc: The last time + QKĐ = S + has/have not + V3/ed + since + mốc thời gian.', level: 'application', unitId: 'gs10-u5'},
+    ],
+    essayPrompt: 'Write a paragraph (120–150 words) about the benefits of a useful modern invention (such as the smartphone, the Internet, or e-book reader) for high school students.',
+    essayOutline: [
+      'Topic sentence: Name the invention and state why it is essential for students.',
+      'Benefit 1: Fast access to learning resources and dictionaries.',
+      'Benefit 2: Convenient communication and group project collaboration.',
+      'Concluding sentence: Note balanced, responsible use.',
+    ],
+    essaySample:
+      'Among modern inventions, the smartphone has become one of the most helpful tools for high school students. First, it provides instant access to vast educational resources. With reliable dictionary and pronunciation apps, learners can look up new words, listen to authentic accents, and review vocabulary anywhere. Second, smartphones make group collaboration much easier. Students can share study notes, discuss project outlines, and submit homework online without wasting paper. In addition, time-management apps help teenagers plan revision schedules effectively before exams. However, to maximize these advantages, students should avoid distracting games during study sessions and limit screen time at night. Overall, when used wisely, the smartphone is a powerful learning companion.',
+    essayUnitId: 'gs10-u5',
+  }),
+
+  // 3. Lớp 10 — Giữa HK II (Unit 6–8)
+  buildPeriodicSampleDossier({
+    id: 'sample-g10-midterm2',
+    grade: 10,
+    examType: 'midterm_2',
+    semester: 'hk2',
+    title: 'Đề kiểm tra Giữa học kỳ II — Tiếng Anh 10 (Unit 6–8)',
+    examTitleUpper: 'ĐỀ KIỂM TRA GIỮA HỌC KỲ II',
+    unitIds: ['gs10-u6', 'gs10-u7', 'gs10-u8'],
+    topicSummary: 'Unit 6: Gender Equality · Unit 7: International Organisations · Unit 8: New Ways to Learn',
+    listeningPart1Title: 'Blended Learning in Grade 10',
+    listeningPart1Transcript:
+      'Good morning class. Today I want to share my experience with blended learning, which combines face-to-face lessons with online practice. Before each English class, I watch a ten-minute grammar video uploaded by our teacher. That way, during classroom hours, we have more time for speaking activities and pair discussions. I also enjoy using online quizzes because they show instant feedback. The only challenge is having a stable Internet connection at home, so the school library keeps twenty computers open every afternoon.',
+    listeningPart1Items: [
+      {prompt: 'Blended learning combines in-person classroom lessons with online learning.', answer: 'T', explanation: 'Transcript: "combines face-to-face lessons with online practice."', level: 'recognition', unitId: 'gs10-u8'},
+      {prompt: 'The speaker watches a one-hour video before every English lesson.', answer: 'F', explanation: 'Transcript: "a ten-minute grammar video" (10 phút, không phải 1 giờ).', level: 'recognition', unitId: 'gs10-u8'},
+      {prompt: 'Online quizzes are helpful because students receive immediate feedback.', answer: 'T', explanation: 'Transcript: "they show instant feedback."', level: 'comprehension', unitId: 'gs10-u8'},
+      {prompt: 'Students without home Internet can use computers at the school library.', answer: 'T', explanation: 'Transcript: "the school library keeps twenty computers open every afternoon."', level: 'comprehension', unitId: 'gs10-u8'},
+    ],
+    listeningPart2Title: 'UNICEF Education Programmes in Viet Nam',
+    listeningPart2Transcript:
+      'Since 1975, UNICEF has worked closely with Viet Nam to protect children’s rights and expand access to quality education. One major focus is helping ethnic minority girls stay in secondary school by providing scholarships, bicycles, and digital learning kits. UNICEF also trains teachers in remote provinces to use interactive methods that make every child feel included. Thanks to these joint projects, thousands of young learners have gained brighter futures.',
+    listeningPart2Items: [
+      {prompt: 'When did UNICEF begin cooperating closely with Viet Nam?', options: ['In 1957', 'In 1975', 'In 1985', 'In 1995'], answer: 'B', explanation: 'Transcript: "Since 1975, UNICEF has worked closely with Viet Nam".', level: 'recognition', unitId: 'gs10-u7'},
+      {prompt: 'Which items are provided to help girls stay in secondary school?', options: ['Uniforms and lunchboxes', 'Scholarships, bicycles, and digital learning kits', 'Smartphones and sports shoes', 'Textbooks and musical instruments'], answer: 'B', explanation: 'Transcript: "providing scholarships, bicycles, and digital learning kits."', level: 'recognition', unitId: 'gs10-u7'},
+      {prompt: 'What training does UNICEF offer teachers in remote provinces?', options: ['Building new classrooms', 'Writing national exams', 'Using inclusive interactive teaching methods', 'Managing school finances'], answer: 'C', explanation: 'Transcript: "use interactive methods that make every child feel included."', level: 'comprehension', unitId: 'gs10-u7'},
+      {prompt: 'What is the overall impact of these joint projects?', options: ['Fewer schools are needed', 'Thousands of young learners gain better opportunities', 'Teachers work fewer days', 'Online classes replace schools'], answer: 'B', explanation: 'Transcript: "thousands of young learners have gained brighter futures."', level: 'comprehension', unitId: 'gs10-u7'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>e</u>qual', 'f<u>e</u>male', 'm<u>e</u>dical', 'r<u>e</u>gion'], answer: 'C', explanation: '"medical" phát âm /e/, ba từ còn lại phát âm /iː/.', level: 'recognition', unitId: 'gs10-u6', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['organi<u>s</u>e', 'advi<u>s</u>e', 'reali<u>s</u>e', 'promi<u>s</u>e'], answer: 'D', explanation: '"promise" đọc âm cuối /s/; "organise, advise, realise" đọc âm /z/.', level: 'recognition', unitId: 'gs10-u7', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['medical', 'physical', 'educate', 'essential'], answer: 'D', explanation: '"essential" nhấn âm 2; "medical, physical, educate" nhấn âm 1.', level: 'recognition', unitId: 'gs10-u6'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['presentation', 'communication', 'education', 'celebration'], answer: 'B', explanation: '"communication" (/kəˌmjuːnɪˈkeɪʃn/) nhấn âm tiết thứ 4; "presentation, education, celebration" đều nhấn âm tiết thứ 3.', level: 'recognition', unitId: 'gs10-u7'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'Both men and women should receive equal ______ for doing the same job.', options: ['pay', 'cost', 'price', 'charge'], answer: 'A', explanation: 'Collocation Unit 6: "equal pay" (mức lương bình đẳng).', level: 'recognition', unitId: 'gs10-u6'},
+      {prompt: 'Gender discrimination must ______ in all workplaces and schools.', options: ['eliminate', 'eliminating', 'be eliminated', 'been eliminated'], answer: 'C', explanation: 'Câu bị động với động từ khuyết thiếu: must + be + V3/ed.', level: 'recognition', unitId: 'gs10-u6'},
+      {prompt: 'Viet Nam has become an active ______ of many international organisations.', options: ['member', 'membership', 'memorise', 'memorable'], answer: 'A', explanation: 'Sau tính từ "active" cần danh từ chỉ thành viên "member".', level: 'recognition', unitId: 'gs10-u7'},
+      {prompt: 'Joining international markets has made Vietnamese exports ______ than ever before.', options: ['competitive', 'more competitive', 'most competitive', 'as competitive'], answer: 'B', explanation: 'So sánh hơn với tính từ dài có "than": more + adj.', level: 'comprehension', unitId: 'gs10-u7'},
+      {prompt: 'This is the ______ interactive learning platform our school has ever used.', options: ['effective', 'more effective', 'most effective', 'effectively'], answer: 'C', explanation: 'So sánh nhất với "the ... ever": the most + tính từ dài.', level: 'comprehension', unitId: 'gs10-u8'},
+      {prompt: 'The teacher ______ designed the online vocabulary game won a national award.', options: ['which', 'who', 'whose', 'whom'], answer: 'B', explanation: 'Đại từ quan hệ "who" làm chủ ngữ thay thế cho người ("The teacher").', level: 'comprehension', unitId: 'gs10-u8'},
+      {prompt: 'Blended learning, ______ combines classroom discussion with digital tools, encourages self-study.', options: ['that', 'which', 'who', 'where'], answer: 'B', explanation: 'Mệnh đề quan hệ không xác định (có dấu phẩy) không dùng "that" → dùng "which".', level: 'application', unitId: 'gs10-u8'},
+      {prompt: 'Equal educational opportunities should ______ to children in both urban and rural areas.', options: ['offer', 'be offering', 'be offered', 'have offered'], answer: 'C', explanation: 'Bị động với động từ khuyết thiếu: should + be + V3/ed.', level: 'application', unitId: 'gs10-u6'},
+    ],
+    clozeTitle: 'Women in Science and Engineering',
+    clozeParagraphs: [
+      'Over the past twenty years, more women have entered science, technology, and engineering fields (21) ______ were once dominated by men. Female surgeons, pilots, and software architects have proved that talent has nothing to do with gender. However, stereotypes still exist, so schools (22) ______ encourage girls to explore robotics and coding from an early age. Mentorship programmes (23) ______ connect high school girls with female scientists are especially effective. When every young person is treated (24) ______, society benefits from (25) ______ innovation and economic growth.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['who', 'which', 'whose', 'where'], answer: 'B', explanation: 'Đại từ quan hệ "which" thay cho danh từ chỉ vật "fields".', level: 'recognition', unitId: 'gs10-u8'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['should', 'must not', 'cannot', 'might not'], answer: 'A', explanation: 'Đưa ra lời khuyên/khuyến nghị tích cực dùng "should".', level: 'recognition', unitId: 'gs10-u6'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['whom', 'whose', 'that', 'what'], answer: 'C', explanation: 'Mệnh đề quan hệ xác định chỉ vật dùng "that" (hoặc which).', level: 'comprehension', unitId: 'gs10-u8'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['equal', 'equality', 'equally', 'equalise'], answer: 'C', explanation: 'Bổ nghĩa cho động từ "treated" cần trạng từ "equally".', level: 'comprehension', unitId: 'gs10-u6'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['great', 'greater', 'greatest', 'greatly'], answer: 'B', explanation: 'So sánh hơn hàm ý sự phát triển mạnh hơn: "greater innovation".', level: 'application', unitId: 'gs10-u7'},
+    ],
+    readingTitle: 'New Ways to Learn in the Digital Age',
+    readingParagraphs: [
+      'Traditional classrooms relied mainly on printed textbooks and chalkboards, requiring every student to learn at the exact same speed. Today, digital technology has opened up flexible ways to study that match individual needs.',
+      'One popular approach is the flipped classroom. Instead of listening to long lectures at school, students watch concise recorded explanations at home and pause whenever they need extra time to take notes. Class time is then dedicated to solving challenging exercises, conducting experiments, and receiving personal feedback from teachers.',
+      'Nevertheless, digital tools work best when combined with human interaction. Face-to-face discussions build teamwork, empathy, and public speaking skills that screens alone cannot replace. Therefore, blended learning offers the strongest balance between independence and classroom support.',
+    ],
+    readingItems: [
+      {prompt: 'What is a key feature of the flipped classroom?', options: ['Students never attend school', 'Students watch short lessons at home and practise in class', 'Teachers stop giving feedback', 'Textbooks are completely banned'], answer: 'B', explanation: 'Đoạn 2: học sinh xem video ngắn ở nhà, thời gian trên lớp dành cho thực hành và phản hồi.', level: 'recognition', unitId: 'gs10-u8'},
+      {prompt: 'Why is watching recorded explanations at home helpful?', options: ['Videos are always shorter than 1 minute', 'Students can pause to take notes at their own pace', 'Internet is free everywhere', 'It replaces all homework'], answer: 'B', explanation: 'Đoạn 2: "pause whenever they need extra time to take notes."', level: 'comprehension', unitId: 'gs10-u8'},
+      {prompt: 'The word "concise" in paragraph 2 is closest in meaning to ______.', options: ['brief and clear', 'long and boring', 'difficult to hear', 'outdated'], answer: 'A', explanation: '"concise" = ngắn gọn, súc tích.', level: 'comprehension', unitId: 'gs10-u8'},
+      {prompt: 'What cannot be fully replaced by screens according to paragraph 3?', options: ['Digital quizzes', 'Recorded grammar videos', 'Face-to-face skills like empathy and teamwork', 'Online dictionaries'], answer: 'C', explanation: 'Đoạn 3: "build teamwork, empathy, and public speaking skills that screens alone cannot replace."', level: 'application', unitId: 'gs10-u8'},
+      {prompt: 'Which title best summarizes the passage?', options: ['The End of Printed Books', 'Balancing Digital Tools and Classroom Learning', 'Why Homework Should Be Abolished', 'History of Chalkboards'], answer: 'B', explanation: 'Bài đọc phân tích sự kết hợp hài hòa giữa công cụ số và tương tác trực tiếp trên lớp.', level: 'application', unitId: 'gs10-u8'},
+    ],
+    transformationItems: [
+      {prompt: 'Schools must give boys and girls equal chances to study science. (Change into passive voice)', answer: 'Boys and girls must be given equal chances to study science by schools.', acceptedAnswers: ['Equal chances to study science must be given to boys and girls by schools.'], explanation: 'Bị động với modal verb: must + be + V3/ed.', level: 'comprehension', unitId: 'gs10-u6'},
+      {prompt: 'No other learning method at our school is more flexible than blended learning. (Rewrite using superlative)', answer: 'Blended learning is the most flexible learning method at our school.', acceptedAnswers: ['Blended learning is the most flexible method at our school.'], explanation: 'Chuyển so sánh hơn phủ định sang so sánh nhất: the most + adj.', level: 'comprehension', unitId: 'gs10-u7'},
+      {prompt: 'Lan is a student. Her project on UNICEF won first prize. (Combine using "whose")', answer: 'Lan is a student whose project on UNICEF won first prize.', acceptedAnswers: ['Lan is the student whose project on UNICEF won first prize.'], explanation: 'Dùng đại từ quan hệ sở hữu "whose" thay cho "Her".', level: 'application', unitId: 'gs10-u8'},
+      {prompt: 'Online learning is convenient. It requires strong self-discipline. (Combine into one sentence using "although")', answer: 'Although online learning is convenient, it requires strong self-discipline.', acceptedAnswers: ['Online learning requires strong self-discipline although it is convenient.'], explanation: 'Mệnh đề nhượng bộ với "Although".', level: 'application', unitId: 'gs10-u8'},
+    ],
+    essayPrompt: 'Write a paragraph (120–150 words) about the benefits of blended learning for Grade 10 students.',
+    essayOutline: [
+      'Topic sentence: Define blended learning and state its value.',
+      'Point 1: Flexibility to review lessons anytime online.',
+      'Point 2: More active speaking and teamwork during classroom hours.',
+      'Concluding sentence: Summarize its positive impact on self-study.',
+    ],
+    essaySample:
+      'Blended learning, which combines face-to-face classroom lessons with online study tools, offers remarkable benefits for Grade 10 students. First, it allows learners to study at their own pace. Students can review recorded explanations, replay listening tracks, and check vocabulary online whenever they need extra practice. Second, blended learning makes classroom time far more interactive. Because basic theory is previewed at home, teachers and students can devote class hours to speaking discussions, group presentations, and instant feedback. Furthermore, using educational apps helps teenagers build essential digital literacy and independent time-management skills for university. In conclusion, blended learning successfully brings together the flexibility of technology and the supportive guidance of real-life teachers.',
+    essayUnitId: 'gs10-u8',
+  }),
+
+  // 4. Lớp 10 — Cuối HK II (Unit 6–10)
+  buildPeriodicSampleDossier({
+    id: 'sample-g10-final2',
+    grade: 10,
+    examType: 'final_2',
+    semester: 'hk2',
+    title: 'Đề kiểm tra Cuối học kỳ II — Tiếng Anh 10 (Unit 6–10)',
+    examTitleUpper: 'ĐỀ KIỂM TRA CUỐI HỌC KỲ II',
+    unitIds: ['gs10-u6', 'gs10-u7', 'gs10-u8', 'gs10-u9', 'gs10-u10'],
+    topicSummary: 'Unit 6–10 (Gender Equality, Organisations, New Ways to Learn, Environment, Ecotourism)',
+    listeningPart1Title: 'An Eco-Tour to Cuc Phuong National Park',
+    listeningPart1Transcript:
+      'Hello travellers! Welcome to our weekend eco-tour in Cuc Phuong National Park. Before we start our forest hike, please remember three simple eco-rules. First, stay strictly on the marked walking trails so that we do not damage rare plants. Second, carry reusable bottles because we provide clean refill stations at the visitor centre instead of selling plastic bottles. Third, keep your voice low when observing wildlife and never feed the monkeys. By following these rules, you help protect endangered animals and support local forest rangers.',
+    listeningPart1Items: [
+      {prompt: 'Visitors are asked to stay on the marked trails to protect rare plants.', answer: 'T', explanation: 'Transcript: "stay strictly on the marked walking trails so that we do not damage rare plants."', level: 'recognition', unitId: 'gs10-u10'},
+      {prompt: 'The visitor centre sells single-use plastic water bottles to hikers.', answer: 'F', explanation: 'Transcript: cung cấp trạm nạp nước sạch thay vì bán chai nhựa ("instead of selling plastic bottles").', level: 'recognition', unitId: 'gs10-u10'},
+      {prompt: 'Tourists are encouraged to feed monkeys along the trail.', answer: 'F', explanation: 'Transcript: "never feed the monkeys."', level: 'comprehension', unitId: 'gs10-u10'},
+      {prompt: 'Following the rules helps protect wildlife and support forest rangers.', answer: 'T', explanation: 'Transcript: "help protect endangered animals and support local forest rangers."', level: 'comprehension', unitId: 'gs10-u9'},
+    ],
+    listeningPart2Title: 'Protecting Endangered Sea Turtles',
+    listeningPart2Transcript:
+      'Every summer, marine volunteers gather on Con Dao Island to protect endangered green sea turtles. Because bright coastal lights can confuse newly hatched turtles, volunteers patrol the beaches quietly at night and move threatened nests to safe hatcheries. Local fishermen also play an important role by reporting injured turtles and avoiding plastic nets near nesting areas. Last year, the conservation team successfully released over twenty-five thousand baby turtles back into the ocean.',
+    listeningPart2Items: [
+      {prompt: 'Why do volunteers patrol Con Dao beaches at night?', options: ['To collect seashells', 'To protect sea turtles and vulnerable nests', 'To build beach resorts', 'To count fishing boats'], answer: 'B', explanation: 'Transcript: "patrol the beaches quietly at night and move threatened nests to safe hatcheries."', level: 'recognition', unitId: 'gs10-u9'},
+      {prompt: 'What can confuse newly hatched baby turtles?', options: ['Ocean waves', 'Cool temperatures', 'Bright coastal lights', 'Heavy rain'], answer: 'C', explanation: 'Transcript: "bright coastal lights can confuse newly hatched turtles."', level: 'recognition', unitId: 'gs10-u9'},
+      {prompt: 'How do local fishermen support the project?', options: ['By funding international travel', 'By reporting injured turtles and avoiding plastic nets near nests', 'By guiding night tours for tourists', 'By filming wildlife documentaries'], answer: 'B', explanation: 'Transcript: "reporting injured turtles and avoiding plastic nets near nesting areas."', level: 'comprehension', unitId: 'gs10-u9'},
+      {prompt: 'How many baby turtles were released into the sea last year?', options: ['Over 2,500', 'Over 15,000', 'Over 25,000', 'Over 50,000'], answer: 'C', explanation: 'Transcript: "released over twenty-five thousand baby turtles".', level: 'comprehension', unitId: 'gs10-u9'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>e</u>cotourism', 'r<u>e</u>sponsible', '<u>e</u>ndangered', '<u>e</u>nvironment'], answer: 'A', explanation: '"ecotourism" đọc âm đầu /iː/, ba từ còn lại đọc /ɪ/ hoặc /e/.', level: 'recognition', unitId: 'gs10-u10', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['habita<u>t</u>', 'protec<u>t</u>', 'na<u>t</u>ure', 'fores<u>t</u>'], answer: 'C', explanation: '"nature" có chữ t đọc /tʃ/, ba từ còn lại đọc /t/.', level: 'recognition', unitId: 'gs10-u9', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['endangered', 'pollution', 'habitat', 'protection'], answer: 'C', explanation: '"habitat" nhấn âm 1; ba từ còn lại nhấn âm 2.', level: 'recognition', unitId: 'gs10-u9'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['tourist', 'culture', 'local', 'respect'], answer: 'D', explanation: '"respect" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs10-u10'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'Deforestation destroys the natural ______ of hundreds of wild species.', options: ['habitat', 'habit', 'inhabitant', 'custom'], answer: 'A', explanation: '"natural habitat" = môi trường sống tự nhiên.', level: 'recognition', unitId: 'gs10-u9'},
+      {prompt: 'If people ______ more trees, air quality in big cities will improve significantly.', options: ['plant', 'planted', 'will plant', 'had planted'], answer: 'A', explanation: 'Câu điều kiện loại 1: If + Present Simple, S + will + V.', level: 'recognition', unitId: 'gs10-u10'},
+      {prompt: 'If I ______ a tour guide, I would design zero-waste trips to national parks.', options: ['am', 'was', 'were', 'will be'], answer: 'C', explanation: 'Câu điều kiện loại 2 giả định ở hiện tại: If I were..., S + would + V.', level: 'recognition', unitId: 'gs10-u10'},
+      {prompt: 'The ranger told visitors ______ litter on the forest path.', options: ['not leave', 'not to leave', 'don’t leave', 'to not leaving'], answer: 'B', explanation: 'Câu tường thuật mệnh lệnh phủ định: tell sb + not to-V.', level: 'comprehension', unitId: 'gs10-u9'},
+      {prompt: 'She asked me whether I ______ visited Phong Nha – Ke Bang National Park before.', options: ['have', 'had', 'will', 'am'], answer: 'B', explanation: 'Câu hỏi tường thuật lùi thì từ Hiện tại hoàn thành → Quá khứ hoàn thành (had visited).', level: 'comprehension', unitId: 'gs10-u9'},
+      {prompt: 'Responsible tourists buy locally made crafts to support the local ______.', options: ['economy', 'economic', 'economical', 'economise'], answer: 'A', explanation: 'Sau "the local" cần danh từ "economy" (nền kinh tế địa phương).', level: 'comprehension', unitId: 'gs10-u10'},
+      {prompt: 'Illegal hunting poses a serious ______ to biodiversity around the globe.', options: ['threat', 'threaten', 'threatening', 'threatened'], answer: 'A', explanation: 'Collocation: "pose a threat to sth" (gây ra mối đe dọa đối với...).', level: 'application', unitId: 'gs10-u9'},
+      {prompt: 'Unless we reduce plastic waste now, marine ecosystems ______ severely damaged.', options: ['would be', 'will be', 'were', 'had been'], answer: 'B', explanation: 'Câu điều kiện loại 1 với Unless (= If ... not): mệnh đề chính dùng "will be".', level: 'application', unitId: 'gs10-u10'},
+    ],
+    clozeTitle: 'Sustainable Ecotourism in Viet Nam',
+    clozeParagraphs: [
+      'Ecotourism is a form of responsible travel to natural areas that conserves the environment and improves the well-being of local communities. Unlike mass tourism, eco-tours focus on small groups (21) ______ minimise damage to fragile ecosystems. Travellers stay in locally owned homestays, enjoy traditional dishes, and learn about indigenous customs. If tourists (22) ______ local crafts directly from artisans, more income stays inside the village. Conservationists also say that ecotourism (23) ______ raise vital funding for national parks. Clearly, travelling with respect is the (24) ______ way to explore nature while protecting it (25) ______ future generations.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['so that', 'in order to', 'because', 'despite'], answer: 'B', explanation: '"in order to + V-inf" diễn tả mục đích giảm thiểu tác động.', level: 'recognition', unitId: 'gs10-u10'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['buy', 'bought', 'will buy', 'buying'], answer: 'A', explanation: 'Câu điều kiện loại 0/1 diễn tả sự thật hiển nhiên: If + Present Simple.', level: 'recognition', unitId: 'gs10-u10'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['can', 'must not', 'needn’t', 'ought'], answer: 'A', explanation: 'Động từ khuyết thiếu "can" + V-bare diễn tả khả năng.', level: 'comprehension', unitId: 'gs10-u10'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['good', 'better', 'best', 'well'], answer: 'C', explanation: 'So sánh nhất với "the": the best way.', level: 'comprehension', unitId: 'gs10-u7'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['for', 'at', 'on', 'about'], answer: 'A', explanation: '"protect sth for future generations" (bảo vệ cho các thế hệ tương lai).', level: 'application', unitId: 'gs10-u9'},
+    ],
+    readingTitle: 'Restoring Mangrove Forests Along the Coast',
+    readingParagraphs: [
+      'Mangrove forests grow along tropical coastlines where salt water meets freshwater. For decades, many mangrove areas were cleared for coastal construction, leaving nearby villages exposed to powerful storms and coastal erosion.',
+      'Today, environmental organisations and coastal communities are working together to replant mangroves. Their dense root networks act as natural barriers that absorb storm waves and trap soil. In addition, mangrove forests store up to four times more carbon per hectare than many inland forests, making them powerful allies against climate change.',
+      'Local schools have also joined the restoration effort. High school students collect mangrove seedlings and plant them during weekend eco-camps. Through hands-on conservation, young people see firsthand how protecting nature protects their own hometowns.',
+    ],
+    readingItems: [
+      {prompt: 'What happened when mangrove forests were cleared in the past?', options: ['Storms disappeared completely', 'Villages faced greater storm damage and erosion', 'More fish migrated into rivers', 'Coastal temperatures dropped'], answer: 'B', explanation: 'Đoạn 1: "leaving nearby villages exposed to powerful storms and coastal erosion."', level: 'recognition', unitId: 'gs10-u9'},
+      {prompt: 'How do mangrove roots protect coastal areas?', options: ['By producing freshwater', 'By absorbing storm waves and holding soil', 'By blocking sunlight', 'By attracting large boats'], answer: 'B', explanation: 'Đoạn 2: "absorb storm waves and trap soil."', level: 'comprehension', unitId: 'gs10-u9'},
+      {prompt: 'The word "Their" in paragraph 2 refers to ______.', options: ['organisations', 'villages', 'mangroves', 'storms'], answer: 'C', explanation: '"Their dense root networks" = mạng lưới rễ dày đặc của rừng ngập mặn (mangroves).', level: 'comprehension', unitId: 'gs10-u9'},
+      {prompt: 'Why are mangroves described as "powerful allies against climate change"?', options: ['They grow without sunlight', 'They absorb exceptionally large amounts of carbon', 'They prevent all rainfall', 'They replace solar panels'], answer: 'B', explanation: 'Đoạn 2: "store up to four times more carbon per hectare".', level: 'application', unitId: 'gs10-u9'},
+      {prompt: 'How are local high school students participating in the project?', options: ['By writing international laws', 'By collecting and planting seedlings at weekend eco-camps', 'By building concrete walls', 'By moving away from the coast'], answer: 'B', explanation: 'Đoạn 3: "collect mangrove seedlings and plant them during weekend eco-camps."', level: 'application', unitId: 'gs10-u9'},
+    ],
+    transformationItems: [
+      {prompt: '“We are launching a plastic-free campaign next week,” the club leader said. (Change into reported speech)', answer: 'The club leader said that they were launching a plastic-free campaign the following week.', acceptedAnswers: ['The club leader said they were launching a plastic-free campaign the next week.'], explanation: 'Lùi thì: are launching → were launching; next week → the following week.', level: 'comprehension', unitId: 'gs10-u9'},
+      {prompt: '“Do you want to join our eco-tour to Ba Be Lake?” Minh asked Hoa. (Change into reported speech)', answer: 'Minh asked Hoa if she wanted to join their eco-tour to Ba Be Lake.', acceptedAnswers: ['Minh asked Hoa whether she wanted to join their eco-tour to Ba Be Lake.'], explanation: 'Câu hỏi Yes/No tường thuật: asked + O + if/whether + S + V(lùi thì).', level: 'comprehension', unitId: 'gs10-u9'},
+      {prompt: 'People cut down too many forests, so wild animals lose their habitats. (Rewrite using Conditional Type 2)', answer: 'If people did not cut down too many forests, wild animals would not lose their habitats.', acceptedAnswers: ["If people didn't cut down too many forests, wild animals wouldn't lose their habitats."], explanation: 'Câu điều kiện loại 2 trái ngược hiện tại: If + QKĐ, S + would + V.', level: 'application', unitId: 'gs10-u10'},
+      {prompt: 'Protect endangered species or they will disappear soon. (Rewrite using "If")', answer: 'If we do not protect endangered species, they will disappear soon.', acceptedAnswers: ["If we don't protect endangered species, they will disappear soon."], explanation: 'Câu điều kiện loại 1 diễn tả hệ quả tương lai.', level: 'application', unitId: 'gs10-u10'},
+    ],
+    essayPrompt: 'Write a paragraph (120–150 words) suggesting practical ways tourists can practise responsible ecotourism when visiting a national park.',
+    essayOutline: [
+      'Topic sentence: State why responsible behaviour is vital in national parks.',
+      'Suggestion 1: Minimize waste (reusable bottles, zero littering).',
+      'Suggestion 2: Respect wildlife and stay on marked trails.',
+      'Suggestion 3: Support local guides and traditional crafts.',
+    ],
+    essaySample:
+      'Practising responsible ecotourism is essential whenever travellers visit a national park. First, tourists should minimize waste by bringing reusable water bottles, cloth bags, and taking all rubbish back with them so natural landscapes remain spotless. Second, visitors must respect wildlife and fragile plants by staying strictly on marked trails, keeping noise levels low, and never feeding wild animals. Third, choosing local eco-guides, family-run homestays, and handmade souvenirs ensures that tourism income directly benefits nearby communities and motivates them to protect the forest. Finally, learning about local conservation rules before arriving helps tourists avoid accidental harm. If every visitor follows these simple habits, ecotourism will continue to educate people while preserving biodiversity for future generations.',
+    essayUnitId: 'gs10-u10',
+  }),
+];

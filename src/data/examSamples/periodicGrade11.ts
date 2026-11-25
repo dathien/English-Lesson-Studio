@@ -1,0 +1,348 @@
+import {buildPeriodicSampleDossier} from './packBuilder';
+import type {ExamDossier} from '../../types/exam';
+
+export const PERIODIC_GRADE_11_PACKS: ExamDossier[] = [
+  // 5. Lớp 11 — Giữa HK I (Unit 1–3)
+  buildPeriodicSampleDossier({
+    id: 'sample-g11-midterm1',
+    grade: 11,
+    examType: 'midterm_1',
+    semester: 'hk1',
+    title: 'Đề kiểm tra Giữa học kỳ I — Tiếng Anh 11 (Unit 1–3)',
+    examTitleUpper: 'ĐỀ KIỂM TRA GIỮA HỌC KỲ I',
+    unitIds: ['gs11-u1', 'gs11-u2', 'gs11-u3'],
+    topicSummary: 'Unit 1: Healthy Life · Unit 2: Generation Gap · Unit 3: Cities of the Future',
+    listeningPart1Title: 'Healthy Habits for High Schoolers',
+    listeningPart1Transcript:
+      'Welcome back to Youth Wellness Podcast! Last year, I used to drink three sugary milk teas a week and stay up until midnight scrolling through my phone. Since January, however, I have completely changed my routine. I now go jogging for thirty minutes every morning before school and eat a balanced breakfast with eggs, fruit, and whole-grain bread. I have also cut down on fast food. As a result, my energy levels and focus during morning classes have improved dramatically.',
+    listeningPart1Items: [
+      {prompt: 'Last year, the speaker regularly stayed up until midnight using a phone.', answer: 'T', explanation: 'Transcript: "stay up until midnight scrolling through my phone."', level: 'recognition', unitId: 'gs11-u1'},
+      {prompt: 'Since January, the speaker has started jogging every afternoon after school.', answer: 'F', explanation: 'Transcript: chạy bộ 30 phút mỗi sáng trước giờ học ("every morning before school").', level: 'recognition', unitId: 'gs11-u1'},
+      {prompt: 'The speaker’s breakfast includes eggs, fruit, and whole-grain bread.', answer: 'T', explanation: 'Transcript: "balanced breakfast with eggs, fruit, and whole-grain bread."', level: 'comprehension', unitId: 'gs11-u1'},
+      {prompt: 'The new routine has helped the speaker concentrate better in morning lessons.', answer: 'T', explanation: 'Transcript: "my energy levels and focus during morning classes have improved dramatically."', level: 'comprehension', unitId: 'gs11-u1'},
+    ],
+    listeningPart2Title: 'Designing Smart Green Cities',
+    listeningPart2Transcript:
+      'In tomorrow’s cities, urban planners aim to make daily life both greener and more convenient. Rooftop gardens will help cool tall apartment buildings naturally, while electric driverless buses will reduce traffic congestion and air pollution. Sensors installed along footpaths will automatically dim street lights when nobody is walking past, saving up to forty percent of electricity. Most importantly, pedestrian zones will encourage neighbours to meet and stay active outdoors.',
+    listeningPart2Items: [
+      {prompt: 'How will rooftop gardens benefit tall apartment buildings?', options: ['By generating wind power', 'By cooling buildings naturally', 'By replacing elevators', 'By storing rainwater for buses'], answer: 'B', explanation: 'Transcript: "help cool tall apartment buildings naturally."', level: 'recognition', unitId: 'gs11-u3'},
+      {prompt: 'What will help cut down traffic jams and air pollution?', options: ['Wider highways', 'Electric driverless buses', 'Private petrol cars', 'Underground shopping malls'], answer: 'B', explanation: 'Transcript: "electric driverless buses will reduce traffic congestion and air pollution."', level: 'recognition', unitId: 'gs11-u3'},
+      {prompt: 'How much electricity could smart street lights save?', options: ['Up to 20 percent', 'Up to 30 percent', 'Up to 40 percent', 'Up to 60 percent'], answer: 'C', explanation: 'Transcript: "saving up to forty percent of electricity."', level: 'comprehension', unitId: 'gs11-u3'},
+      {prompt: 'Why do planners prioritize pedestrian zones?', options: ['To encourage social interaction and outdoor exercise', 'To park electric buses', 'To advertise new apartments', 'To shorten office hours'], answer: 'A', explanation: 'Transcript: "encourage neighbours to meet and stay active outdoors."', level: 'comprehension', unitId: 'gs11-u3'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['fitn<u>e</u>ss', 'r<u>e</u>cipe', 'str<u>e</u>ngth', '<u>e</u>nergy'], answer: 'A', explanation: '"fitness" có chữ e đọc /ə/ hoặc /ɪ/, ba từ còn lại nhấn âm đầu đọc /e/.', level: 'recognition', unitId: 'gs11-u1', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>c</u>onflict', '<u>c</u>ity', '<u>c</u>ulture', '<u>c</u>arbon'], answer: 'B', explanation: '"city" phát âm /s/, ba từ còn lại phát âm /k/.', level: 'recognition', unitId: 'gs11-u2', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['nutrient', 'regular', 'generation', 'balanced'], answer: 'C', explanation: '"generation" nhấn âm 3; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs11-u2'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['sustainable', 'infrastructure', 'pedestrian', 'environment'], answer: 'B', explanation: '"infrastructure" nhấn âm 1; ba từ còn lại nhấn âm 2.', level: 'recognition', unitId: 'gs11-u3'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'Regular exercise and a balanced diet are keys to a long and healthy ______.', options: ['life expectancy', 'generation', 'skyscraper', 'privacy'], answer: 'A', explanation: 'Unit 1: "life expectancy" = tuổi thọ trung bình.', level: 'recognition', unitId: 'gs11-u1'},
+      {prompt: 'My grandfather ______ smoking ten years ago and has felt much healthier since then.', options: ['gives up', 'gave up', 'has given up', 'is giving up'], answer: 'B', explanation: 'Có mốc thời gian quá khứ xác định "ten years ago" → chia Quá khứ đơn.', level: 'recognition', unitId: 'gs11-u1'},
+      {prompt: 'I think parents ______ listen patiently to their teenagers’ opinions before making strict rules.', options: ['should', 'mustn’t', 'don’t have to', 'couldn’t'], answer: 'A', explanation: 'Đưa ra lời khuyên / quan điểm cá nhân dùng "should".', level: 'recognition', unitId: 'gs11-u2'},
+      {prompt: 'In our school, all students ______ wear uniforms on Mondays as required by school regulations.', options: ['should', 'have to', 'might', 'needn’t'], answer: 'B', explanation: 'Nghĩa vụ do quy định bên ngoài đặt ra dùng "have to".', level: 'comprehension', unitId: 'gs11-u2'},
+      {prompt: 'The new rooftop garden in the smart city ______ peaceful and refreshing.', options: ['looks', 'is looking', 'looking', 'looked at'], answer: 'A', explanation: '"look" là linking verb (động từ nối) theo sau bởi tính từ, không chia tiếp diễn ở nghĩa trạng thái.', level: 'comprehension', unitId: 'gs11-u3'},
+      {prompt: 'Doctors ______ great progress in treating infectious diseases over the last fifty years.', options: ['made', 'have made', 'make', 'were making'], answer: 'B', explanation: 'Dấu hiệu "over the last fifty years" → Hiện tại hoàn thành.', level: 'comprehension', unitId: 'gs11-u1'},
+      {prompt: 'Bridging the generation gap requires mutual ______ between parents and children.', options: ['respect', 'argument', 'conflict', 'curiosity'], answer: 'A', explanation: 'Collocation: "mutual respect" (sự tôn trọng lẫn nhau).', level: 'application', unitId: 'gs11-u2'},
+      {prompt: 'Urban planners are thinking ______ building elevated cycle paths to reduce traffic jams.', options: ['about', 'with', 'for', 'at'], answer: 'A', explanation: '"think about + V-ing" (cân nhắc việc gì) dùng được ở thì tiếp diễn.', level: 'application', unitId: 'gs11-u3'},
+    ],
+    clozeTitle: 'Understanding Digital Natives',
+    clozeParagraphs: [
+      'Growing up surrounded by smartphones and social media, Generation Z teenagers are often called digital natives. Because they have used technology since early childhood, they (21) ______ comfortable finding information and collaborating online. Sometimes, however, differences in communication habits create misunderstandings between parents and children. Parents may worry that too much screen time harms health, (22) ______ teenagers view online chats as a normal way to maintain friendships. To avoid unnecessary (23) ______, both generations should talk openly and set fair digital boundaries together. When family members listen with empathy, the generation gap (24) ______ far smaller and home life feels much more (25) ______.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['feel', 'are feeling', 'felt', 'feeling'], answer: 'A', explanation: 'Động từ nối "feel + adj" diễn tả trạng thái hiện tại.', level: 'recognition', unitId: 'gs11-u3'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['because', 'while', 'so', 'unless'], answer: 'B', explanation: '"while" nối hai mệnh đề đối lập nhau.', level: 'recognition', unitId: 'gs11-u2'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['conflicts', 'benefits', 'hobbies', 'habits'], answer: 'A', explanation: 'Danh từ "conflicts" (xung đột) phù hợp ngữ cảnh thu hẹp khoảng cách thế hệ.', level: 'comprehension', unitId: 'gs11-u2'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['becomes', 'is becoming to', 'makes', 'takes'], answer: 'A', explanation: 'Linking verb "become + adj" (trở nên nhỏ hơn nhiều).', level: 'comprehension', unitId: 'gs11-u3'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['harmony', 'harmonious', 'harmoniously', 'harmonise'], answer: 'B', explanation: 'Sau linking verb "feel" cần tính từ "harmonious" (hòa thuận).', level: 'application', unitId: 'gs11-u2'},
+    ],
+    readingTitle: 'Smart Cities and Quality of Life',
+    readingParagraphs: [
+      'By 2050, nearly seventy percent of the world’s population is expected to live in urban areas. To handle this rapid growth without exhausting natural resources, many countries are investing in smart cities powered by data and renewable energy.',
+      'In a smart city, sensors embedded in roads and public transport provide real-time updates to commuters’ phones, helping them choose the fastest electric bus or bicycle lane. Waste bins send signals when they are full so collection trucks only drive necessary routes, cutting fuel use significantly.',
+      'Critics point out that smart infrastructure requires high initial investment and strict privacy safeguards to protect citizens’ personal data. Even so, urban experts agree that putting people’s well-being first — rather than technology for its own sake — is the key to building truly livable cities of the future.',
+    ],
+    readingItems: [
+      {prompt: 'Why are countries investing in smart cities according to paragraph 1?', options: ['To encourage everyone to move to rural villages', 'To manage rapid urban growth sustainably', 'To increase the number of private cars', 'To replace renewable energy with coal'], answer: 'B', explanation: 'Đoạn 1: ứng phó tăng trưởng đô thị nhanh mà không làm cạn kiệt tài nguyên.', level: 'recognition', unitId: 'gs11-u3'},
+      {prompt: 'How do smart waste bins save fuel?', options: ['They recycle rubbish automatically', 'They alert trucks only when collection is needed', 'They run on solar batteries', 'They reduce the weight of plastic'], answer: 'B', explanation: 'Đoạn 2: "send signals when they are full so collection trucks only drive necessary routes".', level: 'comprehension', unitId: 'gs11-u3'},
+      {prompt: 'The word "them" in paragraph 2 refers to ______.', options: ['sensors', 'roads', 'commuters', 'updates'], answer: 'C', explanation: '"helping them choose" = giúp người đi lại (commuters) chọn tuyến đường nhanh nhất.', level: 'comprehension', unitId: 'gs11-u3'},
+      {prompt: 'What two concerns do critics mention in paragraph 3?', options: ['Slow buses and noisy parks', 'High initial costs and data privacy', 'Lack of skyscrapers and shops', 'Too many bicycle lanes'], answer: 'B', explanation: 'Đoạn 3: "high initial investment and strict privacy safeguards".', level: 'application', unitId: 'gs11-u3'},
+      {prompt: 'What is the main principle urban experts emphasize at the end?', options: ['Technology must prioritize citizens’ well-being', 'Personal data should be shared publicly', 'Traditional cities cannot be upgraded', 'Smart cities are impossible before 2050'], answer: 'A', explanation: 'Đoạn 3: "putting people’s well-being first — rather than technology for its own sake".', level: 'application', unitId: 'gs11-u3'},
+    ],
+    transformationItems: [
+      {prompt: 'I last went to a fitness club three months ago. (Rewrite using Present Perfect)', answer: 'I have not been to a fitness club for three months.', acceptedAnswers: ["I haven't been to a fitness club for three months.", "I haven't gone to a fitness club for three months."], explanation: 'Chuyển từ Past Simple + ago sang Present Perfect phủ định + for.', level: 'comprehension', unitId: 'gs11-u1'},
+      {prompt: 'It is not necessary for teenagers to follow every fashion trend. (Rewrite using "don’t have to")', answer: 'Teenagers do not have to follow every fashion trend.', acceptedAnswers: ["Teenagers don't have to follow every fashion trend."], explanation: '"It is not necessary" = do/does not have to + V.', level: 'comprehension', unitId: 'gs11-u2'},
+      {prompt: 'Visitors are strictly prohibited from parking in the pedestrian zone. (Rewrite using "mustn’t")', answer: 'Visitors must not park in the pedestrian zone.', acceptedAnswers: ["Visitors mustn't park in the pedestrian zone."], explanation: 'Cấm đoán nghiêm ngặt dùng "must not / mustn’t + V".', level: 'application', unitId: 'gs11-u2'},
+      {prompt: 'She began practising yoga in 2022. (Rewrite using "since")', answer: 'She has practised yoga since 2022.', acceptedAnswers: ['She has been practising yoga since 2022.'], explanation: 'Chuyển từ "began + V-ing + in ..." sang Hiện tại hoàn thành + since.', level: 'application', unitId: 'gs11-u1'},
+    ],
+    essayPrompt: 'Write a short essay or paragraph (120–150 words) discussing how parents and teenagers can narrow the generation gap in modern families.',
+    essayOutline: [
+      'Topic sentence: Acknowledge why generation gaps occur and that they can be bridged.',
+      'Solution 1: Open, respectful communication without judgement.',
+      'Solution 2: Spending shared quality time learning from each other’s interests.',
+      'Concluding sentence: Mutual understanding builds stronger families.',
+    ],
+    essaySample:
+      'Although the generation gap is common in modern families, parents and teenagers can narrow it through patience and mutual respect. First, open communication plays a crucial role. Instead of arguing over curfews or career choices, parents should listen calmly to their children’s perspectives, while teenagers ought to explain their plans honestly and politely. Second, spending quality time together helps both sides appreciate each other’s worlds. For instance, teenagers can teach grandparents how to use helpful mobile apps, and parents can share traditional cooking recipes or life stories. Finally, setting fair family agreements together ensures everyone feels respected rather than controlled. In conclusion, when both generations choose empathy over criticism, generational differences become an opportunity to grow closer.',
+    essayUnitId: 'gs11-u2',
+  }),
+
+  // 6. Lớp 11 — Cuối HK I (Unit 1–5)
+  buildPeriodicSampleDossier({
+    id: 'sample-g11-final1',
+    grade: 11,
+    examType: 'final_1',
+    semester: 'hk1',
+    title: 'Đề kiểm tra Cuối học kỳ I — Tiếng Anh 11 (Unit 1–5)',
+    examTitleUpper: 'ĐỀ KIỂM TRA CUỐI HỌC KỲ I',
+    unitIds: ['gs11-u1', 'gs11-u2', 'gs11-u3', 'gs11-u4', 'gs11-u5'],
+    topicSummary: 'Unit 1–5 (Health, Generation Gap, Future Cities, ASEAN & Viet Nam, Global Warming)',
+    listeningPart1Title: 'ASEAN Youth Leadership Camp',
+    listeningPart1Transcript:
+      'Hi, I’m Tuan, and I recently represented my school at the ASEAN Youth Cultural Camp in Da Nang. Over five days, sixty students from ten ASEAN member countries took part in workshops on leadership, traditional music, and climate action. Presenting Vietnamese folk games to friends from Thailand, Indonesia, and Singapore was my favourite memory. Sharing meals and working in mixed teams helped us realise how much our cultures have in common.',
+    listeningPart1Items: [
+      {prompt: 'The ASEAN Youth Cultural Camp lasted five days in Da Nang.', answer: 'T', explanation: 'Transcript: "at the ASEAN Youth Cultural Camp in Da Nang. Over five days".', level: 'recognition', unitId: 'gs11-u4'},
+      {prompt: 'Sixty students from ten ASEAN countries participated in the camp.', answer: 'T', explanation: 'Transcript: "sixty students from ten ASEAN member countries".', level: 'recognition', unitId: 'gs11-u4'},
+      {prompt: 'Tuan disliked introducing Vietnamese folk games to international friends.', answer: 'F', explanation: 'Transcript: "was my favourite memory."', level: 'comprehension', unitId: 'gs11-u4'},
+      {prompt: 'Working in mixed teams showed the participants many shared cultural values.', answer: 'T', explanation: 'Transcript: "realise how much our cultures have in common."', level: 'comprehension', unitId: 'gs11-u4'},
+    ],
+    listeningPart2Title: 'Cutting Methane and Carbon Emissions',
+    listeningPart2Transcript:
+      'Scientists explain that global warming is driven mainly by heat-trapping gases released when people burn coal, oil, and natural gas. Burning fossil fuels for electricity and transport accounts for the largest share of carbon dioxide emissions. Meanwhile, methane released from landfills and livestock traps heat even more rapidly in the short term. Switching to solar and wind power, along with composting food waste, offers practical steps communities can take right now.',
+    listeningPart2Items: [
+      {prompt: 'What is the main cause of global warming mentioned in the talk?', options: ['Ocean tides', 'Heat-trapping gases from burning fossil fuels', 'Planting urban trees', 'Wind turbines'], answer: 'B', explanation: 'Transcript: "heat-trapping gases released when people burn coal, oil, and natural gas."', level: 'recognition', unitId: 'gs11-u5'},
+      {prompt: 'Which two sources of methane are mentioned?', options: ['Solar farms and rivers', 'Landfills and livestock', 'Bicycles and trains', 'Forests and mountains'], answer: 'B', explanation: 'Transcript: "methane released from landfills and livestock".', level: 'recognition', unitId: 'gs11-u5'},
+      {prompt: 'Why is methane particularly concerning in the short term?', options: ['It traps heat even more rapidly', 'It smells pleasant', 'It freezes seawater', 'It blocks rainfall'], answer: 'A', explanation: 'Transcript: "traps heat even more rapidly in the short term."', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: 'Which practical community solution is suggested alongside renewable power?', options: ['Building more highways', 'Composting food waste', 'Burning dry leaves', 'Using diesel generators'], answer: 'B', explanation: 'Transcript: "along with composting food waste".', level: 'comprehension', unitId: 'gs11-u5'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>ch</u>arity', 'ex<u>ch</u>ange', '<u>ch</u>emical', '<u>ch</u>allenge'], answer: 'C', explanation: '"chemical" đọc /k/, ba từ còn lại đọc /tʃ/.', level: 'recognition', unitId: 'gs11-u5', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['releas<u>ed</u>', 'reduc<u>ed</u>', 'burn<u>ed</u>', 'increas<u>ed</u>'], answer: 'C', explanation: '"burned" đọc đuôi /d/, ba từ còn lại đọc /t/.', level: 'recognition', unitId: 'gs11-u5', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['cultural', 'proposal', 'leadership', 'qualified'], answer: 'B', explanation: '"proposal" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs11-u4'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['renewable', 'environment', 'consequence', 'pollutant'], answer: 'C', explanation: '"consequence" nhấn âm 1; ba từ còn lại nhấn âm 2.', level: 'recognition', unitId: 'gs11-u5'},
+    ],
+    vocabGrammarItems: [
+      {prompt: '______ in the ASEAN Youth Volunteer Programme helps students develop global citizenship.', options: ['Participate', 'Participating', 'Participated', 'Participation to'], answer: 'B', explanation: 'Danh động từ (Gerund: Participating) làm chủ ngữ của câu.', level: 'recognition', unitId: 'gs11-u4'},
+      {prompt: 'She is really looking forward to ______ new friends from Singapore and Malaysia.', options: ['meet', 'meeting', 'met', 'be met'], answer: 'B', explanation: 'Cấu trúc: look forward to + V-ing.', level: 'recognition', unitId: 'gs11-u4'},
+      {prompt: '______ for electricity, coal releases huge amounts of carbon dioxide into the atmosphere.', options: ['Burning', 'Burned', 'To burn', 'Having burn'], answer: 'B', explanation: 'Mệnh đề quá khứ phân từ mang nghĩa bị động: (When it is) Burned for electricity, coal...', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: '______ solar panels on school roofs, the district significantly reduced its electricity bills.', options: ['Installing', 'Installed', 'Install', 'To be installed'], answer: 'A', explanation: 'Mệnh đề hiện tại phân từ mang nghĩa chủ động: Installing solar panels...', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: 'Excessive use of ______ fuels accelerates climate change worldwide.', options: ['fossil', 'renewable', 'solar', 'organic'], answer: 'A', explanation: 'Collocation Unit 5: "fossil fuels" (nhiên liệu hóa thạch).', level: 'recognition', unitId: 'gs11-u5'},
+      {prompt: 'Viet Nam’s active ______ to ASEAN has promoted regional peace and prosperity.', options: ['contribute', 'contribution', 'contributory', 'contributing'], answer: 'B', explanation: 'Sau tính từ "active" cần danh từ "contribution".', level: 'comprehension', unitId: 'gs11-u4'},
+      {prompt: 'He suggested ______ an exhibition on ASEAN traditional costumes next month.', options: ['organise', 'to organise', 'organising', 'organised'], answer: 'C', explanation: 'Cấu trúc: suggest + V-ing.', level: 'application', unitId: 'gs11-u4'},
+      {prompt: '______ by rising sea levels, coastal cities must invest in sustainable drainage systems.', options: ['Threatening', 'Threatened', 'To threaten', 'Threaten'], answer: 'B', explanation: 'Mệnh đề quá khứ phân từ bị động: (Being) Threatened by rising sea levels...', level: 'application', unitId: 'gs11-u5'},
+    ],
+    clozeTitle: 'Youth Action for a Cooler Planet',
+    clozeParagraphs: [
+      'Across Southeast Asia, young people are stepping up to fight global warming. (21) ______ that small daily habits add up, student eco-clubs have launched campaigns to cut electricity waste and plastic use. Many schools now focus on (22) ______ organic cafeteria leftovers into rich garden compost instead of sending them to landfills. (23) ______ by regional workshops, Vietnamese students are also sharing green solutions with peers across ASEAN. Switching to public buses and bicycles reduces (24) ______ emissions while keeping teenagers healthy. Together, ASEAN youth prove that protecting the climate is a shared (25) ______.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['Realising', 'Realised', 'Realise', 'To realising'], answer: 'A', explanation: 'Mệnh đề hiện tại phân từ chủ động: Realising that...', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['turn', 'turning', 'turned', 'turns'], answer: 'B', explanation: 'Sau giới từ "on" dùng danh động từ V-ing.', level: 'recognition', unitId: 'gs11-u4'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['Inspiring', 'Inspired', 'Inspire', 'To inspire'], answer: 'B', explanation: 'Mệnh đề phân từ bị động có "by": Inspired by regional workshops...', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['carbon', 'fossil', 'solar', 'oxygen'], answer: 'A', explanation: 'Collocation chuẩn: "carbon emissions" (khí thải carbon).', level: 'recognition', unitId: 'gs11-u5'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['responsible', 'responsibly', 'responsibility', 'respond'], answer: 'C', explanation: 'Sau tính từ "shared" cần danh từ "responsibility".', level: 'application', unitId: 'gs11-u4'},
+    ],
+    readingTitle: 'ASEAN Cooperation in Education and Sustainability',
+    readingParagraphs: [
+      'Founded in 1967, the Association of Southeast Asian Nations (ASEAN) has grown far beyond economic trade into a vibrant community focused on education, culture, and environmental protection. Viet Nam joined ASEAN in 1995 and has consistently contributed to regional unity.',
+      'Through university exchange scholarships and youth forums, students from member states gain opportunities to study abroad, practise English as the working language of ASEAN, and collaborate on shared challenges such as climate resilience. These exchanges build lifelong friendships and break down cultural stereotypes.',
+      'In recent years, ASEAN countries have also pledged to expand clean energy grids and protect regional biodiversity. By pooling scientific research and green funding, member nations can respond to extreme weather far more effectively together than any single country could alone.',
+    ],
+    readingItems: [
+      {prompt: 'When did Viet Nam officially become a member of ASEAN?', options: ['In 1967', 'In 1975', 'In 1995', 'In 2005'], answer: 'C', explanation: 'Đoạn 1: "Viet Nam joined ASEAN in 1995".', level: 'recognition', unitId: 'gs11-u4'},
+      {prompt: 'What role does English play in ASEAN according to paragraph 2?', options: ['It is the working language of ASEAN', 'It replaces all local languages', 'It is only used in trade contracts', 'It is optional for youth forums'], answer: 'A', explanation: 'Đoạn 2: "practise English as the working language of ASEAN".', level: 'comprehension', unitId: 'gs11-u4'},
+      {prompt: 'The word "pledged" in paragraph 3 is closest in meaning to ______.', options: ['refused', 'promised formally', 'forgotten', 'delayed'], answer: 'B', explanation: '"pledge" = cam kết chính thức.', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: 'Why is regional cooperation vital for addressing extreme weather?', options: ['Because one country cannot experience storms', 'Because pooling research and funding is more effective than acting alone', 'Because weather forecasts are only made abroad', 'Because clean energy is unnecessary'], answer: 'B', explanation: 'Đoạn 3: kết hợp nghiên cứu và nguồn lực xanh giúp ứng phó hiệu quả hơn hành động đơn lẻ.', level: 'application', unitId: 'gs11-u5'},
+      {prompt: 'What is the best title for the passage?', options: ['The History of Southeast Asian Trade', 'ASEAN Collaboration for Youth and Sustainability', 'Learning English Online', 'How Extreme Weather Forms'], answer: 'B', explanation: 'Toàn bài nói về hợp tác ASEAN trong giáo dục thanh niên và phát triển bền vững.', level: 'application', unitId: 'gs11-u4'},
+    ],
+    transformationItems: [
+      {prompt: 'Because the forest was destroyed by wildfires, many species lost their shelter. (Rewrite using a past participle clause)', answer: 'Destroyed by wildfires, the forest could no longer shelter many species.', acceptedAnswers: ['Destroyed by wildfires, many species lost their shelter.', 'Being destroyed by wildfires, the forest left many species without shelter.'], explanation: 'Rút gọn mệnh đề nguyên nhân bị động bằng V3/ed (Destroyed...).', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: 'When students walk or cycle to school, they help cut greenhouse gas emissions. (Rewrite using a present participle clause)', answer: 'Walking or cycling to school, students help cut greenhouse gas emissions.', acceptedAnswers: ['Walking or cycling to school, they help cut greenhouse gas emissions.'], explanation: 'Rút gọn mệnh đề chủ động cùng chủ ngữ bằng V-ing.', level: 'comprehension', unitId: 'gs11-u5'},
+      {prompt: 'It is exciting to welcome international students to our ASEAN Youth Day. (Rewrite using a Gerund as subject)', answer: 'Welcoming international students to our ASEAN Youth Day is exciting.', acceptedAnswers: ['Welcoming international students to our ASEAN Youth Day is very exciting.'], explanation: 'Chuyển cấu trúc "It is + adj + to-V" thành "V-ing ... + is + adj".', level: 'application', unitId: 'gs11-u4'},
+      {prompt: '“Let’s organize a tree-planting campaign this weekend,” said Nam. (Rewrite using "suggested")', answer: 'Nam suggested organizing a tree-planting campaign that weekend.', acceptedAnswers: ['Nam suggested organising a tree-planting campaign that weekend.', 'Nam suggested organizing a tree-planting campaign this weekend.'], explanation: 'Cấu trúc: suggest + V-ing.', level: 'application', unitId: 'gs11-u4'},
+    ],
+    essayPrompt: 'Write a short proposal or paragraph (120–150 words) recommending practical ways your school can reduce its greenhouse gas emissions.',
+    essayOutline: [
+      'Title / Opening: State the goal of building a low-carbon school.',
+      'Action 1: Save electricity (LED lights, turning off fans/AC during breaks).',
+      'Action 2: Promote cycling, walking, and zero-plastic canteens.',
+      'Expected impact: Lower energy bills and stronger student awareness.',
+    ],
+    essaySample:
+      'To help fight global warming, our school can adopt several practical measures to reduce greenhouse gas emissions. First, we should launch an "Energy-Saving Classroom" campaign that encourages class monitors to turn off lights, fans, and projectors whenever rooms are empty, while gradually replacing old bulbs with energy-efficient LEDs. Second, the school can encourage students living nearby to walk or cycle by providing safe, shaded bicycle racks. Third, banning single-use plastic cups in the canteen and setting up composting bins for organic food scraps will significantly cut methane produced in landfills. Finally, planting more shade trees around the playground will cool classrooms naturally during hot months. By combining these simple actions, our school can lower utility costs and inspire hundreds of teenagers to live sustainably.',
+    essayUnitId: 'gs11-u5',
+  }),
+
+  // 7. Lớp 11 — Giữa HK II (Unit 6–8)
+  buildPeriodicSampleDossier({
+    id: 'sample-g11-midterm2',
+    grade: 11,
+    examType: 'midterm_2',
+    semester: 'hk2',
+    title: 'Đề kiểm tra Giữa học kỳ II — Tiếng Anh 11 (Unit 6–8)',
+    examTitleUpper: 'ĐỀ KIỂM TRA GIỮA HỌC KỲ II',
+    unitIds: ['gs11-u6', 'gs11-u7', 'gs11-u8'],
+    topicSummary: 'Unit 6: Preserving Heritage · Unit 7: Education Options · Unit 8: Becoming Independent',
+    listeningPart1Title: 'Choosing Vocational School After Grade 12',
+    listeningPart1Transcript:
+      'Hello, I’m Khanh. After graduating from high school two years ago, I decided to attend a vocational culinary school instead of going to university. Having studied practical cooking techniques and kitchen management for eighteen months, I landed a paid apprenticeship at a riverside hotel. Many people think university is the only route to success, but vocational training takes less time, costs less, and prepares you directly for the workplace.',
+    listeningPart1Items: [
+      {prompt: 'Khanh chose a vocational culinary school after finishing high school.', answer: 'T', explanation: 'Transcript: "decided to attend a vocational culinary school instead of going to university."', level: 'recognition', unitId: 'gs11-u7'},
+      {prompt: 'His vocational programme lasted four years.', answer: 'F', explanation: 'Transcript: kéo dài 18 tháng ("for eighteen months").', level: 'recognition', unitId: 'gs11-u7'},
+      {prompt: 'Khanh now works in a paid apprenticeship at a riverside hotel.', answer: 'T', explanation: 'Transcript: "landed a paid apprenticeship at a riverside hotel."', level: 'comprehension', unitId: 'gs11-u7'},
+      {prompt: 'He believes vocational training is quicker and more affordable than university.', answer: 'T', explanation: 'Transcript: "takes less time, costs less, and prepares you directly for the workplace."', level: 'comprehension', unitId: 'gs11-u7'},
+    ],
+    listeningPart2Title: 'Youth Preserving Folk Music',
+    listeningPart2Transcript:
+      'In Bac Ninh province, a group of high school students started a club to preserve Quan Ho folk singing. Every weekend, they invite senior local artisans to teach traditional melodies and explain the historical stories behind each song. To reach younger audiences, the club records short high-quality videos with English subtitles and posts them online. Last month, their digital heritage channel reached fifty thousand views.',
+    listeningPart2Items: [
+      {prompt: 'What type of heritage is the student club preserving?', options: ['Ancient temples', 'Quan Ho folk singing', 'Traditional pottery', 'Silk weaving'], answer: 'B', explanation: 'Transcript: "started a club to preserve Quan Ho folk singing."', level: 'recognition', unitId: 'gs11-u6'},
+      {prompt: 'Who teaches the students traditional melodies?', options: ['University professors', 'Senior local artisans', 'Foreign tourists', 'Music producers'], answer: 'B', explanation: 'Transcript: "invite senior local artisans to teach traditional melodies".', level: 'recognition', unitId: 'gs11-u6'},
+      {prompt: 'How does the club attract younger audiences?', options: ['By selling printed books', 'By posting short subtitled videos online', 'By charging entrance fees', 'By organizing radio quizzes'], answer: 'B', explanation: 'Transcript: "records short high-quality videos with English subtitles and posts them online."', level: 'comprehension', unitId: 'gs11-u6'},
+      {prompt: 'How many views did their channel reach last month?', options: ['5,000', '15,000', '50,000', '500,000'], answer: 'C', explanation: 'Transcript: "reached fifty thousand views."', level: 'comprehension', unitId: 'gs11-u6'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['herit<u>a</u>ge', 'vill<u>a</u>ge', 'mess<u>a</u>ge', 'st<u>a</u>ge'], answer: 'D', explanation: '"stage" đọc /eɪ/, ba từ còn lại đọc /ɪ/.', level: 'recognition', unitId: 'gs11-u6', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>th</u>orough', '<u>th</u>erefore', '<u>th</u>oughtful', '<u>th</u>erapy'], answer: 'B', explanation: '"therefore" đọc /ð/, ba từ còn lại đọc /θ/.', level: 'recognition', unitId: 'gs11-u8', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['heritage', 'monument', 'historic', 'citadel'], answer: 'C', explanation: '"historic" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs11-u6'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['vocational', 'apprenticeship', 'diploma', 'academic'], answer: 'D', explanation: '"academic" nhấn âm 3 (/ˌækəˈdemɪk/); "vocational, apprenticeship, diploma" nhấn âm 2.', level: 'recognition', unitId: 'gs11-u7'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'Trang An Scenic Landscape Complex is the only mixed World Heritage Site in Southeast Asia ______ by UNESCO.', options: ['recognising', 'to be recognised', 'recognised to', 'recognise'], answer: 'B', explanation: 'Sau "the only + N" rút gọn mệnh đề quan hệ bị động dùng "to be + V3/ed".', level: 'comprehension', unitId: 'gs11-u6'},
+      {prompt: 'The local youth union created a website ______ awareness of ancient temples.', options: ['raise', 'raising', 'to raise', 'raised'], answer: 'C', explanation: 'Mệnh đề to-infinitive chỉ mục đích: to raise awareness.', level: 'recognition', unitId: 'gs11-u6'},
+      {prompt: '______ the vocational course with honours, Minh immediately received two job offers.', options: ['Having completed', 'Complete', 'Completed', 'Being complete'], answer: 'A', explanation: 'Perfect participle (Having + V3/ed) diễn tả hành động hoàn thành trước hành động chính.', level: 'comprehension', unitId: 'gs11-u7'},
+      {prompt: 'She regretted not ______ more time on her time-management skills in Grade 11.', options: ['spend', 'having spent', 'to spend', 'spent'], answer: 'B', explanation: 'Perfect gerund (regret not having + V3/ed) diễn tả tiếc nuối về việc đã qua.', level: 'application', unitId: 'gs11-u7'},
+      {prompt: 'It was good time-management skills ______ helped Lan stay calm before final exams.', options: ['who', 'whom', 'that', 'where'], answer: 'C', explanation: 'Câu chẻ (Cleft sentence): It is/was + thành phần nhấn mạnh + that + ...', level: 'recognition', unitId: 'gs11-u8'},
+      {prompt: 'Becoming financially ______ helps young adults make confident life decisions.', options: ['independent', 'independence', 'independently', 'depend'], answer: 'A', explanation: 'Sau động từ "become" cần tính từ "independent".', level: 'recognition', unitId: 'gs11-u8'},
+      {prompt: 'Many school-leavers choose ______ education to gain hands-on skills for specific trades.', options: ['vocational', 'historic', 'tangible', 'cultural'], answer: 'A', explanation: 'Unit 7: "vocational education" = giáo dục nghề nghiệp.', level: 'comprehension', unitId: 'gs11-u7'},
+      {prompt: 'It is through daily self-study ______ students build genuine confidence.', options: ['which', 'that', 'when', 'what'], answer: 'B', explanation: 'Câu chẻ nhấn mạnh trạng ngữ luôn dùng "that".', level: 'application', unitId: 'gs11-u8'},
+    ],
+    clozeTitle: 'Building Independence in High School',
+    clozeParagraphs: [
+      'Becoming independent does not happen overnight; it is a gradual journey that starts during high school. First, teenagers should learn (21) ______ their daily schedules using a planner or calendar app. Breaking large assignments into smaller milestones prevents last-minute stress. Second, learning basic life skills such as cooking simple meals and budgeting pocket money prepares students for adult life. (22) ______ a small monthly budget responsibly teaches young people the true value of money. It is self-discipline (23) ______ turns good intentions into lasting habits. While parents remain supportive guides, teenagers who take (24) ______ for their own choices grow into confident, (25) ______ adults.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['manage', 'to manage', 'managing', 'managed'], answer: 'B', explanation: 'Cấu trúc: learn + to-infinitive.', level: 'recognition', unitId: 'gs11-u8'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['Managing', 'Manage', 'Managed', 'To be managed'], answer: 'A', explanation: 'Danh động từ "Managing" làm chủ ngữ của câu.', level: 'comprehension', unitId: 'gs11-u8'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['who', 'which', 'that', 'whom'], answer: 'C', explanation: 'Câu chẻ nhấn mạnh chủ ngữ: It is ... that ...', level: 'comprehension', unitId: 'gs11-u8'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['responsibility', 'responsible', 'responsibly', 'respond'], answer: 'A', explanation: 'Collocation: "take responsibility for sth" (chịu trách nhiệm cho...).', level: 'recognition', unitId: 'gs11-u8'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['self-motivated', 'dependent', 'careless', 'hesitant'], answer: 'A', explanation: '"self-motivated" (có động lực tự thân) phù hợp ngữ cảnh trưởng thành tự lập.', level: 'application', unitId: 'gs11-u8'},
+    ],
+    readingTitle: 'Higher Education vs. Vocational Training',
+    readingParagraphs: [
+      'As graduation approaches, Grade 11 and 12 students face an important decision about their next step. While university remains a popular ambition, vocational colleges and apprenticeships have gained strong recognition in today’s fast-changing job market.',
+      'Higher education typically lasts three to four years and focuses heavily on academic theory, research, and analytical thinking. It is essential for careers such as medicine, law, and scientific research. On the other hand, vocational training concentrates on practical skills tailored to specific professions like culinary arts, electrical engineering, or digital design, allowing graduates to enter the workforce within one to two years.',
+      'Career counsellors advise school-leavers not to follow peer pressure blindly. Instead, students should evaluate their personal strengths, financial situation, and long-term goals before choosing the path that truly fits them.',
+    ],
+    readingItems: [
+      {prompt: 'How long does higher education typically last?', options: ['Six months', 'One to two years', 'Three to four years', 'Five to seven years'], answer: 'C', explanation: 'Đoạn 2: "typically lasts three to four years".', level: 'recognition', unitId: 'gs11-u7'},
+      {prompt: 'Which career is mentioned as requiring higher education?', options: ['Culinary arts', 'Medicine', 'Electrical repair', 'Tour guiding'], answer: 'B', explanation: 'Đoạn 2: "essential for careers such as medicine, law, and scientific research."', level: 'recognition', unitId: 'gs11-u7'},
+      {prompt: 'The word "tailored" in paragraph 2 is closest in meaning to ______.', options: ['specifically designed', 'completely ignored', 'randomly chosen', 'overly expensive'], answer: 'A', explanation: '"tailored to" = được thiết kế chuyên biệt cho...', level: 'comprehension', unitId: 'gs11-u7'},
+      {prompt: 'What advantage of vocational training is highlighted?', options: ['It guarantees international travel', 'It enables quicker entry into the workforce with practical skills', 'It requires no examinations', 'It focuses solely on theoretical research'], answer: 'B', explanation: 'Đoạn 2: "allowing graduates to enter the workforce within one to two years."', level: 'application', unitId: 'gs11-u7'},
+      {prompt: 'What do career counsellors advise students to avoid?', options: ['Checking tuition fees', 'Following peer pressure without self-reflection', 'Asking teachers for advice', 'Learning practical skills'], answer: 'B', explanation: 'Đoạn 3: "not to follow peer pressure blindly."', level: 'application', unitId: 'gs11-u7'},
+    ],
+    transformationItems: [
+      {prompt: 'Hoi An Ancient Town is the most famous heritage site that attracts millions of visitors. (Rewrite using a to-infinitive clause)', answer: 'Hoi An Ancient Town is the most famous heritage site to attract millions of visitors.', acceptedAnswers: ['Hoi An Ancient Town is the most famous heritage site to attract millions of tourists.'], explanation: 'Sau so sánh nhất rút gọn mệnh đề quan hệ chủ động bằng to-infinitive.', level: 'comprehension', unitId: 'gs11-u6'},
+      {prompt: 'After she had finished the online coding course, she built her first website. (Rewrite using a perfect participle clause)', answer: 'Having finished the online coding course, she built her first website.', acceptedAnswers: ['Having completed the online coding course, she built her first website.'], explanation: 'Hành động hoàn thành trước dùng "Having + V3/ed".', level: 'comprehension', unitId: 'gs11-u7'},
+      {prompt: 'Lan organised the heritage photo exhibition last Friday. (Rewrite as a cleft sentence focusing on "the heritage photo exhibition")', answer: 'It was the heritage photo exhibition that Lan organised last Friday.', acceptedAnswers: ['It was the heritage photo exhibition that Lan organized last Friday.'], explanation: 'Câu chẻ nhấn mạnh tân ngữ: It was + O + that + S + V.', level: 'application', unitId: 'gs11-u8'},
+      {prompt: 'Minh saved his pocket money for a year so that he could buy a laptop. (Rewrite using a to-infinitive)', answer: 'Minh saved his pocket money for a year to buy a laptop.', acceptedAnswers: ['Minh saved his pocket money for a year in order to buy a laptop.'], explanation: 'Rút gọn mệnh đề mục đích cùng chủ ngữ bằng "to + V-inf".', level: 'application', unitId: 'gs11-u6'},
+    ],
+    essayPrompt: 'Write a paragraph (120–150 words) discussing the pros and cons of self-study for high school students.',
+    essayOutline: [
+      'Topic sentence: Introduce self-study as an important skill for teenagers.',
+      'Advantages: Flexible pace, deeper understanding, stronger independence.',
+      'Challenges: Easy distraction, difficulty without instant teacher guidance.',
+      'Conclusion: Balanced combination of self-study and teacher support.',
+    ],
+    essaySample:
+      'Self-study plays a vital role in helping high school students become independent learners, though it comes with both advantages and challenges. On the positive side, studying independently gives teenagers the freedom to learn at their own pace and spend extra time on difficult subjects. It also strengthens time-management skills and builds genuine confidence when solving problems alone. However, self-study can be difficult for students who struggle with self-discipline. Without a teacher nearby, learners may easily get distracted by social media or misunderstand complex grammar points. Therefore, to make self-study truly effective, students should set clear weekly goals, create a quiet study corner, and ask teachers whenever doubts arise. Overall, combining active self-study with regular classroom feedback leads to the best academic results.',
+    essayUnitId: 'gs11-u8',
+  }),
+
+  // 8. Lớp 11 — Cuối HK II (Unit 6–10)
+  buildPeriodicSampleDossier({
+    id: 'sample-g11-final2',
+    grade: 11,
+    examType: 'final_2',
+    semester: 'hk2',
+    title: 'Đề kiểm tra Cuối học kỳ II — Tiếng Anh 11 (Unit 6–10)',
+    examTitleUpper: 'ĐỀ KIỂM TRA CUỐI HỌC KỲ II',
+    unitIds: ['gs11-u6', 'gs11-u7', 'gs11-u8', 'gs11-u9', 'gs11-u10'],
+    topicSummary: 'Unit 6–10 (Heritage, Education, Independence, Social Issues, The Ecosystem)',
+    listeningPart1Title: 'Standing Up Against Peer Pressure',
+    listeningPart1Transcript:
+      'Peer pressure affects almost every teenager at some point during high school. Sometimes it can be positive, like when hardworking friends inspire you to join a debate club or study harder for exams. However, negative peer pressure pushes students to skip classes or copy risky trends just to fit in. School counsellors recommend practising polite but firm ways to say no, and surrounding yourself with friends who respect your personal boundaries.',
+    listeningPart1Items: [
+      {prompt: 'Peer pressure can sometimes have positive effects on teenagers.', answer: 'T', explanation: 'Transcript: "Sometimes it can be positive, like when hardworking friends inspire you".', level: 'recognition', unitId: 'gs11-u9'},
+      {prompt: 'Negative peer pressure encourages students to study harder for exams.', answer: 'F', explanation: 'Transcript: áp lực tiêu cực khiến học sinh bỏ học hoặc bắt chước xu hướng nguy hiểm.', level: 'recognition', unitId: 'gs11-u9'},
+      {prompt: 'School counsellors advise students to practise saying no politely and firmly.', answer: 'T', explanation: 'Transcript: "practising polite but firm ways to say no".', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'Choosing friends who respect your boundaries helps reduce negative pressure.', answer: 'T', explanation: 'Transcript: "surrounding yourself with friends who respect your personal boundaries."', level: 'comprehension', unitId: 'gs11-u9'},
+    ],
+    listeningPart2Title: 'Protecting U Minh Thuong Wetland Ecosystem',
+    listeningPart2Transcript:
+      'U Minh Thuong National Park in southern Viet Nam is famous for its rare peat swamp forest ecosystem. Over two hundred species of birds and dozens of endangered mammals depend on these wetlands for food and shelter. During the dry season, park rangers closely monitor water levels to prevent forest fires that could destroy centuries-old peat layers. Ecotourism visits are carefully capped each day so wildlife remains undisturbed.',
+    listeningPart2Items: [
+      {prompt: 'What type of ecosystem is U Minh Thuong National Park famous for?', options: ['Coral reefs', 'Peat swamp forest', 'Alpine tundra', 'Sand dunes'], answer: 'B', explanation: 'Transcript: "famous for its rare peat swamp forest ecosystem."', level: 'recognition', unitId: 'gs11-u10'},
+      {prompt: 'Approximately how many bird species live in the park?', options: ['Over 20', 'Over 100', 'Over 200', 'Over 500'], answer: 'C', explanation: 'Transcript: "Over two hundred species of birds".', level: 'recognition', unitId: 'gs11-u10'},
+      {prompt: 'Why do rangers monitor water levels in the dry season?', options: ['To supply city drinking water', 'To prevent devastating forest fires', 'To expand boating tours', 'To drain agricultural fields'], answer: 'B', explanation: 'Transcript: "prevent forest fires that could destroy centuries-old peat layers."', level: 'comprehension', unitId: 'gs11-u10'},
+      {prompt: 'Why are daily tourist numbers limited?', options: ['Because tickets are sold out online', 'To avoid disturbing local wildlife', 'Because boats are under repair', 'To reduce ranger salaries'], answer: 'B', explanation: 'Transcript: "so wildlife remains undisturbed."', level: 'comprehension', unitId: 'gs11-u10'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>e</u>cosystem', 'sp<u>e</u>cies', 'w<u>e</u>tland', 's<u>e</u>ason'], answer: 'C', explanation: '"wetland" đọc /e/, ba từ còn lại đọc /iː/.', level: 'recognition', unitId: 'gs11-u10', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['pr<u>e</u>ssure', 'd<u>e</u>pression', 'awar<u>e</u>ness', 'expr<u>e</u>ss'], answer: 'C', explanation: '"awareness" đọc âm /eə/, ba từ còn lại đọc /e/.', level: 'recognition', unitId: 'gs11-u9', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['bullying', 'confidence', 'awareness', 'empathy'], answer: 'C', explanation: '"awareness" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs11-u9'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['biodiversity', 'ecosystem', 'conservation', 'deforestation'], answer: 'B', explanation: '"ecosystem" nhấn âm 1; ba từ còn lại nhấn âm 3 hoặc 4.', level: 'recognition', unitId: 'gs11-u10'},
+    ],
+    vocabGrammarItems: [
+      {prompt: '______ the strict school anti-bullying policy, students still need workshops on online kindness.', options: ['Although', 'Despite', 'Because', 'However'], answer: 'B', explanation: 'Theo sau là cụm danh từ ("the strict school anti-bullying policy") chỉ sự tương phản → dùng "Despite".', level: 'recognition', unitId: 'gs11-u9'},
+      {prompt: 'Many teenagers experience anxiety ______ intense academic and peer pressure.', options: ['because', 'because of', 'although', 'in addition'], answer: 'B', explanation: 'Theo sau là cụm danh từ chỉ nguyên nhân → dùng "because of".', level: 'recognition', unitId: 'gs11-u9'},
+      {prompt: 'Wetlands provide clean water; ______, they act as natural sponges that reduce flooding.', options: ['moreover', 'however', 'despite', 'therefore'], answer: 'A', explanation: 'Bổ sung thêm ý tích cực cùng chiều → dùng "moreover".', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'Every living organism plays a crucial role in maintaining the local ______.', options: ['food chain', 'generation gap', 'study plan', 'vocational school'], answer: 'A', explanation: 'Danh từ ghép Unit 10: "food chain" (chuỗi thức ăn).', level: 'recognition', unitId: 'gs11-u10'},
+      {prompt: 'Loss of ______ threatens both wildlife survival and human food security.', options: ['biodiversity', 'diverse', 'diversify', 'diversely'], answer: 'A', explanation: 'Sau giới từ "of" cần danh từ "biodiversity" (đa dạng sinh học).', level: 'comprehension', unitId: 'gs11-u10'},
+      {prompt: 'Cyberbullying can hurt victims deeply; ______, schools must teach digital citizenship early.', options: ['nevertheless', 'therefore', 'in contrast', 'although'], answer: 'B', explanation: 'Chỉ kết quả/hệ quả hợp lý → dùng "therefore".', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'The national park’s ______ programme has helped rare cranes return after ten years.', options: ['habitat restoration', 'peer pressure', 'body shaming', 'time management'], answer: 'A', explanation: 'Danh từ ghép chuẩn chủ đề hệ sinh thái: "habitat restoration" (phục hồi môi trường sống).', level: 'application', unitId: 'gs11-u10'},
+      {prompt: '______ she felt nervous at first, Mai spoke up against online rumours during the class meeting.', options: ['Despite', 'In spite of', 'Although', 'Because of'], answer: 'C', explanation: 'Theo sau là mệnh đề đầy đủ (S + V) chỉ sự tương phản → dùng "Although".', level: 'application', unitId: 'gs11-u9'},
+    ],
+    clozeTitle: 'Why Biodiversity Keeps Ecosystems Resilient',
+    clozeParagraphs: [
+      'A healthy ecosystem resembles a tightly woven web in which plants, insects, birds, and mammals depend on one another. (21) ______ a single species disappears, the entire food chain can become unbalanced. For example, bees pollinate crops and wildflowers; (22) ______, declining bee populations directly threaten global food supplies. (23) ______ human expansion has damaged many forests, restoration projects prove that nature can recover quickly when given protection. Creating wildlife corridors allows animals to move safely between habitats. Protecting (24) ______ ecosystems is not only a scientific goal (25) ______ a vital investment in humanity’s future.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['When', 'Despite', 'However', 'Whereas'], answer: 'A', explanation: '"When" diễn tả điều kiện/thời điểm xảy ra hệ quả.', level: 'recognition', unitId: 'gs11-u10'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['however', 'therefore', 'although', 'besides'], answer: 'B', explanation: 'Quan hệ nguyên nhân – kết quả → dùng "therefore".', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['Although', 'Despite', 'Because of', 'In addition'], answer: 'A', explanation: 'Trước mệnh đề đầy đủ mang nghĩa tương phản dùng "Although".', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['nature', 'natural', 'naturally', 'naturalise'], answer: 'B', explanation: 'Trước danh từ "ecosystems" cần tính từ "natural".', level: 'recognition', unitId: 'gs11-u10'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['or', 'but also', 'and yet', 'so that'], answer: 'B', explanation: 'Cấu trúc tương quan: not only ... but also ...', level: 'application', unitId: 'gs11-u9'},
+    ],
+    readingTitle: 'Building Safer Digital Spaces for Teenagers',
+    readingParagraphs: [
+      'Social media enables high school students to share creative projects, join study groups, and stay in touch with relatives abroad. Yet the same platforms can also magnify social issues such as cyberbullying and body shaming.',
+      'Unlike traditional schoolyard bullying, hurtful online comments can spread rapidly within minutes and follow victims home after school hours. As a result, affected teenagers may experience sleep problems, lower grades, or reluctance to attend class.',
+      'Fortunately, student-led awareness campaigns are making a real difference. In many Vietnamese high schools, peer support clubs run workshops on verifying information before sharing, reporting abusive accounts, and offering kind encouragement to classmates. When teenagers choose empathy online, digital spaces become safer for everyone.',
+    ],
+    readingItems: [
+      {prompt: 'How does cyberbullying differ from traditional schoolyard bullying?', options: ['It only happens during class', 'It spreads rapidly and follows victims even at home', 'It never affects school grades', 'It is always easy to ignore'], answer: 'B', explanation: 'Đoạn 2: bình luận tổn thương lan nhanh trong vài phút và theo nạn nhân về tận nhà.', level: 'recognition', unitId: 'gs11-u9'},
+      {prompt: 'Which consequence of cyberbullying is mentioned in paragraph 2?', options: ['Higher athletic scores', 'Sleep problems and lower academic performance', 'More international friends', 'Improved time management'], answer: 'B', explanation: 'Đoạn 2: "experience sleep problems, lower grades, or reluctance to attend class."', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'The word "magnify" in paragraph 1 is closest in meaning to ______.', options: ['make worse or larger', 'solve completely', 'hide carefully', 'prevent early'], answer: 'A', explanation: '"magnify" = phóng đại, làm trầm trọng thêm.', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'What activities do student peer support clubs organise?', options: ['Banning all school computers', 'Workshops on fact-checking, reporting abuse, and supporting classmates', 'Replacing school counsellors', 'Grading weekly homework'], answer: 'B', explanation: 'Đoạn 3: tổ chức hội thảo kiểm chứng thông tin, báo cáo tài khoản xấu và động viên bạn bè.', level: 'application', unitId: 'gs11-u9'},
+      {prompt: 'What is the overall tone of the final paragraph?', options: ['Hopeful and constructive', 'Angry and hopeless', 'Humorous and casual', 'Doubtful and critical'], answer: 'A', explanation: 'Đoạn 3 dùng "Fortunately", "making a real difference", thể hiện giọng điệu lạc quan và xây dựng.', level: 'application', unitId: 'gs11-u9'},
+    ],
+    transformationItems: [
+      {prompt: 'Although the national park faces illegal logging, local rangers work tirelessly to protect it. (Rewrite using "Despite")', answer: 'Despite illegal logging, local rangers work tirelessly to protect the national park.', acceptedAnswers: ['Despite facing illegal logging, local rangers work tirelessly to protect the national park.'], explanation: 'Chuyển mệnh đề sau Although thành cụm danh từ / V-ing sau Despite.', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'Many students suffer from stress because they spend too many hours comparing themselves online. (Rewrite using "because of")', answer: 'Many students suffer from stress because of spending too many hours comparing themselves online.', acceptedAnswers: ['Many students suffer from stress because of online comparison.'], explanation: 'Chuyển mệnh đề nguyên nhân sang V-ing/cụm danh từ sau "because of".', level: 'comprehension', unitId: 'gs11-u9'},
+      {prompt: 'Deforestation destroys habitats. It also increases carbon dioxide in the atmosphere. (Combine using "In addition,")', answer: 'Deforestation destroys habitats. In addition, it increases carbon dioxide in the atmosphere.', acceptedAnswers: ['Deforestation destroys habitats; in addition, it increases carbon dioxide in the atmosphere.'], explanation: 'Dùng từ nối bổ sung "In addition," nối hai ý cùng chiều.', level: 'application', unitId: 'gs11-u9'},
+      {prompt: 'The ecosystem is fragile, so visitors must strictly obey conservation rules. (Rewrite using "Therefore")', answer: 'The ecosystem is fragile; therefore, visitors must strictly obey conservation rules.', acceptedAnswers: ['The ecosystem is fragile. Therefore, visitors must strictly obey conservation rules.'], explanation: 'Chuyển liên từ "so" sang trạng từ liên kết "; therefore,".', level: 'application', unitId: 'gs11-u9'},
+    ],
+    essayPrompt: 'Write a paragraph (120–150 words) explaining why protecting local ecosystems is important and suggesting two actions high school students can take.',
+    essayOutline: [
+      'Topic sentence: State the vital role of local ecosystems for both wildlife and humans.',
+      'Reason: Ecosystems purify air/water and maintain ecological balance.',
+      'Student actions: Join clean-up/tree-planting drives and avoid single-use plastics.',
+      'Conclusion: Collective youth effort preserves nature for tomorrow.',
+    ],
+    essaySample:
+      'Protecting local ecosystems is crucial because healthy nature supports both wildlife and human well-being. Local rivers, wetlands, and green parks purify the air, prevent urban flooding, and provide habitats for countless native species. If these ecosystems are polluted or destroyed, the entire food chain suffers. High school students can make a meaningful contribution through two practical actions. First, we can reduce daily plastic waste and join weekend clean-up campaigns along local waterways to keep aquatic habitats safe. Second, teenagers can participate in school tree-planting projects and share reliable conservation tips on social media to raise community awareness. Even small habits, when practised by hundreds of students, create lasting positive change. In short, protecting our local ecosystem today secures a healthier and greener future for everyone.',
+    essayUnitId: 'gs11-u10',
+  }),
+];

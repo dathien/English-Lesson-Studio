@@ -516,6 +516,90 @@ NGUYÊN TẮC BẮT BUỘC:
     }
   });
 
+  // Optional AI exam item generation strictly aligned to a Matrix & Specification row
+  app.post('/api/ai/generate-exam-items', async (req, res) => {
+    const ai = getGeminiClient();
+    if (!ai) {
+      res.status(503).json({
+        ok: false,
+        unavailable: true,
+        error: 'Dịch vụ AI chưa được kích hoạt. Giáo viên vẫn có thể lấy câu hỏi từ Ngân hàng câu hỏi hoặc soạn thủ công hoàn toàn ngoại tuyến.',
+      });
+      return;
+    }
+
+    try {
+      const {grade, topic, skill, format, cognitiveLevel, learningOutcome, count} = req.body as {
+        grade?: number;
+        topic?: string;
+        skill?: string;
+        format?: string;
+        cognitiveLevel?: string;
+        learningOutcome?: string;
+        count?: number;
+      };
+
+      const safeCount = Math.min(Math.max(Number(count || 3), 1), 8);
+      const prompt = `Bạn là chuyên gia biên soạn đề kiểm tra Tiếng Anh THPT Việt Nam (Lớp ${grade || 10}, Chương trình GDPT 2018 & Công văn 7991/BGDĐT-GDTrH).
+Hãy biên soạn ${safeCount} câu hỏi MỚI hoàn toàn bám sát đặc tả sau:
+- Chủ đề / Phạm vi: ${topic || 'Tiếng Anh THPT'}
+- Kỹ năng: ${skill || 'language'}
+- Dạng câu hỏi: ${format || 'mcq'}
+- Mức độ nhận thức: ${cognitiveLevel || 'comprehension'}
+- Yêu cầu cần đạt: ${learningOutcome || 'Đánh giá đúng năng lực ngôn ngữ lớp học.'}
+
+QUY TẮC BẮT BUỘC:
+1. Mỗi câu trắc nghiệm (mcq) phải có đúng 4 phương án A, B, C, D rõ ràng, KHÔNG trùng lặp, chỉ có DUY NHẤT 1 đáp án đúng, KHÔNG dùng phương án phụ thuộc kiểu "Both A and B" hay "All of the above".
+2. Nếu là câu ngữ âm/phát âm, đánh dấu phần gạch chân bằng <u>...</u>.
+3. Cung cấp đáp án chính xác và giải thích ngắn gọn bằng tiếng Việt.
+4. Nếu là bài đọc hoặc bài nghe, có thể kèm thêm một đoạn văn/transcript ngắn liên quan.`;
+
+      const response = await ai.models.generateContent({
+        model: MODEL_NAME,
+        contents: prompt,
+        config: {
+          thinkingConfig: {thinkingLevel: ThinkingLevel.LOW},
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              stimulusTitle: {type: Type.STRING},
+              stimulusText: {type: Type.STRING},
+              questions: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    prompt: {type: Type.STRING},
+                    options: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          label: {type: Type.STRING},
+                          text: {type: Type.STRING},
+                        },
+                      },
+                    },
+                    correctAnswer: {type: Type.STRING},
+                    acceptedAnswers: {type: Type.ARRAY, items: {type: Type.STRING}},
+                    explanation: {type: Type.STRING},
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const parsed = JSON.parse((response.text ?? '{"questions":[]}').trim());
+      res.json({ok: true, data: parsed});
+    } catch (err) {
+      const info = classifyGeminiError(err);
+      res.status(info.status).json({ok: false, error: info.message});
+    }
+  });
+
   const httpServer = http.createServer(app);
   const isProd = process.env.NODE_ENV === 'production';
 

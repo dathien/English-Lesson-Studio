@@ -34,6 +34,7 @@ import {
 } from './services/storage';
 import {checkAIStatus, type AIStatus} from './services/aiService';
 import {AssessmentCenter} from './components/AssessmentCenter';
+import {ExamStudio} from './components/exam/ExamStudio';
 import {GuideView} from './components/GuideView';
 import {ImportWizard} from './components/ImportWizard';
 import {
@@ -221,6 +222,7 @@ export default function App() {
   const [aiStatus, setAiStatus] = useState<AIStatus>({configured: false, online: true});
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [assessmentMode, setAssessmentMode] = useState<'exam_studio' | 'quick_quiz'>('exam_studio');
 
   const [editingLesson, setEditingLesson] = useState<LessonProject | null>(null);
   const [presentingState, setPresentingState] = useState<{
@@ -350,6 +352,7 @@ export default function App() {
     {id: 'home', label: 'Trang chủ'},
     {id: 'samples', label: 'Kho bài mẫu'},
     {id: 'my_lessons', label: 'Bài của tôi'},
+    {id: 'assessment', label: 'Soạn đề & Đánh giá'},
     {id: 'guide', label: 'Hướng dẫn'},
     {id: 'settings', label: 'Cài đặt'},
   ];
@@ -381,21 +384,19 @@ export default function App() {
             </div>
           </button>
 
-          {/* Right: 5 Clean Single-Line Nav Links */}
+          {/* Right: 6 Clean Single-Line Nav Links */}
           <nav
             aria-label="Điều hướng chính"
-            className="hidden lg:flex items-center gap-1.5 text-[15px] font-medium"
+            className="hidden lg:flex items-center gap-1 text-[14px] xl:text-[15px] font-medium"
           >
             {navItems.map((item) => {
-              const active =
-                route === item.id ||
-                (route === 'assessment' && item.id === 'samples');
+              const active = route === item.id;
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setRoute(item.id)}
-                  className={`px-3.5 py-2 rounded-xl transition-all duration-150 whitespace-nowrap shrink-0 ${
+                  className={`px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap shrink-0 ${
                     active
                       ? 'bg-white text-[#1E40AF] font-bold shadow-xs'
                       : 'text-blue-50 hover:bg-white/15 hover:text-white'
@@ -560,11 +561,14 @@ export default function App() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setRoute('assessment')}
+                        onClick={() => {
+                          setAssessmentMode('exam_studio');
+                          setRoute('assessment');
+                        }}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-300 px-3.5 py-2 text-sm font-semibold text-[#0F172A] hover:border-[#10B981] hover:text-[#059669] transition-colors whitespace-nowrap"
                       >
                         <ClipboardCheck className="w-4 h-4 text-[#10B981]" />
-                        Trung tâm kiểm tra
+                        Soạn đề &amp; Đánh giá
                       </button>
                     </div>
                     <PWAInstallButton compact />
@@ -902,15 +906,61 @@ export default function App() {
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.2, ease: [0.16, 1, 0.3, 1]}}
           >
-            <AssessmentCenter
-              allLessons={allLessons}
-              defaultGrade={selectedGrade}
-              onConvertToLesson={async (testLesson) => {
-                const saved = await saveLessonToDB(testLesson);
-                setSavedLessons((prev) => [saved, ...prev]);
-                setPresentingState({lesson: saved, startIndex: 0});
-              }}
-            />
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-4 flex flex-wrap items-center justify-between gap-2">
+              <div className="inline-flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-xl shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => setAssessmentMode('exam_studio')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-colors ${
+                    assessmentMode === 'exam_studio'
+                      ? 'bg-[#2563EB] text-white'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Soạn đề, Ma trận &amp; Bản đặc tả THPT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAssessmentMode('quick_quiz')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-colors ${
+                    assessmentMode === 'quick_quiz'
+                      ? 'bg-[#2563EB] text-white'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Đề luyện nhanh từ kho bài giảng
+                </button>
+              </div>
+            </div>
+
+            {assessmentMode === 'exam_studio' ? (
+              <ExamStudio
+                defaultGrade={
+                  selectedGrade >= 10 ? (selectedGrade as 10 | 11 | 12) : 10
+                }
+                defaultSchoolName={settings.schoolName}
+                aiAvailable={aiStatus.online && aiStatus.configured}
+                onPresentLesson={(lesson) =>
+                  setPresentingState({lesson, startIndex: 0})
+                }
+                onSaveAndEditLesson={async (lesson) => {
+                  const saved = await saveLessonToDB(lesson);
+                  setSavedLessons((prev) => [saved, ...prev]);
+                  setEditingLesson(saved);
+                  setRoute('editor');
+                }}
+              />
+            ) : (
+              <AssessmentCenter
+                allLessons={allLessons}
+                defaultGrade={selectedGrade}
+                onConvertToLesson={async (testLesson) => {
+                  const saved = await saveLessonToDB(testLesson);
+                  setSavedLessons((prev) => [saved, ...prev]);
+                  setPresentingState({lesson: saved, startIndex: 0});
+                }}
+              />
+            )}
           </motion.div>
         )}
 

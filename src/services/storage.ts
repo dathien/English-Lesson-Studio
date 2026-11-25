@@ -1,5 +1,6 @@
 import {openDB, type DBSchema, type IDBPDatabase} from 'idb';
 import type {AppSettings, LessonProject, StudentSubmission} from '../types/lesson';
+import type {BankQuestionRecord, ExamDossier} from '../types/exam';
 
 interface SlideStudioDB extends DBSchema {
   lessons: {
@@ -16,10 +17,20 @@ interface SlideStudioDB extends DBSchema {
     key: string;
     value: AppSettings;
   };
+  examDossiers: {
+    key: string;
+    value: ExamDossier;
+    indexes: {'by-updated': number; 'by-grade': number};
+  };
+  questionBank: {
+    key: string;
+    value: BankQuestionRecord;
+    indexes: {'by-grade': number; 'by-skill': string; 'by-updated': number};
+  };
 }
 
 const DB_NAME = 'english-slide-studio-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   defaultGrade: 10,
@@ -27,7 +38,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   presenterFontScale: 1,
   showTeacherNotesByDefault: false,
   teacherName: 'Giáo viên Tiếng Anh THPT',
-  schoolName: 'Trường THPT',
+  schoolName: '',
 };
 
 let dbPromise: Promise<IDBPDatabase<SlideStudioDB>> | null = null;
@@ -48,6 +59,17 @@ function getDB() {
         }
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings');
+        }
+        if (!db.objectStoreNames.contains('examDossiers')) {
+          const examStore = db.createObjectStore('examDossiers', {keyPath: 'id'});
+          examStore.createIndex('by-updated', 'updatedAt');
+          examStore.createIndex('by-grade', 'scope.grade');
+        }
+        if (!db.objectStoreNames.contains('questionBank')) {
+          const bankStore = db.createObjectStore('questionBank', {keyPath: 'id'});
+          bankStore.createIndex('by-grade', 'grade');
+          bankStore.createIndex('by-skill', 'skill');
+          bankStore.createIndex('by-updated', 'updatedAt');
         }
       },
     });
@@ -150,3 +172,93 @@ export async function importLessonFromJsonFile(file: File): Promise<LessonProjec
   };
   return saveLessonToDB(imported);
 }
+
+// --- Exam Dossiers & Question Bank (IndexedDB v2, offline-first) ---
+
+export async function getAllExamDossiers(): Promise<ExamDossier[]> {
+  const db = await getDB();
+  const list = await db.getAll('examDossiers');
+  return list.sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+export async function saveExamDossierToDB(dossier: ExamDossier): Promise<ExamDossier> {
+  const db = await getDB();
+  const record: ExamDossier = {
+    ...dossier,
+    isSample: false,
+    updatedAt: Date.now(),
+  };
+  await db.put('examDossiers', record);
+  return record;
+}
+
+export async function deleteExamDossierFromDB(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('examDossiers', id);
+}
+
+export function exportExamDossierAsJson(dossier: ExamDossier): void {
+  const payload = {
+    format: 'english-lesson-studio-exam-dossier',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    dossier,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName =
+    dossier.title
+      .replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s_-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_') || 'ho_so_de_kiem_tra';
+  a.href = url;
+  a.download = `${safeName}.exam.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function importExamDossierFromJsonFile(file: File): Promise<ExamDossier> {
+  const text = await file.text();
+  const parsed = JSON.parse(text);
+  const raw: ExamDossier = parsed?.dossier ?? parsed;
+  if (!raw || !raw.blueprint || !raw.exam || !Array.isArray(raw.exam.questions)) {
+    throw new Error('Tệp JSON không đúng định dạng Hồ sơ đề kiểm tra của English Lesson Studio.');
+  }
+  const imported: ExamDossier = {
+    ...raw,
+    id: `exam-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    isSample: false,
+    createdAt: raw.createdAt || Date.now(),
+    updatedAt: Date.now(),
+  };
+  return saveExamDossierToDB(imported);
+}
+
+export async function getAllBankQuestions(): Promise<BankQuestionRecord[]> {
+  const db = await getDB();
+  const list = await db.getAll('questionBank');
+  return list.sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+export async function saveBankQuestionToDB(item: BankQuestionRecord): Promise<BankQuestionRecord> {
+  const db = await getDB();
+  const record: BankQuestionRecord = {...item, updatedAt: Date.now()};
+  await db.put('questionBank', record);
+  return record;
+}
+
+export async function bulkSaveBankQuestionsToDB(items: BankQuestionRecord[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('questionBank', 'readwrite');
+  for (const item of items) {
+    await tx.store.put({...item, updatedAt: Date.now()});
+  }
+  await tx.done;
+}
+
+export async function deleteBankQuestionFromDB(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('questionBank', id);
+}
+

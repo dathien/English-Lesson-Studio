@@ -1,0 +1,348 @@
+import {buildPeriodicSampleDossier} from './packBuilder';
+import type {ExamDossier} from '../../types/exam';
+
+export const PERIODIC_GRADE_12_PACKS: ExamDossier[] = [
+  // 9. Lớp 12 — Giữa HK I (Unit 1–3)
+  buildPeriodicSampleDossier({
+    id: 'sample-g12-midterm1',
+    grade: 12,
+    examType: 'midterm_1',
+    semester: 'hk1',
+    title: 'Đề kiểm tra Giữa học kỳ I — Tiếng Anh 12 (Unit 1–3)',
+    examTitleUpper: 'ĐỀ KIỂM TRA GIỮA HỌC KỲ I',
+    unitIds: ['gs12-u1', 'gs12-u2', 'gs12-u3'],
+    topicSummary: 'Unit 1: Life Stories · Unit 2: Multicultural World · Unit 3: Green Living',
+    listeningPart1Title: 'An Inspiring Young Inventor',
+    listeningPart1Transcript:
+      'Today we profile Nguyen An, a young Vietnamese engineer admired for creating affordable water filters for flood-prone villages. While he was studying mechanical engineering at university, severe storms cut off clean drinking water in his hometown. Determined to help, he spent two years testing bamboo-charcoal filtration systems. His invention now supplies clean water to more than three thousand rural households, which has earned him international environmental awards.',
+    listeningPart1Items: [
+      {prompt: 'Nguyen An created affordable water filters for villages affected by floods.', answer: 'T', explanation: 'Transcript: "creating affordable water filters for flood-prone villages."', level: 'recognition', unitId: 'gs12-u1'},
+      {prompt: 'He got the idea after graduating and working abroad for ten years.', answer: 'F', explanation: 'Transcript: khi đang học đại học ("While he was studying mechanical engineering at university").', level: 'recognition', unitId: 'gs12-u1'},
+      {prompt: 'He tested bamboo-charcoal filtration systems for two years.', answer: 'T', explanation: 'Transcript: "spent two years testing bamboo-charcoal filtration systems."', level: 'comprehension', unitId: 'gs12-u1'},
+      {prompt: 'Over three thousand rural households currently benefit from his filters.', answer: 'T', explanation: 'Transcript: "supplies clean water to more than three thousand rural households".', level: 'comprehension', unitId: 'gs12-u3'},
+    ],
+    listeningPart2Title: 'Celebrating Our School Multicultural Fair',
+    listeningPart2Transcript:
+      'Every November, our high school hosts a Multicultural Fair to celebrate cultural diversity. Students set up stalls showcasing traditional costumes, calligraphy, and authentic snacks from Japan, Korea, India, Italy, and Viet Nam. Last year, the highlight was an interactive workshop where visitors learned how to wrap Vietnamese spring rolls alongside origami paper folding. According to the principal, experiencing other cultures firsthand teaches respect while helping students take greater pride in their own national identity.',
+    listeningPart2Items: [
+      {prompt: 'When does the school host the Multicultural Fair?', options: ['Every September', 'Every October', 'Every November', 'Every December'], answer: 'C', explanation: 'Transcript: "Every November, our high school hosts a Multicultural Fair".', level: 'recognition', unitId: 'gs12-u2'},
+      {prompt: 'What was the highlight of last year’s fair?', options: ['A fashion contest', 'An interactive spring-roll and origami workshop', 'A classical piano concert', 'A movie screening'], answer: 'B', explanation: 'Transcript: "an interactive workshop where visitors learned how to wrap Vietnamese spring rolls alongside origami".', level: 'recognition', unitId: 'gs12-u2'},
+      {prompt: 'Which country was NOT mentioned among the cultural stalls?', options: ['Japan', 'Italy', 'Brazil', 'India'], answer: 'C', explanation: 'Transcript liệt kê Japan, Korea, India, Italy, Viet Nam — không có Brazil.', level: 'comprehension', unitId: 'gs12-u2'},
+      {prompt: 'What does the principal say students gain from the event?', options: ['Higher exam scores', 'Respect for others and pride in their own identity', 'Free overseas scholarships', 'New language certificates'], answer: 'B', explanation: 'Transcript: "teaches respect while helping students take greater pride in their own national identity."', level: 'comprehension', unitId: 'gs12-u2'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['adm<u>i</u>re', 'ident<u>i</u>ty', 'mult<u>i</u>cultural', 'l<u>i</u>festyle'], answer: 'C', explanation: '"multicultural" đọc /ɪ/, ba từ còn lại đọc /aɪ/.', level: 'recognition', unitId: 'gs12-u2', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['gr<u>ea</u>t', 'st<u>ay</u>', 'f<u>a</u>mous', 'cl<u>ea</u>r'], answer: 'D', explanation: '"clear" đọc nguyên âm đôi /ɪə/; "great, stay, famous" đọc nguyên âm đôi /eɪ/.', level: 'recognition', unitId: 'gs12-u1', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['admire', 'devote', 'inspire', 'culture'], answer: 'D', explanation: '"culture" nhấn âm 1; ba động từ còn lại nhấn âm 2.', level: 'recognition', unitId: 'gs12-u1'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['festival', 'origin', 'diversity', 'custom'], answer: 'C', explanation: '"diversity" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs12-u2'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'While Marie Curie ______ in Paris, she conducted groundbreaking research on radioactivity.', options: ['studied', 'was studying', 'studies', 'has studied'], answer: 'B', explanation: 'Hành động đang diễn ra trong quá khứ (While + Past Continuous).', level: 'recognition', unitId: 'gs12-u1'},
+      {prompt: 'Vietnamese pho has gained ______ worldwide popularity thanks to cultural exchange.', options: ['a', 'an', 'the', 'Ø (no article)'], answer: 'D', explanation: 'Danh từ không đếm được "popularity" dùng nghĩa chung không dùng mạo từ.', level: 'recognition', unitId: 'gs12-u2'},
+      {prompt: 'Our class switched completely to reusable flasks, ______ reduced plastic bottle waste by eighty percent.', options: ['that', 'which', 'who', 'what'], answer: 'B', explanation: 'Mệnh đề quan hệ thay thế cả mệnh đề phía trước luôn dùng ", which".', level: 'comprehension', unitId: 'gs12-u3'},
+      {prompt: 'To live greener, families should work ______ practical ways to compost kitchen scraps.', options: ['out', 'in', 'off', 'at'], answer: 'A', explanation: 'Cụm động từ: "work out" = tìm ra giải pháp/cách thức.', level: 'comprehension', unitId: 'gs12-u3'},
+      {prompt: 'Many young people deeply ______ doctors who volunteered during health emergencies.', options: ['admire', 'admiration', 'admirable', 'admiringly'], answer: 'A', explanation: 'Sau trạng từ "deeply" cần động từ chính "admire".', level: 'recognition', unitId: 'gs12-u1'},
+      {prompt: 'Celebrating traditional festivals helps preserve ______ unique cultural identity of each community.', options: ['a', 'an', 'the', 'Ø'], answer: 'C', explanation: 'Danh từ xác định có cụm "of each community" → dùng mạo từ "the".', level: 'comprehension', unitId: 'gs12-u2'},
+      {prompt: 'We must rely less ______ single-use packaging if we want cleaner oceans.', options: ['in', 'on', 'with', 'to'], answer: 'B', explanation: 'Động từ đi với giới từ Unit 3: "rely on" (phụ thuộc vào).', level: 'application', unitId: 'gs12-u3'},
+      {prompt: 'He devoted his entire life to ______ educational opportunities for blind children.', options: ['create', 'creating', 'created', 'be created'], answer: 'B', explanation: 'Cấu trúc: devote sth to + V-ing (cống hiến cho việc...).', level: 'application', unitId: 'gs12-u1'},
+    ],
+    clozeTitle: 'Zero-Waste Habits on Campus',
+    clozeParagraphs: [
+      'Adopting a green lifestyle does not require expensive gadgets; it begins with mindful choices every day. At many high schools, students are learning to sort recyclable paper from organic waste, (21) ______ makes campus recycling far more efficient. Instead of buying bottled drinks, teenagers carry personal tumblers and refill them at filtered water stations. Students also care deeply (22) ______ reducing food waste by taking only what they can finish at lunch. When a whole school commits to (23) ______ sustainable routine, the environmental impact grows rapidly. More importantly, these habits inspire families at home to cut (24) ______ on plastic and embrace eco-friendly (25) ______.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['that', 'which', 'who', 'where'], answer: 'B', explanation: '", which" thay thế cho cả mệnh đề phía trước.', level: 'comprehension', unitId: 'gs12-u3'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['about', 'with', 'at', 'from'], answer: 'A', explanation: 'Động từ đi với giới từ: "care about" (quan tâm đến).', level: 'recognition', unitId: 'gs12-u3'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['a', 'an', 'the', 'Ø'], answer: 'A', explanation: 'Trước danh từ số ít đếm được bắt đầu bằng phụ âm /s/ dùng "a".', level: 'recognition', unitId: 'gs12-u2'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['off', 'down', 'away', 'over'], answer: 'B', explanation: 'Cụm động từ: "cut down on sth" (cắt giảm).', level: 'comprehension', unitId: 'gs12-u3'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['alternatives', 'conflicts', 'barriers', 'accidents'], answer: 'A', explanation: '"eco-friendly alternatives" = các giải pháp thay thế thân thiện môi trường.', level: 'application', unitId: 'gs12-u3'},
+    ],
+    readingTitle: 'Cultural Diversity in a Globalised World',
+    readingParagraphs: [
+      'Globalisation has connected nations more closely than at any other time in history. Today, teenagers in Hanoi can enjoy Italian pasta, listen to Korean pop music, and collaborate online with peers in London within a single afternoon.',
+      'This cross-cultural exchange brings undeniable benefits. Exposure to different traditions broadens young people’s perspectives, stimulates creativity in art and cuisine, and fosters mutual understanding among nations. International festivals also boost local tourism and create jobs for traditional craftspeople.',
+      'At the same time, cultural scholars warn against losing local heritage in the rush to adopt global trends. The healthiest approach is not rejecting outside influences, but balancing global openness with active pride in one’s own language, folk arts, and family customs.',
+    ],
+    readingItems: [
+      {prompt: 'Which benefit of cross-cultural exchange is NOT mentioned in paragraph 2?', options: ['Broadening young people’s perspectives', 'Inspiring creativity in art and food', 'Eliminating all foreign languages', 'Creating jobs for local artisans'], answer: 'C', explanation: 'Bài đọc không nói về việc xóa bỏ ngoại ngữ.', level: 'recognition', unitId: 'gs12-u2'},
+      {prompt: 'The word "fosters" in paragraph 2 is closest in meaning to ______.', options: ['promotes', 'prevents', 'ignores', 'replaces'], answer: 'A', explanation: '"foster" = promote (thúc đẩy, nuôi dưỡng).', level: 'comprehension', unitId: 'gs12-u2'},
+      {prompt: 'What concern do cultural scholars express in paragraph 3?', options: ['Travel tickets are becoming too cheap', 'Local heritage may fade if global trends dominate blindly', 'Teenagers dislike international festivals', 'Craftspeople refuse to use technology'], answer: 'B', explanation: 'Đoạn 3: cảnh báo nguy cơ mai một di sản bản địa khi chạy theo trào lưu toàn cầu.', level: 'comprehension', unitId: 'gs12-u2'},
+      {prompt: 'What balanced approach does the author recommend?', options: ['Closing borders to foreign media', 'Replacing local customs with global ones', 'Welcoming global culture while actively preserving local identity', 'Studying only ancient history'], answer: 'C', explanation: 'Đoạn 3: "balancing global openness with active pride in one’s own language, folk arts, and family customs."', level: 'application', unitId: 'gs12-u2'},
+      {prompt: 'What is the main idea of the entire passage?', options: ['Globalisation only causes cultural loss', 'Globalisation enriches cultural life when balanced with heritage preservation', 'Italian food is popular worldwide', 'Online study replaces international travel'], answer: 'B', explanation: 'Toàn bài phân tích lợi ích của giao lưu văn hóa cùng yêu cầu gìn giữ bản sắc.', level: 'application', unitId: 'gs12-u2'},
+    ],
+    transformationItems: [
+      {prompt: 'Students started composting school garden waste. This significantly improved the soil quality. (Combine using ", which")', answer: 'Students started composting school garden waste, which significantly improved the soil quality.', acceptedAnswers: ['Students started composting school garden waste, which improved the soil quality significantly.'], explanation: 'Dùng mệnh đề quan hệ ", which" thay cho cả mệnh đề phía trước.', level: 'comprehension', unitId: 'gs12-u3'},
+      {prompt: 'She was preparing her speech on national heroes. The power went out. (Combine using "While")', answer: 'While she was preparing her speech on national heroes, the power went out.', acceptedAnswers: ['The power went out while she was preparing her speech on national heroes.'], explanation: 'Kết hợp Quá khứ tiếp diễn và Quá khứ đơn với "While".', level: 'comprehension', unitId: 'gs12-u1'},
+      {prompt: 'Many teenagers admire Professor Ton That Tung for his dedication to medicine. (Rewrite using "look up to")', answer: 'Many teenagers look up to Professor Ton That Tung for his dedication to medicine.', acceptedAnswers: ['Many teenagers look up to Professor Ton That Tung because of his dedication to medicine.'], explanation: 'Cụm động từ đồng nghĩa với admire: "look up to".', level: 'application', unitId: 'gs12-u1'},
+      {prompt: 'Our school reduced paper handouts by half last term. That saved dozens of trees. (Combine using ", which")', answer: 'Our school reduced paper handouts by half last term, which saved dozens of trees.', acceptedAnswers: ['Last term, our school reduced paper handouts by half, which saved dozens of trees.'], explanation: 'Dùng ", which" thay cho cả hành động giảm tờ rơi giấy.', level: 'application', unitId: 'gs12-u3'},
+    ],
+    essayPrompt: 'Write a short problem-solving paragraph/essay (120–150 words) proposing practical ways to reduce single-use plastic waste at your school.',
+    essayOutline: [
+      'Problem: High volume of plastic cups and bottles used daily on campus.',
+      'Solution 1: Install clean drinking water refill stations and promote personal flasks.',
+      'Solution 2: Replace plastic canteen containers with washable or paper alternatives.',
+      'Conclusion: Cleaner school environment and stronger green habits.',
+    ],
+    essaySample:
+      'Single-use plastic waste from drink cups and snack wrappers has become a visible environmental problem in many high schools. Fortunately, students and school leaders can solve this issue through practical daily habits. First, the school should install filtered water refill stations on every floor and encourage students to bring reusable tumblers, which can cut plastic bottle consumption immediately. Second, the school canteen ought to switch from disposable foam boxes to washable trays or biodegradable paper packaging. In addition, eco-clubs can place clearly labelled recycling bins across the yard and run monthly "Plastic-Free Friday" challenges to keep students motivated. By combining better campus facilities with student commitment, we can build a cleaner, greener school and carry sustainable habits into adult life.',
+    essayUnitId: 'gs12-u3',
+  }),
+
+  // 10. Lớp 12 — Cuối HK I (Unit 1–5)
+  buildPeriodicSampleDossier({
+    id: 'sample-g12-final1',
+    grade: 12,
+    examType: 'final_1',
+    semester: 'hk1',
+    title: 'Đề kiểm tra Cuối học kỳ I — Tiếng Anh 12 (Unit 1–5)',
+    examTitleUpper: 'ĐỀ KIỂM TRA CUỐI HỌC KỲ I',
+    unitIds: ['gs12-u1', 'gs12-u2', 'gs12-u3', 'gs12-u4', 'gs12-u5'],
+    topicSummary: 'Unit 1–5 (Life Stories, Multiculturalism, Green Living, Urbanisation, World of Work)',
+    listeningPart1Title: 'My First Part-Time Job at a Community Library',
+    listeningPart1Transcript:
+      'Last summer, I took a part-time job as a junior assistant at our city’s community library. I worked four afternoons a week, helping visitors locate books, organising children’s reading corners, and updating the digital catalogue. Although the salary was modest, the job taught me punctuality, teamwork, and how to communicate patiently with people of all ages. I believe part-time work during school holidays prepares Grade 12 students well for future careers, as long as it does not interfere with exam revision.',
+    listeningPart1Items: [
+      {prompt: 'The speaker worked full-time at a university library last summer.', answer: 'F', explanation: 'Transcript: làm bán thời gian 4 buổi chiều/tuần tại thư viện cộng đồng ("part-time job... community library").', level: 'recognition', unitId: 'gs12-u5'},
+      {prompt: 'Duties included helping visitors find books and updating the digital catalogue.', answer: 'T', explanation: 'Transcript: "helping visitors locate books... updating the digital catalogue."', level: 'recognition', unitId: 'gs12-u5'},
+      {prompt: 'The speaker gained punctuality and communication skills from the job.', answer: 'T', explanation: 'Transcript: "taught me punctuality, teamwork, and how to communicate patiently".', level: 'comprehension', unitId: 'gs12-u5'},
+      {prompt: 'The speaker warns that part-time work should not harm exam revision.', answer: 'T', explanation: 'Transcript: "as long as it does not interfere with exam revision."', level: 'comprehension', unitId: 'gs12-u5'},
+    ],
+    listeningPart2Title: 'Rapid Urbanisation in Viet Nam',
+    listeningPart2Transcript:
+      'Over the past three decades, Viet Nam has experienced rapid urbanisation as millions of people have moved from rural provinces to major cities in search of better education and employment. Urban residents now enjoy modern hospitals, expanded metro lines, and diverse cultural venues. Nevertheless, the faster cities grow, the heavier the pressure becomes on affordable housing, clean air, and public transport. Urban planners therefore emphasize developing satellite towns with green parks to ensure balanced growth.',
+    listeningPart2Items: [
+      {prompt: 'Why have millions of people moved from rural areas to major cities?', options: ['For quieter neighbourhoods', 'For better education and job opportunities', 'For cheaper farmland', 'For cooler winter weather'], answer: 'B', explanation: 'Transcript: "in search of better education and employment."', level: 'recognition', unitId: 'gs12-u4'},
+      {prompt: 'Which urban benefit is mentioned in the talk?', options: ['Free public housing', 'Modern hospitals and expanded metro lines', 'Zero traffic congestion', 'Lower grocery prices'], answer: 'B', explanation: 'Transcript: "modern hospitals, expanded metro lines, and diverse cultural venues."', level: 'recognition', unitId: 'gs12-u4'},
+      {prompt: 'What happens as cities expand faster?', options: ['Housing becomes cheaper everywhere', 'Pressure grows on housing, air quality, and transit', 'Fewer jobs are created', 'Rural schools close immediately'], answer: 'B', explanation: 'Transcript: "heavier the pressure becomes on affordable housing, clean air, and public transport."', level: 'comprehension', unitId: 'gs12-u4'},
+      {prompt: 'What solution do urban planners recommend?', options: ['Stopping all migration', 'Developing green satellite towns', 'Building only high-rise offices', 'Removing public parks'], answer: 'B', explanation: 'Transcript: "developing satellite towns with green parks to ensure balanced growth."', level: 'comprehension', unitId: 'gs12-u4'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>u</u>rban', 'b<u>u</u>rden', 'p<u>u</u>rpose', 's<u>u</u>pport'], answer: 'D', explanation: '"support" đọc /ə/; "urban, burden, purpose" đọc /ɜː/.', level: 'recognition', unitId: 'gs12-u4', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['appli<u>c</u>ant', 'va<u>c</u>ancy', '<u>c</u>andidate', '<u>c</u>ertificate'], answer: 'D', explanation: '"certificate" đọc /s/, ba từ còn lại đọc /k/.', level: 'recognition', unitId: 'gs12-u5', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['housing', 'suburb', 'expand', 'resident'], answer: 'C', explanation: '"expand" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs12-u4'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['employer', 'flexible', 'vacancy', 'bonus'], answer: 'A', explanation: '"employer" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs12-u5'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'The ______ cities become, the more urgently governments must invest in public transit.', options: ['crowded', 'more crowded', 'most crowded', 'crowding'], answer: 'B', explanation: 'So sánh kép: The + comparative..., the + comparative...', level: 'recognition', unitId: 'gs12-u4'},
+      {prompt: 'Housing prices in the city centre are getting ______ every year.', options: ['high and high', 'higher and higher', 'more and most high', 'highest'], answer: 'B', explanation: 'So sánh tăng tiến với tính từ ngắn: adj-er and adj-er.', level: 'recognition', unitId: 'gs12-u4'},
+      {prompt: 'It is the first time our city ______ an automated electric metro line.', options: ['operates', 'operated', 'has operated', 'is operating'], answer: 'C', explanation: 'Cấu trúc: It is the first time + S + has/have + V3/ed.', level: 'comprehension', unitId: 'gs12-u4'},
+      {prompt: 'The company announced a new ______ for a bilingual customer service assistant.', options: ['vacancy', 'resident', 'migration', 'suburb'], answer: 'A', explanation: 'Unit 5: "vacancy" = vị trí việc làm đang tuyển dụng.', level: 'recognition', unitId: 'gs12-u5'},
+      {prompt: 'She applied for the internship ______ she wanted hands-on experience in graphic design.', options: ['although', 'because', 'so that', 'whereas'], answer: 'B', explanation: 'Câu phức chỉ nguyên nhân dùng liên từ "because".', level: 'comprehension', unitId: 'gs12-u5'},
+      {prompt: 'Not only did he complete his degree on time, ______ he also gained two workplace certificates.', options: ['and', 'but', 'so', 'or'], answer: 'B', explanation: 'Cấu trúc: Not only ... but (also)...', level: 'comprehension', unitId: 'gs12-u5'},
+      {prompt: 'Flexible working hours help employees maintain a healthy ______.', options: ['work-life balance', 'carbon footprint', 'housing shortage', 'culture shock'], answer: 'A', explanation: 'Collocation Unit 5: "work-life balance" (cân bằng công việc – cuộc sống).', level: 'application', unitId: 'gs12-u5'},
+      {prompt: 'Although the salary was competitive, he turned down the offer ______ the daily commute was too long.', options: ['so', 'because', 'despite', 'but'], answer: 'B', explanation: 'Mệnh đề phụ chỉ lý do sau mệnh đề chính dùng "because".', level: 'application', unitId: 'gs12-u5'},
+    ],
+    clozeTitle: 'Preparing for the Modern Workplace',
+    clozeParagraphs: [
+      'The world of work is evolving rapidly as digital tools reshape nearly every industry. Today’s employers look not only for strong academic qualifications (21) ______ also for adaptability, communication, and teamwork. The (22) ______ practical skills a candidate develops during school projects, the smoother their transition into a first job will be. Many companies now offer flexible schedules (23) ______ employees can balance personal commitments with productivity. Meanwhile, rapid urbanisation has created (24) ______ job hubs in major cities while remote work lets specialists collaborate from smaller towns. Clearly, continuous learning has become (25) ______ essential habit for career success.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['and', 'but', 'or', 'so'], answer: 'B', explanation: 'Cấu trúc tương quan: not only ... but also ...', level: 'recognition', unitId: 'gs12-u5'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['more', 'most', 'much', 'many'], answer: 'A', explanation: 'So sánh kép: The more ..., the smoother ...', level: 'comprehension', unitId: 'gs12-u4'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['so that', 'because of', 'despite', 'although'], answer: 'A', explanation: 'Mệnh đề chỉ mục đích dùng "so that".', level: 'comprehension', unitId: 'gs12-u5'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['diverse', 'diversity', 'diversify', 'diversely'], answer: 'A', explanation: 'Trước danh từ "job hubs" cần tính từ "diverse".', level: 'recognition', unitId: 'gs12-u2'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['a', 'an', 'the', 'Ø'], answer: 'B', explanation: 'Trước âm nguyên âm /ɪ/ ("essential") dùng mạo từ "an".', level: 'application', unitId: 'gs12-u2'},
+    ],
+    readingTitle: 'Counter-Urbanisation and Satellite Towns',
+    readingParagraphs: [
+      'For much of the twentieth century, migration flowed mainly in one direction: from countryside villages toward dense urban centres. Over the last decade, however, urban geographers have noticed a growing counter-trend known as suburbanisation and counter-urbanisation.',
+      'As downtown housing grows increasingly expensive and traffic congestion worsens, many young families are relocating to well-connected satellite towns thirty to fifty kilometres outside metropolitan hubs. Improved expressways, commuter rail lines, and high-speed Internet allow professionals to work remotely several days a week while enjoying larger green spaces and cleaner air.',
+      'This shift also brings new opportunities to surrounding regions. Local cafés, clinics, and schools expand to serve newcomers, reducing overpopulation in historic city centres. However, experts stress that satellite towns must be carefully planned with public transit so residents do not become overly reliant on private cars.',
+    ],
+    readingItems: [
+      {prompt: 'What factors encourage young families to move to satellite towns?', options: ['Lower Internet speeds', 'High downtown housing costs and heavy traffic', 'Closure of all city offices', 'Lack of schools in cities'], answer: 'B', explanation: 'Đoạn 2: "downtown housing grows increasingly expensive and traffic congestion worsens".', level: 'recognition', unitId: 'gs12-u4'},
+      {prompt: 'What enables professionals to work remotely from satellite towns?', options: ['Better expressways, rail lines, and high-speed Internet', 'Free electric cars', 'Shorter school years', 'Smaller apartments'], answer: 'A', explanation: 'Đoạn 2: "Improved expressways, commuter rail lines, and high-speed Internet".', level: 'comprehension', unitId: 'gs12-u4'},
+      {prompt: 'The word "newcomers" in paragraph 3 refers to ______.', options: ['urban geographers', 'families relocating to satellite towns', 'historic city centres', 'local cafés'], answer: 'B', explanation: '"newcomers" chỉ những cư dân mới chuyển tới sinh sống ở đô thị vệ tinh.', level: 'comprehension', unitId: 'gs12-u4'},
+      {prompt: 'What warning do experts give in paragraph 3?', options: ['Satellite towns should ban cafés', 'Public transit must be planned to avoid car dependency', 'Remote work should be prohibited', 'Green parks cost too much'], answer: 'B', explanation: 'Đoạn 3: "planned with public transit so residents do not become overly reliant on private cars."', level: 'application', unitId: 'gs12-u4'},
+      {prompt: 'Which best describes the main idea of the passage?', options: ['Why historic cities are disappearing', 'The rise, benefits, and planning needs of satellite towns', 'How to apply for remote jobs', 'The history of expressways'], answer: 'B', explanation: 'Bài đọc nói về xu hướng đô thị vệ tinh, lợi ích và yêu cầu quy hoạch giao thông công cộng.', level: 'application', unitId: 'gs12-u4'},
+    ],
+    transformationItems: [
+      {prompt: 'When a city builds more green parks, its residents become healthier. (Rewrite using double comparatives)', answer: 'The more green parks a city builds, the healthier its residents become.', acceptedAnswers: ['The more green parks a city builds, the healthier the residents become.'], explanation: 'So sánh kép: The more + N + S + V, the + adj-er + S + V.', level: 'comprehension', unitId: 'gs12-u4'},
+      {prompt: 'This is the first time Minh has written a formal application letter in English. (Rewrite using "never")', answer: 'Minh has never written a formal application letter in English before.', acceptedAnswers: ['Minh has never written a formal application letter in English.'], explanation: 'Chuyển "the first time" sang Present Perfect với "never ... before".', level: 'comprehension', unitId: 'gs12-u4'},
+      {prompt: 'She had little work experience, but her enthusiasm impressed the interviewer. (Rewrite using "Although")', answer: 'Although she had little work experience, her enthusiasm impressed the interviewer.', acceptedAnswers: ['Her enthusiasm impressed the interviewer although she had little work experience.'], explanation: 'Chuyển câu ghép với "but" thành câu phức với "Although".', level: 'application', unitId: 'gs12-u5'},
+      {prompt: 'Public transport is becoming increasingly convenient in our city. (Rewrite using "more and more")', answer: 'Public transport is becoming more and more convenient in our city.', acceptedAnswers: ['In our city, public transport is becoming more and more convenient.'], explanation: 'So sánh tăng tiến với tính từ dài: more and more + adj.', level: 'application', unitId: 'gs12-u4'},
+    ],
+    essayPrompt: 'Write a short application letter or paragraph (120–150 words) applying for a summer part-time position as a Student Library Assistant at your local cultural centre.',
+    essayOutline: [
+      'Opening: State the position applied for and where you saw the advertisement.',
+      'Body 1: Highlight relevant strengths (organisation, computer literacy, English communication).',
+      'Body 2: Mention availability and willingness to learn.',
+      'Closing: Express enthusiasm for an interview.',
+    ],
+    essaySample:
+      'Dear Hiring Manager, I am writing to apply for the summer part-time position of Student Library Assistant advertised on the District Cultural Centre website. As a Grade 12 student with a strong passion for books and community service, I believe I am well suited for this role. Over the past two years, I have helped manage our school reading club, where I organised catalogues, guided younger students, and maintained digital records accurately. I am punctual, polite, and confident communicating in both Vietnamese and English. Since school finishes in late May, I am available to work flexible shifts throughout June and July. I would welcome the opportunity to discuss my application in an interview. Thank you for your time and consideration. Yours faithfully, Nguyen Minh Anh.',
+    essayUnitId: 'gs12-u5',
+  }),
+
+  // 11. Lớp 12 — Giữa HK II (Unit 6–8)
+  buildPeriodicSampleDossier({
+    id: 'sample-g12-midterm2',
+    grade: 12,
+    examType: 'midterm_2',
+    semester: 'hk2',
+    title: 'Đề kiểm tra Giữa học kỳ II — Tiếng Anh 12 (Unit 6–8)',
+    examTitleUpper: 'ĐỀ KIỂM TRA GIỮA HỌC KỲ II',
+    unitIds: ['gs12-u6', 'gs12-u7', 'gs12-u8'],
+    topicSummary: 'Unit 6: Artificial Intelligence · Unit 7: Mass Media · Unit 8: Wildlife Conservation',
+    listeningPart1Title: 'Fact-Checking News on Social Media',
+    listeningPart1Transcript:
+      'Welcome to Media Literacy Minute! These days, social media spreads breaking stories so quickly that rumours often travel faster than verified facts. Before sharing an alarming headline with your friends, follow three simple checks. First, look at who published the article and whether it comes from a credible newsroom. Second, check if at least two independent sources report the same facts. Third, inspect photos carefully because AI-edited images can look completely real. Taking thirty seconds to verify information protects your whole community.',
+    listeningPart1Items: [
+      {prompt: 'Rumours on social media often spread faster than verified news.', answer: 'T', explanation: 'Transcript: "rumours often travel faster than verified facts."', level: 'recognition', unitId: 'gs12-u7'},
+      {prompt: 'The speaker advises sharing breaking headlines immediately without checking.', answer: 'F', explanation: 'Transcript: khuyên kiểm chứng qua 3 bước trước khi chia sẻ.', level: 'recognition', unitId: 'gs12-u7'},
+      {prompt: 'Checking whether two independent sources confirm a story is recommended.', answer: 'T', explanation: 'Transcript: "check if at least two independent sources report the same facts."', level: 'comprehension', unitId: 'gs12-u7'},
+      {prompt: 'AI-edited photos can appear realistic, so readers should inspect images carefully.', answer: 'T', explanation: 'Transcript: "AI-edited images can look completely real."', level: 'comprehension', unitId: 'gs12-u6'},
+    ],
+    listeningPart2Title: 'AI Cameras Protecting Rare Gibbons',
+    listeningPart2Transcript:
+      'In northern Vietnamese forests, wildlife researchers now use smart acoustic sensors and AI-powered camera traps to monitor critically endangered gibbons. Previously, rangers had to hike steep mountain trails for days to record animal sightings manually. Now, solar-powered sensors detect distinctive gibbon calls and automatically alert rangers if illegal chainsaws are heard nearby. Unless conservation teams combine modern technology with community support, fragile forest species will remain at serious risk.',
+    listeningPart2Items: [
+      {prompt: 'What technology do researchers use to monitor endangered gibbons?', options: ['Underwater drones', 'Acoustic sensors and AI camera traps', 'Satellite TV dishes', 'Thermal balloons'], answer: 'B', explanation: 'Transcript: "smart acoustic sensors and AI-powered camera traps".', level: 'recognition', unitId: 'gs12-u8'},
+      {prompt: 'How are the forest sensors powered?', options: ['By solar energy', 'By diesel fuel', 'By wind turbines', 'By power lines'], answer: 'A', explanation: 'Transcript: "solar-powered sensors".', level: 'recognition', unitId: 'gs12-u6'},
+      {prompt: 'What illegal activity can the sensors alert rangers to?', options: ['Tourists taking photos', 'Illegal chainsaws cutting trees', 'Heavy rainfall', 'Camping fires'], answer: 'B', explanation: 'Transcript: "alert rangers if illegal chainsaws are heard nearby."', level: 'comprehension', unitId: 'gs12-u8'},
+      {prompt: 'What do researchers say must accompany technology to protect wildlife?', options: ['Higher ticket prices', 'Community support', 'More forest roads', 'Commercial farming'], answer: 'B', explanation: 'Transcript: "combine modern technology with community support".', level: 'comprehension', unitId: 'gs12-u8'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['m<u>e</u>dia', 'f<u>ea</u>ture', 'thr<u>ea</u>ten', 'sp<u>e</u>cies'], answer: 'C', explanation: '"threaten" đọc /e/, ba từ còn lại đọc /iː/.', level: 'recognition', unitId: 'gs12-u8', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>c</u>onserve', '<u>c</u>amera', '<u>c</u>yber', '<u>c</u>reate'], answer: 'C', explanation: '"cyber" đọc /s/, ba từ còn lại đọc /k/.', level: 'recognition', unitId: 'gs12-u6', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['virtual', 'chatbot', 'machine', 'robot'], answer: 'C', explanation: '"machine" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs12-u6'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['journalist', 'credible', 'broadcast', 'endangered'], answer: 'D', explanation: '"endangered" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs12-u7'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'Our school had the computer lab ______ with new interactive software before the new term.', options: ['upgrade', 'upgraded', 'upgrading', 'to upgrade'], answer: 'B', explanation: 'Thể sai khiến bị động Unit 6: have + sth + V3/ed.', level: 'recognition', unitId: 'gs12-u6'},
+      {prompt: 'The IT coordinator got the technicians ______ the AI projection system yesterday.', options: ['check', 'to check', 'checked', 'checking'], answer: 'B', explanation: 'Thể sai khiến chủ động với "get": get + sb + to-V.', level: 'recognition', unitId: 'gs12-u6'},
+      {prompt: 'The fake video spread ______ rapidly that thousands of users believed it within an hour.', options: ['such', 'so', 'as', 'too'], answer: 'B', explanation: 'Mệnh đề trạng ngữ kết quả Unit 7: so + adj/adv + that...', level: 'recognition', unitId: 'gs12-u7'},
+      {prompt: 'It was ______ an informative documentary on sea turtles that the whole class applauded.', options: ['so', 'such', 'as if', 'unless'], answer: 'B', explanation: 'Mệnh đề trạng ngữ kết quả: such + a/an + adj + N + that...', level: 'comprehension', unitId: 'gs12-u7'},
+      {prompt: 'The voice assistant speaks so naturally ______ it were a real human tutor.', options: ['unless', 'as if', 'provided that', 'so that'], answer: 'B', explanation: 'Mệnh đề trạng ngữ chỉ cách thức giả định: as if + S + were...', level: 'comprehension', unitId: 'gs12-u7'},
+      {prompt: '______ illegal wildlife trade is strictly punished, endangered species will face extinction.', options: ['Provided that', 'Unless', 'As if', 'Because'], answer: 'B', explanation: 'Mệnh đề điều kiện phủ định Unit 8: Unless (= If ... not).', level: 'comprehension', unitId: 'gs12-u8'},
+      {prompt: 'Digital platforms offer instant news updates, ______ printed newspapers remain valued for deep analysis.', options: ['while', 'unless', 'so that', 'as if'], answer: 'A', explanation: 'Liên từ đối chiếu/tương phản "while".', level: 'application', unitId: 'gs12-u7'},
+      {prompt: 'Habitat restoration succeeds ______ local residents benefit economically from protecting the forest.', options: ['unless', 'provided that', 'as though', 'such that'], answer: 'B', explanation: 'Mệnh đề điều kiện Unit 8: "provided that" (= miễn là / với điều kiện là).', level: 'application', unitId: 'gs12-u8'},
+    ],
+    clozeTitle: 'AI in Modern Classrooms',
+    clozeParagraphs: [
+      'Artificial intelligence is transforming education by offering personalised practice that adapts to each learner’s pace. Many schools have their digital platforms (21) ______ with intelligent speech tools so students can practise pronunciation anytime. The software responds so accurately (22) ______ learners receive instant feedback on word stress and intonation. Yet educators emphasise that AI can support learning effectively (23) ______ students use it ethically rather than copying answers blindly. Teachers remain irreplaceable because they inspire curiosity and guide critical thinking in ways no algorithm can replicate. Used wisely, AI acts (24) ______ a tireless study assistant that helps every teenager reach their full (25) ______.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['equip', 'equipped', 'equipping', 'to equip'], answer: 'B', explanation: 'Thể sai khiến bị động: have + sth + V3/ed (equipped).', level: 'recognition', unitId: 'gs12-u6'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['that', 'than', 'as', 'when'], answer: 'A', explanation: 'Cấu trúc kết quả: so + adv + that...', level: 'recognition', unitId: 'gs12-u7'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['unless', 'provided that', 'as if', 'despite'], answer: 'B', explanation: '"provided that" = miễn là (điều kiện cần).', level: 'comprehension', unitId: 'gs12-u8'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['like', 'unless', 'such', 'though'], answer: 'A', explanation: '"act like + N" = hoạt động như một...', level: 'comprehension', unitId: 'gs12-u7'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['potential', 'potentially', 'potent', 'potency'], answer: 'A', explanation: 'Collocation: "reach one’s full potential" (phát huy hết tiềm năng).', level: 'application', unitId: 'gs12-u6'},
+    ],
+    readingTitle: 'From Print to Digital: How Mass Media Evolved',
+    readingParagraphs: [
+      'For centuries, newspapers, radio, and television served as the primary gatekeepers of public information. Journalists spent hours verifying facts with editors before a single headline reached readers the following morning.',
+      'The rise of digital media changed everything. Today, smartphones deliver live updates from every corner of the globe in real time, and ordinary citizens can publish photos or podcasts within seconds. Because digital platforms are interactive, audiences no longer passively consume news — they comment, debate, and share stories instantly.',
+      'However, speed has created a serious side effect: misinformation. Without professional editors checking every post, misleading claims can go viral before experts correct them. Therefore, media literacy — the ability to evaluate sources critically — has become one of the most important skills for twenty-first-century citizens.',
+    ],
+    readingItems: [
+      {prompt: 'How did traditional mass media differ from today’s social media?', options: ['It updated every second', 'Editors verified stories before publication', 'Anyone could broadcast live without review', 'It did not use journalists'], answer: 'B', explanation: 'Đoạn 1: phóng viên và biên tập viên kiểm chứng thông tin trước khi phát hành.', level: 'recognition', unitId: 'gs12-u7'},
+      {prompt: 'Why are digital media audiences described as interactive?', options: ['They print newspapers at home', 'They comment, debate, and share stories instantly', 'They only listen to radio', 'They refuse to read headlines'], answer: 'B', explanation: 'Đoạn 2: "they comment, debate, and share stories instantly."', level: 'comprehension', unitId: 'gs12-u7'},
+      {prompt: 'The word "them" in paragraph 3 refers to ______.', options: ['editors', 'experts', 'misleading claims', 'citizens'], answer: 'C', explanation: '"before experts correct them" = trước khi chuyên gia đính chính các thông tin sai lệch.', level: 'comprehension', unitId: 'gs12-u7'},
+      {prompt: 'What does "media literacy" mean in the final paragraph?', options: ['Memorising TV schedules', 'The ability to critically evaluate information sources', 'Designing social media advertisements', 'Writing faster text messages'], answer: 'B', explanation: 'Đoạn 3 định nghĩa trực tiếp: "the ability to evaluate sources critically".', level: 'application', unitId: 'gs12-u7'},
+      {prompt: 'What is the main purpose of the passage?', options: ['To argue that smartphones should be banned', 'To trace the shift in mass media and highlight the need for media literacy', 'To explain how printing presses work', 'To compare radio and cinema'], answer: 'B', explanation: 'Toàn bài trình bày sự chuyển dịch truyền thông và tầm quan trọng của năng lực đọc hiểu truyền thông.', level: 'application', unitId: 'gs12-u7'},
+    ],
+    transformationItems: [
+      {prompt: 'A technician repaired our school’s smart board yesterday. (Rewrite using passive causative "had")', answer: 'We had our school’s smart board repaired by a technician yesterday.', acceptedAnswers: ['Our school had its smart board repaired by a technician yesterday.', 'We had our school’s smart board repaired yesterday.'], explanation: 'Thể sai khiến bị động: have + sth + V3/ed.', level: 'comprehension', unitId: 'gs12-u6'},
+      {prompt: 'The wildlife documentary was very moving, so many students donated to the rescue centre. (Rewrite using "so ... that")', answer: 'The wildlife documentary was so moving that many students donated to the rescue centre.', acceptedAnswers: ['The wildlife documentary was so moving that many students made donations to the rescue centre.'], explanation: 'Mệnh đề kết quả: so + adj + that + S + V.', level: 'comprehension', unitId: 'gs12-u7'},
+      {prompt: 'If poachers are not stopped immediately, rare rhinos will vanish. (Rewrite using "Unless")', answer: 'Unless poachers are stopped immediately, rare rhinos will vanish.', acceptedAnswers: ['Rare rhinos will vanish unless poachers are stopped immediately.'], explanation: 'Unless = If ... not.', level: 'application', unitId: 'gs12-u8'},
+      {prompt: 'The chatbot answers very fluently. You might think it is a native speaker. (Rewrite using "as if")', answer: 'The chatbot answers so fluently as if it were a native speaker.', acceptedAnswers: ['The chatbot answers as if it were a native speaker.'], explanation: 'Mệnh đề cách thức giả định: as if + S + were...', level: 'application', unitId: 'gs12-u7'},
+    ],
+    essayPrompt: 'Write a short essay/paragraph (120–150 words) discussing the advantages and disadvantages of using Artificial Intelligence tools in high school learning.',
+    essayOutline: [
+      'Topic sentence: State that AI offers major study benefits alongside clear risks.',
+      'Advantages: Instant grammar/pronunciation feedback, personalised practice.',
+      'Disadvantages: Over-dependence, risk of inaccurate information if unverified.',
+      'Conclusion: Students should use AI as a guide while keeping independent thinking.',
+    ],
+    essaySample:
+      'Artificial Intelligence tools have rapidly entered high school classrooms, bringing both promising advantages and notable drawbacks. On the one hand, AI applications offer personalised support at any hour. Students can practise English pronunciation, check grammar explanations, and organise revision flashcards much more efficiently than before. On the other hand, relying too heavily on AI poses serious risks. Learners who copy AI-generated paragraphs without thinking independently fail to develop genuine writing and problem-solving skills. Moreover, AI can occasionally produce inaccurate facts if users do not verify sources carefully. Therefore, teenagers should treat AI strictly as a learning assistant rather than a shortcut. When combined with teacher guidance and honest effort, AI can enrich education without replacing human creativity.',
+    essayUnitId: 'gs12-u6',
+  }),
+
+  // 12. Lớp 12 — Cuối HK II (Unit 6–10)
+  buildPeriodicSampleDossier({
+    id: 'sample-g12-final2',
+    grade: 12,
+    examType: 'final_2',
+    semester: 'hk2',
+    title: 'Đề kiểm tra Cuối học kỳ II — Tiếng Anh 12 (Unit 6–10)',
+    examTitleUpper: 'ĐỀ KIỂM TRA CUỐI HỌC KỲ II',
+    unitIds: ['gs12-u6', 'gs12-u7', 'gs12-u8', 'gs12-u9', 'gs12-u10'],
+    topicSummary: 'Unit 6–10 (AI, Mass Media, Wildlife Conservation, Career Paths, Lifelong Learning)',
+    listeningPart1Title: 'Planning Your Career Path Early',
+    listeningPart1Transcript:
+      'Choosing a career path can feel overwhelming for Grade 12 students, but career adviser Ms. Huong suggests starting with self-reflection. First, list the subjects and activities that genuinely excite you, as well as the transferable skills you already enjoy using — such as problem-solving, public speaking, or data analysis. Second, talk to professionals working in fields you are curious about to understand their real daily routines. Remember that very few people keep the exact same job title forever, so adaptability matters even more than picking one fixed label at age eighteen.',
+    listeningPart1Items: [
+      {prompt: 'Ms. Huong recommends beginning career planning with self-reflection.', answer: 'T', explanation: 'Transcript: "suggests starting with self-reflection."', level: 'recognition', unitId: 'gs12-u9'},
+      {prompt: 'Problem-solving and public speaking are mentioned as examples of transferable skills.', answer: 'T', explanation: 'Transcript: "transferable skills... such as problem-solving, public speaking, or data analysis."', level: 'recognition', unitId: 'gs12-u9'},
+      {prompt: 'Ms. Huong advises students not to speak with working professionals.', answer: 'F', explanation: 'Transcript: khuyên trò chuyện với người đang làm nghề ("talk to professionals").', level: 'comprehension', unitId: 'gs12-u9'},
+      {prompt: 'She emphasizes that adaptability is essential in modern careers.', answer: 'T', explanation: 'Transcript: "adaptability matters even more than picking one fixed label".', level: 'comprehension', unitId: 'gs12-u9'},
+    ],
+    listeningPart2Title: 'The Power of Lifelong Learning',
+    listeningPart2Transcript:
+      'Meet Mr. Quang, a sixty-two-year-old retired accountant who recently completed an online course in digital photography and basic English communication. After retiring two years ago, his daughter encouraged him to explore hobbies he had never had time for during his working years. Every Tuesday, Mr. Quang joins a local community study group to practise speaking English with younger learners. Doctors confirm that keeping the mind active through lifelong learning strengthens memory and boosts overall happiness.',
+    listeningPart2Items: [
+      {prompt: 'What was Mr. Quang’s profession before he retired?', options: ['A photographer', 'An accountant', 'A doctor', 'A high school teacher'], answer: 'B', explanation: 'Transcript: "a sixty-two-year-old retired accountant".', level: 'recognition', unitId: 'gs12-u10'},
+      {prompt: 'Who encouraged Mr. Quang to take up new learning hobbies?', options: ['His former boss', 'His daughter', 'His neighbour', 'His doctor'], answer: 'B', explanation: 'Transcript: "his daughter encouraged him to explore hobbies".', level: 'recognition', unitId: 'gs12-u10'},
+      {prompt: 'What does he do every Tuesday?', options: ['Teaches accounting classes', 'Joins a community group to practise English', 'Travels abroad', 'Repairs cameras'], answer: 'B', explanation: 'Transcript: "joins a local community study group to practise speaking English".', level: 'comprehension', unitId: 'gs12-u10'},
+      {prompt: 'What health benefits of lifelong learning do doctors highlight?', options: ['Stronger memory and greater happiness', 'Faster running speed', 'Longer working hours', 'Lower tuition fees'], answer: 'A', explanation: 'Transcript: "strengthens memory and boosts overall happiness."', level: 'comprehension', unitId: 'gs12-u10'},
+    ],
+    phoneticsItems: [
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['car<u>ee</u>r', 'volunt<u>ee</u>r', 'engin<u>ee</u>r', 'c<u>ei</u>ling'], answer: 'D', explanation: '"ceiling" đọc nguyên âm dài /iː/; "career, volunteer, engineer" đọc nguyên âm đôi /ɪə/.', level: 'recognition', unitId: 'gs12-u9', pronunciation: true},
+      {prompt: 'Choose the word whose underlined part differs in pronunciation:', options: ['<u>a</u>dapt', '<u>a</u>dvice', '<u>a</u>dult', '<u>a</u>cquire'], answer: 'C', explanation: '"adult" (BrE /ˈædʌlt/) nhấn âm 1 đọc /æ/, ba từ còn lại âm đầu không nhấn đọc /ə/.', level: 'recognition', unitId: 'gs12-u10', pronunciation: true},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['passion', 'mentor', 'pursue', 'skillful'], answer: 'C', explanation: '"pursue" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs12-u9'},
+      {prompt: 'Choose the word that differs in the position of primary stress:', options: ['lifelong', 'knowledge', 'relevant', 'adaptable'], answer: 'D', explanation: '"adaptable" nhấn âm 2; ba từ còn lại nhấn âm 1.', level: 'recognition', unitId: 'gs12-u10'},
+    ],
+    vocabGrammarItems: [
+      {prompt: 'In rapidly changing industries, workers must ______ the latest technological trends.', options: ['keep up with', 'get rid of', 'look down on', 'put up with'], answer: 'A', explanation: 'Cụm động từ 3 thành phần Unit 9: "keep up with" (theo kịp).', level: 'recognition', unitId: 'gs12-u9'},
+      {prompt: 'She really ______ her high school mentor, who guided her toward environmental engineering.', options: ['looks up to', 'runs out of', 'cuts down on', 'comes up with'], answer: 'A', explanation: '"look up to" = kính trọng, ngưỡng mộ.', level: 'recognition', unitId: 'gs12-u9'},
+      {prompt: 'The career counsellor advised us ______ our personal strengths before choosing a major.', options: ['evaluate', 'to evaluate', 'evaluating', 'evaluated'], answer: 'B', explanation: 'Câu tường thuật với động từ đặc biệt Unit 10: advise + sb + to-V.', level: 'recognition', unitId: 'gs12-u10'},
+      {prompt: 'My teacher reminded me ______ my scholarship application before Friday afternoon.', options: ['submit', 'submitting', 'to submit', 'submitted'], answer: 'C', explanation: 'Cấu trúc: remind + sb + to-V (nhắc ai làm gì).', level: 'comprehension', unitId: 'gs12-u10'},
+      {prompt: 'He offered ______ me review my English CV for the summer internship.', options: ['help', 'to help', 'helping', 'helped'], answer: 'B', explanation: 'Cấu trúc: offer + to-V (đề nghị giúp đỡ).', level: 'comprehension', unitId: 'gs12-u10'},
+      {prompt: 'Although the project deadline was tight, our team ______ a creative solution together.', options: ['came up with', 'got on with', 'dropped out of', 'looked forward to'], answer: 'A', explanation: '"come up with" = nảy ra, đề xuất ý tưởng/giải pháp.', level: 'comprehension', unitId: 'gs12-u9'},
+      {prompt: 'Lifelong learners stay curious and continue to ______ new skills long after graduation.', options: ['acquire', 'retire', 'ignore', 'resign'], answer: 'A', explanation: 'Collocation Unit 10: "acquire new skills/knowledge" (tiếp thu kỹ năng mới).', level: 'application', unitId: 'gs12-u10'},
+      {prompt: 'The manager ordered the new staff ______ all safety guidelines carefully.', options: ['follow', 'to follow', 'following', 'followed'], answer: 'B', explanation: 'Câu tường thuật mệnh lệnh: order + sb + to-V.', level: 'application', unitId: 'gs12-u10'},
+    ],
+    clozeTitle: 'Why Lifelong Learning Shapes Successful Careers',
+    clozeParagraphs: [
+      'A generation ago, completing a university degree often prepared workers for an entire forty-year career. Today, however, automation and digital innovation mean employees must continuously update their skills to (21) ______ workplace demands. Lifelong learning includes not only formal night classes (22) ______ also reading books, joining professional workshops, and learning from colleagues. Career mentors often advise young graduates (23) ______ curiosity as their greatest asset. Adults who actively (24) ______ new digital or language skills are better prepared to handle career transitions. Ultimately, lifelong learning enriches both professional growth and personal (25) ______ at every stage of life.',
+    ],
+    clozeItems: [
+      {prompt: 'Question 21: Choose the best option for blank (21).', options: ['keep up with', 'run away from', 'look down on', 'drop out of'], answer: 'A', explanation: '"keep up with workplace demands" = bắt kịp yêu cầu công việc.', level: 'recognition', unitId: 'gs12-u9'},
+      {prompt: 'Question 22: Choose the best option for blank (22).', options: ['and', 'but', 'or', 'so'], answer: 'B', explanation: 'Cấu trúc: not only ... but also ...', level: 'recognition', unitId: 'gs12-u10'},
+      {prompt: 'Question 23: Choose the best option for blank (23).', options: ['treat', 'to treat', 'treating', 'treated'], answer: 'B', explanation: 'Cấu trúc: advise + sb + to-V.', level: 'comprehension', unitId: 'gs12-u10'},
+      {prompt: 'Question 24: Choose the best option for blank (24).', options: ['acquire', 'acquiring', 'acquired', 'acquisition'], answer: 'A', explanation: 'Sau chủ ngữ số nhiều "who" chia động từ nguyên thể "acquire".', level: 'comprehension', unitId: 'gs12-u10'},
+      {prompt: 'Question 25: Choose the best option for blank (25).', options: ['fulfil', 'fulfilling', 'fulfilment', 'fulfilled'], answer: 'C', explanation: 'Sau tính từ "personal" cần danh từ "fulfilment" (sự mãn nguyện/trọn vẹn).', level: 'application', unitId: 'gs12-u10'},
+    ],
+    readingTitle: 'Transferable Skills in the Future Job Market',
+    readingParagraphs: [
+      'When Grade 12 students research university majors, they often focus narrowly on technical knowledge for a single profession. Yet labour market studies reveal that many graduates change industries at least twice during their working lives.',
+      'For this reason, employers place tremendous value on transferable skills — abilities that remain useful across nearly every field. Clear communication, ethical judgement, teamwork, critical reading, and digital adaptability allow workers to move smoothly from healthcare to education, or from engineering to project management.',
+      'Fortunately, high school is an ideal place to practise these skills. Joining a debate team, leading a volunteer project, or collaborating on science presentations helps teenagers develop confidence and adaptability long before their first job interview.',
+    ],
+    readingItems: [
+      {prompt: 'What do labour market studies show about many graduates?', options: ['They never use technical skills', 'They change industries multiple times in their careers', 'They work in the same company for 50 years', 'They stop learning after age 25'], answer: 'B', explanation: 'Đoạn 1: "change industries at least twice during their working lives."', level: 'recognition', unitId: 'gs12-u9'},
+      {prompt: 'What are "transferable skills" according to paragraph 2?', options: ['Skills tied strictly to one machine', 'Abilities valuable across many different professions', 'Certificates earned only abroad', 'Salaries transferred between jobs'], answer: 'B', explanation: 'Đoạn 2: "abilities that remain useful across nearly every field."', level: 'comprehension', unitId: 'gs12-u9'},
+      {prompt: 'The word "tremendous" in paragraph 2 is closest in meaning to ______.', options: ['enormous', 'tiny', 'temporary', 'uncertain'], answer: 'A', explanation: '"tremendous" = enormous (rất lớn, to lớn).', level: 'comprehension', unitId: 'gs12-u9'},
+      {prompt: 'How can high school students build transferable skills early?', options: ['By avoiding group projects', 'By joining clubs, volunteering, and doing presentations', 'By memorising job titles', 'By skipping extracurriculars'], answer: 'B', explanation: 'Đoạn 3: tham gia câu lạc bộ tranh biện, dự án tình nguyện, thuyết trình nhóm.', level: 'application', unitId: 'gs12-u9'},
+      {prompt: 'What is the main message of the passage?', options: ['University majors no longer matter', 'Developing transferable skills prepares students for flexible careers', 'Only engineers need adaptability', 'Debate teams replace academic exams'], answer: 'B', explanation: 'Toàn bài nhấn mạnh giá trị của kỹ năng chuyển đổi cho sự nghiệp linh hoạt.', level: 'application', unitId: 'gs12-u9'},
+    ],
+    transformationItems: [
+      {prompt: '“You should practise speaking English for twenty minutes every day,” my teacher said to me. (Rewrite using "advised")', answer: 'My teacher advised me to practise speaking English for twenty minutes every day.', acceptedAnswers: ['My teacher advised me to practice speaking English for twenty minutes every day.'], explanation: 'Tường thuật lời khuyên: advise + sb + to-V.', level: 'comprehension', unitId: 'gs12-u10'},
+      {prompt: '“Don’t forget to proofread your CV carefully,” Minh told Hoa. (Rewrite using "reminded")', answer: 'Minh reminded Hoa to proofread her CV carefully.', acceptedAnswers: ['Minh reminded Hoa to check her CV carefully.'], explanation: 'Tường thuật lời nhắc nhở: remind + sb + to-V.', level: 'comprehension', unitId: 'gs12-u10'},
+      {prompt: '“Shall I help you prepare for the university interview?” Lan said to me. (Rewrite using "offered")', answer: 'Lan offered to help me prepare for the university interview.', acceptedAnswers: ['Lan offered to help me prepare for my university interview.'], explanation: 'Tường thuật lời đề nghị giúp đỡ: offer + to-V.', level: 'application', unitId: 'gs12-u10'},
+      {prompt: 'It is hard to tolerate constant noise while studying. (Rewrite using a three-word phrasal verb: "put up with")', answer: 'It is hard to put up with constant noise while studying.', acceptedAnswers: ['Putting up with constant noise while studying is hard.'], explanation: '"put up with" = tolerate (chịu đựng).', level: 'application', unitId: 'gs12-u9'},
+    ],
+    essayPrompt: 'Write a paragraph (120–150 words) explaining why lifelong learning is essential in the 21st century and how you plan to keep learning after graduating from high school.',
+    essayOutline: [
+      'Topic sentence: Define why learning must continue beyond school.',
+      'Reason: Fast technological change and evolving job skills.',
+      'Personal plan: Reading daily, taking online courses, practising English.',
+      'Conclusion: Lifelong learning keeps the mind sharp and opens new doors.',
+    ],
+    essaySample:
+      'In the twenty-first century, lifelong learning has become essential rather than optional. Because technology and workplace requirements evolve so rapidly, skills learned in school alone cannot last a lifetime. Continuing to learn helps individuals stay adaptable, solve new problems, and enjoy greater personal fulfilment. After graduating from high school, I plan to maintain lifelong learning in three practical ways. First, I will set aside thirty minutes every evening to read reliable books and articles outside my main major. Second, I intend to take reputable online courses to strengthen my digital and English communication skills. Third, I will stay active in professional and community clubs where I can exchange ideas with mentors and peers. By keeping an open, curious mind, I believe lifelong learning will help me grow both professionally and personally.',
+    essayUnitId: 'gs12-u10',
+  }),
+];

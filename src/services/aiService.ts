@@ -211,3 +211,51 @@ export async function generateSpeechTTS(params: {
   }
 }
 
+export async function generateExamItemsAI(params: {
+  grade: 10 | 11 | 12;
+  topic: string;
+  skill: string;
+  format: string;
+  cognitiveLevel: string;
+  learningOutcome: string;
+  count: number;
+}): Promise<{
+  ok: boolean;
+  unavailable?: boolean;
+  error?: string;
+  data?: {
+    stimulusTitle?: string;
+    stimulusText?: string;
+    questions?: Array<{
+      prompt: string;
+      options?: Array<{label: string; text: string}>;
+      correctAnswer: string;
+      acceptedAnswers?: string[];
+      explanation: string;
+    }>;
+  };
+}> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return {
+      ok: false,
+      unavailable: true,
+      error: 'Thiết bị đang ngoại tuyến. Bạn vẫn có thể lấy câu hỏi từ Ngân hàng câu hỏi hoặc soạn thủ công.',
+    };
+  }
+  try {
+    const res = await fetch('/api/ai/generate-exam-items', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(params),
+    });
+    return await res.json();
+  } catch {
+    return {
+      ok: false,
+      unavailable: true,
+      error: 'Không thể kết nối dịch vụ AI. Hệ thống vẫn hoạt động đầy đủ ở chế độ ngoại tuyến.',
+    };
+  }
+}
+
+
