@@ -47,7 +47,10 @@ import {SettingsView} from './components/SettingsView';
 import {SlideEditor} from './components/SlideEditor';
 import {SlidePresenter} from './components/SlidePresenter';
 
+import {EnglishInteractiveLab} from './components/EnglishInteractiveLab';
+
 type ActiveRoute =
+  | 'interactive_lab'
   | 'home'
   | 'samples'
   | 'my_lessons'
@@ -353,6 +356,7 @@ export default function App() {
     {id: 'samples', label: 'Kho bài mẫu'},
     {id: 'my_lessons', label: 'Bài của tôi'},
     {id: 'assessment', label: 'Soạn đề & Đánh giá'},
+    {id: 'interactive_lab', label: 'Học tương tác'},
     {id: 'guide', label: 'Hướng dẫn'},
     {id: 'settings', label: 'Cài đặt'},
   ];
@@ -387,7 +391,7 @@ export default function App() {
           {/* Right: 6 Clean Single-Line Nav Links */}
           <nav
             aria-label="Điều hướng chính"
-            className="hidden lg:flex items-center gap-1 text-[14px] xl:text-[15px] font-medium"
+            className="hidden 2xl:flex items-center gap-1 text-[14px] xl:text-[15px] font-medium"
           >
             {navItems.map((item) => {
               const active = route === item.id;
@@ -413,7 +417,7 @@ export default function App() {
             type="button"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label={mobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
-            className="lg:hidden p-2.5 rounded-xl bg-white/15 border border-white/25 text-white hover:bg-white/25 transition-colors shrink-0"
+            className="2xl:hidden p-2.5 rounded-xl bg-white/15 border border-white/25 text-white hover:bg-white/25 transition-colors shrink-0"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -421,7 +425,7 @@ export default function App() {
 
         {/* Collapsible Mobile / Tablet Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/15 bg-[#1E40AF] px-4 py-3 space-y-1.5">
+          <div className="2xl:hidden border-t border-white/15 bg-[#1E40AF] px-4 py-3 space-y-1.5">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -466,6 +470,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0">
+        {route === 'interactive_lab' && <EnglishInteractiveLab />}
         {route === 'home' && (
           <motion.div
             key="route-home"
