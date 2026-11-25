@@ -37,7 +37,7 @@ import {
   parseStructuredEnglishText,
   processUploadedFiles,
 } from '../services/documentParser';
-import {RenderFormattedText} from '../utils/richText';
+import {CompactAnswerEditor} from './editor/CompactAnswerEditor';
 
 interface ImportWizardProps {
   defaultGrade: Grade;
@@ -912,47 +912,34 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
                       </div>
                     </div>
 
-                    <input
-                      type="text"
+                    <CompactAnswerEditor
                       value={q.prompt}
-                      onChange={(e) => {
+                      onChange={(nextHtml) => {
                         const next = structuredClone(draft);
-                        next.questions[qIdx].prompt = e.target.value;
+                        next.questions[qIdx].prompt = nextHtml;
                         setDraft(next);
                       }}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm"
+                      placeholder="Nội dung câu hỏi..."
+                      spellCheckLang="en-GB"
                     />
-
-                    {(q.prompt.includes('<u>') || q.options?.some((o) => o.text.includes('<u>'))) && (
-                      <div className="text-xs text-slate-600 bg-blue-50/70 border border-blue-200 rounded-xl px-3 py-1.5">
-                        <span className="font-semibold text-[#1E40AF] mr-1.5">Xem trước gạch chân:</span>
-                        <RenderFormattedText text={q.prompt} />{' '}
-                        {q.options?.map((o) => (
-                          <span key={o.id} className="ml-3">
-                            <strong>{o.label}.</strong> <RenderFormattedText text={o.text} />
-                          </span>
-                        ))}
-                      </div>
-                    )}
 
                     {q.options && q.options.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {q.options.map((opt, oIdx) => (
-                          <div key={opt.id} className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold w-5">{opt.label}.</span>
-                            <input
-                              type="text"
-                              value={opt.text}
-                              onChange={(e) => {
-                                const next = structuredClone(draft);
-                                if (next.questions[qIdx].options) {
-                                  next.questions[qIdx].options![oIdx].text = e.target.value;
-                                }
-                                setDraft(next);
-                              }}
-                              className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs"
-                            />
-                          </div>
+                          <CompactAnswerEditor
+                            key={opt.id}
+                            label={opt.label}
+                            value={opt.text}
+                            placeholder={`Phương án ${opt.label}...`}
+                            spellCheckLang="off"
+                            onChange={(nextHtml) => {
+                              const next = structuredClone(draft);
+                              if (next.questions[qIdx].options) {
+                                next.questions[qIdx].options![oIdx].text = nextHtml;
+                              }
+                              setDraft(next);
+                            }}
+                          />
                         ))}
                       </div>
                     )}
@@ -968,18 +955,17 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
                           setDraft(next);
                         }}
                         placeholder="Đáp án đúng..."
-                        className="rounded-lg border border-emerald-300 bg-white px-2.5 py-1.5 text-xs"
+                        className="rounded-lg border border-emerald-300 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-800"
                       />
-                      <input
-                        type="text"
+                      <CompactAnswerEditor
                         value={q.explanation || ''}
-                        onChange={(e) => {
+                        onChange={(nextHtml) => {
                           const next = structuredClone(draft);
-                          next.questions[qIdx].explanation = e.target.value;
+                          next.questions[qIdx].explanation = nextHtml;
                           setDraft(next);
                         }}
                         placeholder="Giải thích (tùy chọn)..."
-                        className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs"
+                        spellCheckLang="vi"
                       />
                     </div>
                   </div>

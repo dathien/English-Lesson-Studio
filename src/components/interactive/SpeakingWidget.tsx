@@ -14,6 +14,8 @@ import {
   getSubmissionsByLesson,
   saveSubmissionToDB,
 } from '../../services/storage';
+import {RenderFormattedText} from '../../utils/richText';
+import {stripHtmlToPlainText} from '../../services/documentExportAdapter';
 
 interface SpeakingWidgetProps {
   lessonId: string;
@@ -27,7 +29,7 @@ interface SpeakingWidgetProps {
 function speakText(text: string) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
+  const utter = new SpeechSynthesisUtterance(stripHtmlToPlainText(text));
   utter.lang = 'en-GB';
   utter.rate = 0.92;
   window.speechSynthesis.speak(utter);
@@ -198,7 +200,9 @@ export const SpeakingWidget: React.FC<SpeakingWidgetProps> = ({
       <div className="lg:col-span-7 space-y-4">
         <div className={`rounded-xl border p-4 space-y-3 ${cardClass}`}>
           <h4 className="font-semibold text-[#0F4C81]">Nhiệm vụ luyện nói (Speaking Prompt)</h4>
-          <p className="leading-relaxed">{task.prompt}</p>
+          <div className="leading-relaxed">
+            <RenderFormattedText text={task.prompt} />
+          </div>
 
           {imageUrl && (
             <figure className="space-y-1.5">
@@ -217,7 +221,9 @@ export const SpeakingWidget: React.FC<SpeakingWidgetProps> = ({
               <p className="text-xs font-semibold text-slate-500">Gợi ý triển khai ý:</p>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 {task.cues.map((cue, idx) => (
-                  <li key={idx}>{cue}</li>
+                  <li key={idx}>
+                    <RenderFormattedText text={cue} />
+                  </li>
                 ))}
               </ul>
             </div>
@@ -237,8 +243,10 @@ export const SpeakingWidget: React.FC<SpeakingWidgetProps> = ({
                   }`}
                 >
                   <div>
-                    <div className="font-semibold">{item.text}</div>
-                    <div className="font-mono-tabular text-xs text-[#0284C7]">{item.ipa}</div>
+                    <div className="font-semibold">
+                      <RenderFormattedText text={item.text} />
+                    </div>
+                    <div className="font-ipa text-xs text-[#0284C7]">{item.ipa}</div>
                     {item.note && <div className="text-xs text-slate-500 mt-0.5">{item.note}</div>}
                   </div>
                   <button

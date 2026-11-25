@@ -337,7 +337,9 @@ export const ExamPreviewExportStep: React.FC<ExamPreviewExportStepProps> = ({
                     return (
                       <div key={group.id} className="space-y-2.5">
                         <div className="font-bold uppercase">{group.title}</div>
-                        <div className="italic text-[0.95em]">{group.instruction}</div>
+                        <div className="italic text-[0.95em]">
+                          <FormattedText text={group.instruction} />
+                        </div>
                         {group.stimulusParagraphs && group.stimulusParagraphs.length > 0 && (
                           <div className="border border-slate-300 bg-slate-50/70 p-4 space-y-2 text-justify">
                             {group.stimulusTitle && (
@@ -385,7 +387,7 @@ export const ExamPreviewExportStep: React.FC<ExamPreviewExportStepProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                   {activeAnswerKey.entries.map((e) => (
                     <div key={e.questionId} className="border border-slate-300 px-2.5 py-1.5">
-                      <strong>Câu {e.questionNumber}:</strong> {e.correctAnswer} ({e.points}đ)
+                      <strong>Câu {e.questionNumber}:</strong> <FormattedText text={e.correctAnswer} /> ({e.points}đ)
                     </div>
                   ))}
                 </div>

@@ -27,6 +27,8 @@ import type {
   VoiceAccent,
 } from '../../types/lesson';
 import {generateListeningQuestionsAI, generateSpeechTTS} from '../../services/aiService';
+import {stripHtmlToPlainText} from '../../services/documentExportAdapter';
+import {RenderFormattedText} from '../../utils/richText';
 
 interface ListeningWidgetProps {
   audioConfig: ListeningAudioConfig;
@@ -50,7 +52,7 @@ function formatTime(sec: number): string {
 }
 
 function splitTranscriptToSegments(transcript: string): string[] {
-  const cleaned = transcript.trim();
+  const cleaned = stripHtmlToPlainText(transcript).trim();
   if (!cleaned) return [];
   const lines = cleaned
     .split(/\n+/)
@@ -1078,7 +1080,9 @@ export const ListeningWidget: React.FC<ListeningWidgetProps> = ({
             )}
           </div>
           {audioConfig.transcript ? (
-            <p className="whitespace-pre-line">{audioConfig.transcript}</p>
+            <div className="leading-relaxed">
+              <RenderFormattedText text={audioConfig.transcript} />
+            </div>
           ) : (
             <p className="text-slate-500 italic">
               Chưa có transcript cho tệp âm thanh này. Giáo viên có thể nhập hoặc tải tệp .txt trong Trình biên tập.

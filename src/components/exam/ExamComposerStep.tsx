@@ -27,6 +27,224 @@ import {RenderFormattedText as FormattedText} from '../../utils/richText';
 import {ListeningWidget} from '../interactive/ListeningWidget';
 import {processUploadedFiles} from '../../services/documentParser';
 import {generateExamItemsAI} from '../../services/aiService';
+import {RichTextEditor} from '../editor/RichTextEditor';
+import {CompactAnswerEditor} from '../editor/CompactAnswerEditor';
+import {
+  joinParagraphsToRichHtml,
+  splitRichHtmlToParagraphs,
+  stripHtmlToPlainText,
+} from '../../services/documentExportAdapter';
+
+interface QuestionInlineEditorProps {
+  question: ExamQuestionItem;
+  onApply: (patch: Partial<ExamQuestionItem>) => void;
+  onCancel: () => void;
+}
+
+const QuestionInlineEditor: React.FC<QuestionInlineEditorProps> = ({
+  question,
+  onApply,
+  onCancel,
+}) => {
+  const [draftPrompt, setDraftPrompt] = useState(question.prompt);
+  const [draftOptions, setDraftOptions] = useState(
+    question.options ? question.options.map((o) => ({...o})) : undefined,
+  );
+  const [draftAnswer, setDraftAnswer] = useState(question.correctAnswer);
+  const [draftLevel, setDraftLevel] = useState<CognitiveLevel>(question.cognitiveLevel);
+  const [draftPoints, setDraftPoints] = useState<number>(question.points);
+  const [draftExplanation, setDraftExplanation] = useState(question.explanation || '');
+  const [draftSample, setDraftSample] = useState(question.sampleAnswer || '');
+  const [optionsEdited, setOptionsEdited] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+
+  const isDirty =
+    draftPrompt !== question.prompt ||
+    draftAnswer !== question.correctAnswer ||
+    draftLevel !== question.cognitiveLevel ||
+    draftPoints !== question.points ||
+    draftExplanation !== (question.explanation || '') ||
+    draftSample !== (question.sampleAnswer || '') ||
+    JSON.stringify(draftOptions) !== JSON.stringify(question.options);
+
+  const handleRequestCancel = () => {
+    if (isDirty) {
+      setConfirmDiscard(true);
+      return;
+    }
+    onCancel();
+  };
+
+  const handleApply = () => {
+    onApply({
+      prompt: draftPrompt,
+      options: draftOptions,
+      correctAnswer: draftAnswer,
+      cognitiveLevel: draftLevel,
+      points: draftPoints,
+      explanation: draftExplanation,
+      sampleAnswer: draftSample || undefined,
+      updatedAt: Date.now(),
+    });
+  };
+
+  const isErrorId =
+    question.questionType === 'error_correction' ||
+    stripHtmlToPlainText(question.prompt).toLowerCase().includes('need correction') ||
+    stripHtmlToPlainText(question.prompt).toLowerCase().includes('underlined part that needs');
+
+  return (
+    <div className="rounded-xl border border-blue-200 bg-blue-50/30 p-4 space-y-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-blue-100">
+        <span className="text-xs font-bold text-[#1E40AF]">
+          Đang biên tập trực quan Câu {question.number} — Bôi đen ký tự và nhấn U (hoặc Ctrl+U) để gạch chân phát âm / lỗi sai
+        </span>
+        <div className="flex items-center gap-2">
+          {confirmDiscard ? (
+            <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
+              <span>Bỏ thay đổi chưa lưu?</span>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded bg-amber-600 px-2 py-0.5 text-white hover:bg-amber-700"
+              >
+                Bỏ thay đổi
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDiscard(false)}
+                className="rounded border border-amber-300 bg-white px-2 py-0.5 text-amber-900 hover:bg-amber-100"
+              >
+                Tiếp tục sửa
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleRequestCancel}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Hủy
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleApply}
+            className="inline-flex items-center gap-1 rounded-lg bg-[#2563EB] px-3 py-1 text-xs font-bold text-white hover:bg-[#1E40AF]"
+          >
+            <Check className="w-3.5 h-3.5" />
+            Áp dụng
+          </button>
+        </div>
+      </div>
+
+      <RichTextEditor
+        label="Nội dung câu hỏi"
+        value={draftPrompt}
+        onChange={setDraftPrompt}
+        placeholder="Nhập nội dung câu hỏi tiếng Anh..."
+        minHeightClass="min-h-[90px]"
+        allowAudio={question.skill === 'listening'}
+        allowFullscreen
+        defaultSpellCheck={isErrorId ? 'off' : 'en-GB'}
+        disableProofreadHints={isErrorId}
+        draftKey={`exam-q-${question.id}`}
+      />
+
+      {draftOptions && draftOptions.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-700">
+              Các phương án lựa chọn (bấm vào từng ô để bật thanh công cụ gạch chân / IPA)
+            </span>
+            {optionsEdited && (
+              <span className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-0.5">
+                Bạn vừa sửa phương án — vui lòng kiểm tra lại Đáp án đúng bên dưới.
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {draftOptions.map((opt, idx) => (
+              <CompactAnswerEditor
+                key={opt.id}
+                label={opt.label}
+                value={opt.text}
+                placeholder={`Nhập phương án ${opt.label}...`}
+                spellCheckLang="off"
+                onFirstEditNotice={() => setOptionsEdited(true)}
+                onChange={(nextHtml) => {
+                  setOptionsEdited(true);
+                  setDraftOptions((prev) =>
+                    prev ? prev.map((o, i) => (i === idx ? {...o, text: nextHtml} : o)) : prev,
+                  );
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Đáp án đúng</label>
+          <input
+            type="text"
+            value={draftAnswer}
+            onChange={(e) => setDraftAnswer(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-bold text-emerald-800"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Mức độ</label>
+          <select
+            value={draftLevel}
+            onChange={(e) => setDraftLevel(e.target.value as CognitiveLevel)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm"
+          >
+            <option value="recognition">Nhận biết</option>
+            <option value="comprehension">Thông hiểu</option>
+            <option value="application">Vận dụng</option>
+            <option value="high_application">Vận dụng cao</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Điểm số</label>
+          <input
+            type="number"
+            step={0.25}
+            min={0}
+            max={10}
+            value={draftPoints}
+            onChange={(e) => setDraftPoints(Number(e.target.value) || 0)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-bold font-mono-tabular"
+          />
+        </div>
+      </div>
+
+      <RichTextEditor
+        label="Giải thích chi tiết"
+        value={draftExplanation}
+        onChange={setDraftExplanation}
+        placeholder="Nhập lời giải thích, phiên âm IPA hoặc cấu trúc ngữ pháp..."
+        compactToolbar
+        minHeightClass="min-h-[72px]"
+        defaultSpellCheck="vi"
+      />
+
+      {(question.format === 'essay' || question.format === 'speaking') && (
+        <RichTextEditor
+          label="Bài mẫu / Gợi ý chấm tham khảo"
+          value={draftSample}
+          onChange={setDraftSample}
+          placeholder="Nhập bài viết mẫu hoặc gợi ý triển khai ý..."
+          compactToolbar
+          minHeightClass="min-h-[84px]"
+          defaultSpellCheck="en-GB"
+        />
+      )}
+    </div>
+  );
+};
 
 interface ExamComposerStepProps {
   dossier: ExamDossier;
@@ -118,7 +336,7 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
       tags: [`Lớp ${scope.grade}`, group.skill],
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      locked: true,
+      locked: false,
     };
     onUpdateExam({...exam, questions: [...exam.questions, fresh]});
     setEditingQId(fresh.id);
@@ -425,7 +643,14 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-sm italic text-[#475569] mt-0.5">{group.instruction}</p>
+                  <div className="mt-1.5 max-w-2xl">
+                    <CompactAnswerEditor
+                      value={group.instruction}
+                      onChange={(nextHtml) => updateGroup(group.id, {instruction: nextHtml})}
+                      placeholder="Nhập hướng dẫn yêu cầu phần thi..."
+                      spellCheckLang="en-GB"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -499,7 +724,7 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                       lessonTitle={group.title}
                       audioConfig={{
                         sourceMode: group.audio.sourceMode,
-                        transcript: group.audio.transcript,
+                        transcript: stripHtmlToPlainText(group.audio.transcript),
                         voiceAccent: group.audio.voiceAccent,
                         isSynthesized: group.audio.isSynthesized,
                         dataUrl: group.audio.dataUrl,
@@ -511,7 +736,7 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                         updateGroup(group.id, {
                           audio: {
                             sourceMode: nextCfg.sourceMode || 'builtin',
-                            transcript: nextCfg.transcript || '',
+                            transcript: nextCfg.transcript || group.audio?.transcript || '',
                             voiceAccent: nextCfg.voiceAccent || 'en-GB',
                             isSynthesized: nextCfg.isSynthesized ?? nextCfg.sourceMode !== 'uploaded',
                             dataUrl: nextCfg.dataUrl,
@@ -525,27 +750,29 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                   )}
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">
-                      Chỉnh sửa Transcript bài nghe (giọng tổng hợp &amp; TTS đọc trực tiếp theo nội dung này):
-                    </label>
-                    <textarea
-                      rows={3}
+                    <RichTextEditor
+                      label="Chỉnh sửa Transcript bài nghe (giọng đọc TTS đọc theo văn bản thuần, bản in & đáp án giữ đầy đủ định dạng):"
                       value={group.audio?.transcript || ''}
-                      onChange={(e) =>
+                      onChange={(nextHtml) =>
                         updateGroup(group.id, {
                           audio: {
                             sourceMode: group.audio?.sourceMode || 'builtin',
-                            transcript: e.target.value,
+                            transcript: nextHtml,
                             voiceAccent: group.audio?.voiceAccent || 'en-GB',
                             isSynthesized: group.audio?.sourceMode !== 'uploaded',
                             dataUrl: group.audio?.dataUrl,
                             fileName: group.audio?.fileName,
+                            mimeType: group.audio?.mimeType,
                             showTranscriptInKey: true,
                           },
                         })
                       }
-                      className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm leading-relaxed"
                       placeholder="Nhập transcript bài nghe tiếng Anh..."
+                      minHeightClass="min-h-[110px]"
+                      allowAudio
+                      allowFullscreen
+                      compactToolbar
+                      defaultSpellCheck="en-GB"
                     />
                   </div>
                 </div>
@@ -553,7 +780,7 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
 
               {/* Reading / Notice / Leaflet Passage Stimulus */}
               {group.stimulusParagraphs && group.stimulusParagraphs.length > 0 && (
-                <div className="p-5 border-b border-slate-200 bg-slate-50/70 space-y-2">
+                <div className="p-5 border-b border-slate-200 bg-slate-50/70 space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <input
                       type="text"
@@ -563,18 +790,17 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                       placeholder="Tiêu đề ngữ liệu / bài đọc..."
                     />
                   </div>
-                  <textarea
-                    rows={Math.min(10, Math.max(4, group.stimulusParagraphs.length * 3))}
-                    value={group.stimulusParagraphs.join('\n\n')}
-                    onChange={(e) =>
+                  <RichTextEditor
+                    value={joinParagraphsToRichHtml(group.stimulusParagraphs)}
+                    onChange={(nextHtml) =>
                       updateGroup(group.id, {
-                        stimulusParagraphs: e.target.value
-                          .split(/\n{2,}/)
-                          .map((s) => s.trim())
-                          .filter(Boolean),
+                        stimulusParagraphs: splitRichHtmlToParagraphs(nextHtml),
                       })
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-[15px] leading-relaxed text-[#0F172A]"
+                    placeholder="Nhập hoặc dán đoạn văn bài đọc, thông báo, tờ rơi..."
+                    minHeightClass="min-h-[170px]"
+                    allowFullscreen
+                    defaultSpellCheck="en-GB"
                   />
                 </div>
               )}
@@ -616,8 +842,14 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => updateQuestion(q.id, {locked: !q.locked})}
-                            title={q.locked ? 'Đã khóa câu này (không bị ghi đè khi sinh lại)' : 'Khóa câu này để giữ nguyên khi sinh lại đề'}
+                            onClick={() => {
+                              const nextLocked = !q.locked;
+                              if (nextLocked && isEditing) {
+                                setEditingQId(null);
+                              }
+                              updateQuestion(q.id, {locked: nextLocked});
+                            }}
+                            title={q.locked ? 'Đã khóa câu này — nhấn để mở khóa trước khi chỉnh sửa' : 'Khóa câu này để bảo vệ nội dung và không bị ghi đè'}
                             className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors ${
                               q.locked
                                 ? 'border-amber-300 bg-amber-50 text-amber-800'
@@ -639,25 +871,42 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                           )}
                           <button
                             type="button"
-                            onClick={() => setEditingQId(isEditing ? null : q.id)}
-                            className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-[#2563EB] hover:bg-blue-100"
+                            disabled={Boolean(q.locked)}
+                            onClick={() => {
+                              if (q.locked) return;
+                              setEditingQId(isEditing ? null : q.id);
+                            }}
+                            title={q.locked ? 'Mở khóa câu hỏi trước khi chỉnh sửa' : 'Chỉnh sửa trực quan'}
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors ${
+                              q.locked
+                                ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                                : 'border-blue-200 bg-blue-50 text-[#2563EB] hover:bg-blue-100'
+                            }`}
                           >
-                            {isEditing ? 'Xong' : 'Chỉnh sửa'}
+                            {q.locked ? 'Đang khóa' : isEditing ? 'Đóng' : 'Chỉnh sửa'}
                           </button>
                           <button
                             type="button"
-                            onClick={() => deleteQuestion(q.id)}
-                            title="Xóa câu hỏi"
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                            disabled={Boolean(q.locked)}
+                            onClick={() => {
+                              if (q.locked) return;
+                              deleteQuestion(q.id);
+                            }}
+                            title={q.locked ? 'Mở khóa trước khi xóa' : 'Xóa câu hỏi'}
+                            className={`p-1 rounded-lg ${
+                              q.locked
+                                ? 'text-slate-300 cursor-not-allowed'
+                                : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                            }`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
 
-                      {!isEditing ? (
+                      {!isEditing || q.locked ? (
                         <div className="space-y-2">
-                          <div className="text-[15px] text-[#0F172A] whitespace-pre-line leading-relaxed">
+                          <div className="text-[15px] text-[#0F172A] leading-relaxed">
                             <FormattedText text={q.prompt} />
                           </div>
                           {q.options && q.options.length > 0 && (
@@ -682,96 +931,24 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
                             </div>
                           )}
                           <div className="text-sm text-[#475569] bg-slate-50 rounded-xl px-3.5 py-2 border border-slate-200/80">
-                            <span className="font-bold text-emerald-700">Đáp án: {q.correctAnswer}</span>
-                            {q.explanation && <span className="ml-2">— {q.explanation}</span>}
+                            <span className="font-bold text-emerald-700">Đáp án: <FormattedText text={q.correctAnswer} /></span>
+                            {q.explanation && (
+                              <span className="ml-2">
+                                — <FormattedText text={q.explanation} />
+                              </span>
+                            )}
                           </div>
                         </div>
                       ) : (
-                        <div className="rounded-xl border border-blue-200 bg-blue-50/30 p-4 space-y-3">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
-                              Nội dung câu hỏi (dùng &lt;u&gt;...&lt;/u&gt; cho phần gạch chân ngữ âm):
-                            </label>
-                            <textarea
-                              rows={3}
-                              value={q.prompt}
-                              onChange={(e) => updateQuestion(q.id, {prompt: e.target.value})}
-                              className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-[15px]"
-                            />
-                          </div>
-
-                          {q.options && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {q.options.map((opt, idx) => (
-                                <div key={opt.id} className="flex items-center gap-2">
-                                  <span className="font-bold text-sm w-6 text-center">{opt.label}.</span>
-                                  <input
-                                    type="text"
-                                    value={opt.text}
-                                    onChange={(e) => {
-                                      const nextOpts = q.options!.map((o, i) =>
-                                        i === idx ? {...o, text: e.target.value} : o,
-                                      );
-                                      updateQuestion(q.id, {options: nextOpts});
-                                    }}
-                                    className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm"
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                              <label className="block text-xs font-bold text-slate-700 mb-1">Đáp án đúng</label>
-                              <input
-                                type="text"
-                                value={q.correctAnswer}
-                                onChange={(e) => updateQuestion(q.id, {correctAnswer: e.target.value})}
-                                className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-bold"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-bold text-slate-700 mb-1">Mức độ</label>
-                              <select
-                                value={q.cognitiveLevel}
-                                onChange={(e) =>
-                                  updateQuestion(q.id, {cognitiveLevel: e.target.value as CognitiveLevel})
-                                }
-                                className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm"
-                              >
-                                <option value="recognition">Nhận biết</option>
-                                <option value="comprehension">Thông hiểu</option>
-                                <option value="application">Vận dụng</option>
-                                <option value="high_application">Vận dụng cao</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-bold text-slate-700 mb-1">Điểm số</label>
-                              <input
-                                type="number"
-                                step={0.25}
-                                min={0}
-                                max={10}
-                                value={q.points}
-                                onChange={(e) =>
-                                  updateQuestion(q.id, {points: Number(e.target.value) || 0})
-                                }
-                                className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-bold font-mono-tabular"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Giải thích chi tiết</label>
-                            <textarea
-                              rows={2}
-                              value={q.explanation}
-                              onChange={(e) => updateQuestion(q.id, {explanation: e.target.value})}
-                              className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm"
-                            />
-                          </div>
-                        </div>
+                        <QuestionInlineEditor
+                          key={q.id}
+                          question={q}
+                          onApply={(patch) => {
+                            updateQuestion(q.id, patch);
+                            setEditingQId(null);
+                          }}
+                          onCancel={() => setEditingQId(null)}
+                        />
                       )}
                     </div>
                   );

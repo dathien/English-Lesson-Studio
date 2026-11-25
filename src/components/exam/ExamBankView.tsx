@@ -31,6 +31,9 @@ import {
 } from '../../types/exam';
 import {GLOBAL_SUCCESS_UNITS} from '../../data/examCurriculum';
 import {RenderFormattedText as FormattedText} from '../../utils/richText';
+import {RichTextEditor} from '../editor/RichTextEditor';
+import {CompactAnswerEditor} from '../editor/CompactAnswerEditor';
+import {isRichHtmlEmpty, stripHtmlToPlainText} from '../../services/documentExportAdapter';
 
 interface ExamBankViewProps {
   bankQuestions: BankQuestionRecord[];
@@ -101,6 +104,7 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
   const [page, setPage] = useState(1);
 
   const [editingItem, setEditingItem] = useState<BankQuestionRecord | null>(null);
+  const [modalOptionsEdited, setModalOptionsEdited] = useState(false);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -132,7 +136,7 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
 
   const handleSaveEditor = async () => {
     if (!editingItem) return;
-    if (!editingItem.prompt.trim()) {
+    if (isRichHtmlEmpty(editingItem.prompt)) {
       showNotice('Vui lòng nhập nội dung câu hỏi trước khi lưu.');
       return;
     }
@@ -145,6 +149,7 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
     };
     await onSaveQuestion(cleaned);
     setEditingItem(null);
+    setModalOptionsEdited(false);
     showNotice('Đã lưu câu hỏi vào Ngân hàng câu hỏi cục bộ (IndexedDB).');
   };
 
@@ -203,14 +208,14 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
       KyNang: EXAM_SKILL_LABELS[q.skill].vi,
       DangCau: EXAM_FORMAT_LABELS[q.format].vi,
       MucDo: COGNITIVE_LABELS[q.cognitiveLevel],
-      NoiDung: q.prompt,
-      PhuongAnA: q.options?.[0]?.text || '',
-      PhuongAnB: q.options?.[1]?.text || '',
-      PhuongAnC: q.options?.[2]?.text || '',
-      PhuongAnD: q.options?.[3]?.text || '',
-      DapAn: q.correctAnswer,
+      NoiDung: stripHtmlToPlainText(q.prompt),
+      PhuongAnA: stripHtmlToPlainText(q.options?.[0]?.text || ''),
+      PhuongAnB: stripHtmlToPlainText(q.options?.[1]?.text || ''),
+      PhuongAnC: stripHtmlToPlainText(q.options?.[2]?.text || ''),
+      PhuongAnD: stripHtmlToPlainText(q.options?.[3]?.text || ''),
+      DapAn: stripHtmlToPlainText(q.correctAnswer),
       Diem: q.points,
-      GiaiThich: q.explanation,
+      GiaiThich: stripHtmlToPlainText(q.explanation),
       Nguon: q.sourceLabel,
       TrangThai: VERIFICATION_STATUS_LABELS[q.verificationStatus].label,
     }));
@@ -341,7 +346,10 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => setEditingItem(createEmptyBankQuestion(gradeFilter === 'all' ? 10 : gradeFilter))}
+            onClick={() => {
+              setModalOptionsEdited(false);
+              setEditingItem(createEmptyBankQuestion(gradeFilter === 'all' ? 10 : gradeFilter));
+            }}
             className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#1E40AF] px-4 py-2 text-sm font-bold text-white hover:opacity-95 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
@@ -543,7 +551,10 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
                   )}
                   <button
                     type="button"
-                    onClick={() => setEditingItem(structuredClone(item))}
+                    onClick={() => {
+                      setModalOptionsEdited(false);
+                      setEditingItem(structuredClone(item));
+                    }}
                     className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:border-[#2563EB] hover:text-[#2563EB]"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -598,8 +609,14 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-[#475569]">
                 <div>
-                  <span className="font-bold text-emerald-700">Đáp án: {item.correctAnswer}</span>
-                  {item.explanation && <span className="ml-2">— {item.explanation}</span>}
+                  <span className="font-bold text-emerald-700">
+                    Đáp án: <FormattedText text={item.correctAnswer} />
+                  </span>
+                  {item.explanation && (
+                    <span className="ml-2">
+                      — <FormattedText text={item.explanation} />
+                    </span>
+                  )}
                 </div>
                 <span className="text-slate-500">
                   {item.topic} · {item.sourceLabel}
@@ -619,7 +636,7 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
       {/* Add / Edit Modal */}
       {editingItem && (
         <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-[20px] border border-slate-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
+          <div className="bg-white rounded-[20px] border border-slate-200 max-w-3xl w-full max-h-[92vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <h3 className="font-display text-lg font-extrabold text-[#0F172A]">
                 {customIds.has(editingItem.id) ? 'Chỉnh sửa câu hỏi' : 'Thêm / Lưu bản sao câu hỏi'}
@@ -725,43 +742,59 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
               </label>
             </div>
 
-            <label className="block text-xs font-semibold text-slate-700 space-y-1">
-              <span>Nội dung câu hỏi (hỗ trợ thẻ &lt;u&gt;gạch chân&lt;/u&gt; cho phát âm)</span>
-              <textarea
-                rows={3}
-                value={editingItem.prompt}
-                onChange={(e) => setEditingItem({...editingItem, prompt: e.target.value})}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
+            <RichTextEditor
+              label="Nội dung câu hỏi (bôi đen chữ và bấm U hoặc Ctrl+U để gạch chân, chèn IPA trực tiếp)"
+              value={editingItem.prompt}
+              onChange={(nextHtml) => setEditingItem({...editingItem, prompt: nextHtml})}
+              placeholder="Nhập nội dung câu hỏi tiếng Anh..."
+              minHeightClass="min-h-[100px]"
+              allowAudio={editingItem.skill === 'listening'}
+              allowFullscreen
+              defaultSpellCheck="en-GB"
+              draftKey={`bank-q-${editingItem.id}`}
+            />
 
             {(editingItem.format === 'mcq' ||
               editingItem.format === 'true_false' ||
               editingItem.format === 'ordering') && (
               <div className="space-y-2">
-                <div className="text-xs font-semibold text-slate-700">Các phương án lựa chọn</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-xs font-semibold text-slate-700">
+                    Các phương án lựa chọn (bấm vào từng ô để gạch chân ký tự hoặc chèn IPA)
+                  </div>
+                  {modalOptionsEdited && (
+                    <span className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-0.5">
+                      Đã sửa phương án — hãy kiểm tra lại Đáp án đúng.
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {(editingItem.options || [
                     {id: 'a', label: 'A', text: ''},
                     {id: 'b', label: 'B', text: ''},
                     {id: 'c', label: 'C', text: ''},
                     {id: 'd', label: 'D', text: ''},
                   ]).map((opt, idx) => (
-                    <div key={opt.id} className="flex items-center gap-2">
-                      <span className="w-6 text-center text-xs font-bold text-[#2563EB]">
-                        {opt.label}
-                      </span>
-                      <input
-                        type="text"
-                        value={opt.text}
-                        onChange={(e) => {
-                          const nextOpts = [...(editingItem.options || [])];
-                          nextOpts[idx] = {...opt, text: e.target.value};
-                          setEditingItem({...editingItem, options: nextOpts});
-                        }}
-                        className="flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-sm"
-                      />
-                    </div>
+                    <CompactAnswerEditor
+                      key={opt.id}
+                      label={opt.label}
+                      value={opt.text}
+                      placeholder={`Nhập phương án ${opt.label}...`}
+                      spellCheckLang="off"
+                      onFirstEditNotice={() => setModalOptionsEdited(true)}
+                      onChange={(nextHtml) => {
+                        setModalOptionsEdited(true);
+                        const baseOpts = editingItem.options || [
+                          {id: 'a', label: 'A', text: ''},
+                          {id: 'b', label: 'B', text: ''},
+                          {id: 'c', label: 'C', text: ''},
+                          {id: 'd', label: 'D', text: ''},
+                        ];
+                        const nextOpts = [...baseOpts];
+                        nextOpts[idx] = {...opt, text: nextHtml};
+                        setEditingItem({...editingItem, options: nextOpts});
+                      }}
+                    />
                   ))}
                 </div>
               </div>
@@ -814,15 +847,15 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
               </label>
             </div>
 
-            <label className="block text-xs font-semibold text-slate-700 space-y-1">
-              <span>Giải thích đáp án chi tiết</span>
-              <textarea
-                rows={2}
-                value={editingItem.explanation}
-                onChange={(e) => setEditingItem({...editingItem, explanation: e.target.value})}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
+            <RichTextEditor
+              label="Giải thích đáp án chi tiết"
+              value={editingItem.explanation}
+              onChange={(nextHtml) => setEditingItem({...editingItem, explanation: nextHtml})}
+              placeholder="Nhập giải thích đáp án, phiên âm IPA hoặc cấu trúc trọng tâm..."
+              compactToolbar
+              minHeightClass="min-h-[80px]"
+              defaultSpellCheck="vi"
+            />
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
               <button

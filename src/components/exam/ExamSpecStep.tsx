@@ -8,6 +8,7 @@ import {
   EXAM_SKILL_LABELS,
 } from '../../types/exam';
 import {downloadSpecificationDocx, printMatrixOrSpecPdf} from '../../services/examExporters';
+import {CompactAnswerEditor} from '../editor/CompactAnswerEditor';
 
 interface ExamSpecStepProps {
   dossier: ExamDossier;
@@ -104,31 +105,31 @@ export const ExamSpecStep: React.FC<ExamSpecStepProps> = ({
                     <div className="text-xs text-[#475569] mt-0.5 line-clamp-2">{sr.topic}</div>
                   </td>
                   <td className="p-2.5">
-                    <textarea
-                      rows={3}
+                    <CompactAnswerEditor
                       value={sr.knowledgeContent}
-                      onChange={(e) => updateSpecRow(sr.id, {knowledgeContent: e.target.value})}
-                      className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm leading-snug"
+                      onChange={(nextHtml) => updateSpecRow(sr.id, {knowledgeContent: nextHtml})}
+                      placeholder="Nội dung kiến thức..."
+                      spellCheckLang="vi"
                     />
                   </td>
                   <td className="p-2.5">
-                    <textarea
-                      rows={3}
+                    <CompactAnswerEditor
                       value={sr.learningOutcome}
-                      onChange={(e) =>
-                        updateSpecRow(sr.id, {learningOutcome: e.target.value}, true)
+                      onChange={(nextHtml) =>
+                        updateSpecRow(sr.id, {learningOutcome: nextHtml}, true)
                       }
-                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm leading-snug"
+                      placeholder="Yêu cầu cần đạt..."
+                      spellCheckLang="vi"
                     />
                   </td>
                   <td className="p-2.5">
-                    <textarea
-                      rows={3}
+                    <CompactAnswerEditor
                       value={sr.assessmentDescriptor}
-                      onChange={(e) =>
-                        updateSpecRow(sr.id, {assessmentDescriptor: e.target.value})
+                      onChange={(nextHtml) =>
+                        updateSpecRow(sr.id, {assessmentDescriptor: nextHtml})
                       }
-                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm leading-snug"
+                      placeholder="Biểu hiện cần đánh giá..."
+                      spellCheckLang="vi"
                     />
                   </td>
                   <td className="p-2.5 text-sm text-slate-700 font-medium">

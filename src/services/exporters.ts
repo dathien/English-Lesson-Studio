@@ -10,7 +10,12 @@ import {
 import PptxGenJS from 'pptxgenjs';
 import type {LessonProject, Slide} from '../types/lesson';
 import {SKILL_LABELS} from '../types/lesson';
-import {parseFormattedSegments, stripFormattingTags} from '../utils/richText';
+import {stripFormattingTags} from '../utils/richText';
+import {
+  richHtmlToDocxRuns,
+  richHtmlToPptxTextRuns,
+  richHtmlToPrintableHtml,
+} from './documentExportAdapter';
 
 function triggerDownload(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);
@@ -32,18 +37,12 @@ function sanitizeFileName(name: string): string {
 }
 
 function buildDocxRuns(text: string, baseOptions?: {size?: number; bold?: boolean; color?: string}): TextRun[] {
-  const segments = parseFormattedSegments(text);
-  return segments.map(
-    (seg) =>
-      new TextRun({
-        text: seg.text,
-        bold: seg.bold || baseOptions?.bold,
-        underline: seg.underline ? {type: UnderlineType.SINGLE} : undefined,
-        size: baseOptions?.size ?? 24,
-        color: baseOptions?.color ?? '0F172A',
-        font: 'Calibri',
-      }),
-  );
+  return richHtmlToDocxRuns(text, {
+    font: 'Calibri',
+    sizeHalfPt: baseOptions?.size ?? 24,
+    bold: baseOptions?.bold,
+    color: baseOptions?.color ?? '0F172A',
+  });
 }
 
 /**
@@ -493,16 +492,8 @@ export async function exportLessonToPowerPoint(lesson: LessonProject): Promise<v
       const qRuns: PptxGenJS.TextProps[] = [];
       slideData.questions.slice(0, 6).forEach((q) => {
         qRuns.push({text: `${q.number}. `, options: {bold: true, fontSize: 15, color: '0F4C81'}});
-        parseFormattedSegments(q.prompt).forEach((seg) => {
-          qRuns.push({
-            text: seg.text,
-            options: {
-              bold: seg.bold,
-              underline: seg.underline ? {style: 'sng'} : undefined,
-              fontSize: 15,
-              color: '0F172A',
-            },
-          });
+        richHtmlToPptxTextRuns(q.prompt, {fontSize: 15, color: '0F172A'}).forEach((r) => {
+          qRuns.push(r);
         });
         qRuns.push({text: '\n', options: {fontSize: 15}});
 
@@ -512,16 +503,8 @@ export async function exportLessonToPowerPoint(lesson: LessonProject): Promise<v
               text: `${oi > 0 ? '    ' : '   '}${opt.label}. `,
               options: {bold: true, fontSize: 14, color: '334155'},
             });
-            parseFormattedSegments(opt.text).forEach((seg) => {
-              qRuns.push({
-                text: seg.text,
-                options: {
-                  bold: seg.bold,
-                  underline: seg.underline ? {style: 'sng'} : undefined,
-                  fontSize: 14,
-                  color: '1E293B',
-                },
-              });
+            richHtmlToPptxTextRuns(opt.text, {fontSize: 14, color: '1E293B'}).forEach((r) => {
+              qRuns.push(r);
             });
           });
           qRuns.push({text: '\n\n', options: {fontSize: 10}});
@@ -636,14 +619,7 @@ function escapeHtml(text: string): string {
 }
 
 function renderHtmlWithUnderlines(text: string): string {
-  return parseFormattedSegments(text)
-    .map((seg) => {
-      const safe = escapeHtml(seg.text);
-      if (seg.underline) return `<u style="text-decoration-thickness:2px;font-weight:700">${safe}</u>`;
-      if (seg.bold) return `<strong>${safe}</strong>`;
-      return safe;
-    })
-    .join('');
+  return richHtmlToPrintableHtml(text);
 }
 
 /**
@@ -738,8 +714,10 @@ export function printLessonAsPDF(
     <head>
       <meta charset="utf-8" />
       <title>${escapeHtml(lesson.title)}</title>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Charis+SIL:ital,wght@0,400;0,700;1,400&display=swap" />
       <style>
-        body { font-family: "Segoe UI", Arial, sans-serif; color: #0F172A; line-height: 1.55; margin: 28px; font-size: 13.5px; }
+        body { font-family: "Segoe UI", "Charis SIL", Arial, sans-serif; color: #0F172A; line-height: 1.55; margin: 28px; font-size: 13.5px; }
+        .ipa-inline { font-family: "Charis SIL", "Doulos SIL", "DejaVu Sans", serif; }
         header { text-align: center; border-bottom: 2px solid #0F4C81; padding-bottom: 12px; margin-bottom: 20px; }
         h1 { font-size: 20px; margin: 0 0 6px; color: #0F4C81; }
         .meta { color: #475569; font-size: 12.5px; }

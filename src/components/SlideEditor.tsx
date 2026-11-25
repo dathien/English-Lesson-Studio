@@ -56,6 +56,13 @@ import {
 import {exportLessonAsJson} from '../services/storage';
 import {RenderFormattedText} from '../utils/richText';
 import {ListeningWidget} from './interactive/ListeningWidget';
+import {RichTextEditor} from './editor/RichTextEditor';
+import {CompactAnswerEditor} from './editor/CompactAnswerEditor';
+import {EnglishIPAPicker} from './editor/EnglishIPAPicker';
+import {
+  joinParagraphsToRichHtml,
+  splitRichHtmlToParagraphs,
+} from '../services/documentExportAdapter';
 
 interface SlideEditorProps {
   lesson: LessonProject;
@@ -259,6 +266,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [previewMode, setPreviewMode] = useState(false);
+  const [openIpaTarget, setOpenIpaTarget] = useState<string | null>(null);
 
   const activeSlide = draft.slides[selectedIdx] || draft.slides[0];
 
@@ -933,12 +941,11 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     <label className="text-xs font-semibold text-slate-500 block mb-1">
                       Hướng dẫn hoạt động (Instruction)
                     </label>
-                    <input
-                      type="text"
+                    <CompactAnswerEditor
                       value={activeSlide.instruction || ''}
-                      onChange={(e) => updateCurrentSlide({instruction: e.target.value})}
+                      onChange={(nextHtml) => updateCurrentSlide({instruction: nextHtml})}
                       placeholder="Nhập hướng dẫn ngắn gọn cho học sinh..."
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm text-slate-800 focus:bg-white focus:border-[#0284C7] outline-none"
+                      spellCheckLang="en-GB"
                     />
                   </div>
 
@@ -991,9 +998,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                         <span className="text-xs text-slate-500">Bấm để sửa ở khung phải</span>
                       </div>
                       {activeSlide.passage.paragraphs.map((p, idx) => (
-                        <p key={idx} className="text-sm text-slate-700 leading-relaxed">
+                        <div key={idx} className="text-sm text-slate-700 leading-relaxed">
                           <RenderFormattedText text={p} />
-                        </p>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -1024,13 +1031,13 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                                 <div key={o.id}>
                                   <span className="font-semibold">{o.label}. </span>
                                   <RenderFormattedText text={o.text} />
-                                  {o.ipa && <span className="font-mono-tabular text-xs text-slate-500 ml-1">{o.ipa}</span>}
+                                  {o.ipa && <span className="font-ipa text-xs text-slate-500 ml-1">{o.ipa}</span>}
                                 </div>
                               ))}
                             </div>
                           )}
                           <div className="text-xs text-emerald-700 font-medium pt-1">
-                            Đáp án: {q.correctAnswer || '(Chưa nhập)'}
+                            Đáp án: <RenderFormattedText text={q.correctAnswer || '(Chưa nhập)'} />
                           </div>
                         </div>
                       ))}
@@ -1048,9 +1055,13 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                           key={v.id}
                           className="rounded-xl border border-slate-200 p-3 hover:border-[#0284C7]"
                         >
-                          <div className="font-semibold">{v.word}</div>
-                          <div className="font-mono-tabular text-xs text-[#0284C7]">{v.ipa}</div>
-                          <div className="text-xs text-slate-600 mt-1">{v.meaningVi}</div>
+                          <div className="font-semibold">
+                            <RenderFormattedText text={v.word} />
+                          </div>
+                          <div className="font-ipa text-xs text-[#0284C7]">{v.ipa}</div>
+                          <div className="text-xs text-slate-600 mt-1">
+                            <RenderFormattedText text={v.meaningVi} />
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1063,7 +1074,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                       className="rounded-xl border border-slate-200 p-4 bg-slate-50/70 cursor-pointer hover:border-[#0284C7]"
                     >
                       <div className="text-xs font-semibold text-[#0F4C81] mb-1">Nhiệm vụ Speaking (6 tiêu chí Rubric)</div>
-                      <p className="text-sm text-slate-800">{activeSlide.speakingTask.prompt}</p>
+                      <div className="text-sm text-slate-800">
+                        <RenderFormattedText text={activeSlide.speakingTask.prompt} />
+                      </div>
                     </div>
                   )}
                   {activeSlide.writingTask && (
@@ -1074,7 +1087,9 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                       <div className="text-xs font-semibold text-[#0F4C81] mb-1">
                         Đề bài Writing ({activeSlide.writingTask.minWords}–{activeSlide.writingTask.maxWords} từ)
                       </div>
-                      <p className="text-sm text-slate-800">{activeSlide.writingTask.prompt}</p>
+                      <div className="text-sm text-slate-800">
+                        <RenderFormattedText text={activeSlide.writingTask.prompt} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1188,35 +1203,30 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    Các ý chính (mỗi dòng 1 ý — dùng **chữ** để in đậm)
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={(activeSlide.bullets || []).join('\n')}
-                    onChange={(e) =>
+                  <RichTextEditor
+                    label="Các ý chính trình chiếu (hỗ trợ in đậm, gạch chân, danh sách, IPA)"
+                    value={joinParagraphsToRichHtml(activeSlide.bullets)}
+                    onChange={(nextHtml) =>
                       updateCurrentSlide({
-                        bullets: e.target.value
-                          .split('\n')
-                          .map((l) => l.trim())
-                          .filter(Boolean),
+                        bullets: splitRichHtmlToParagraphs(nextHtml),
                       })
                     }
-                    className="w-full rounded-lg border border-slate-300 p-2.5 text-sm"
-                    placeholder="Nhập các gạch đầu dòng trình chiếu..."
+                    placeholder="Nhập các ý chính trình chiếu..."
+                    compactToolbar
+                    minHeightClass="min-h-[96px]"
+                    defaultSpellCheck="en-GB"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    Ghi chú giáo viên (Teacher Notes)
-                  </label>
-                  <textarea
-                    rows={3}
+                  <RichTextEditor
+                    label="Ghi chú giáo viên (Teacher Notes)"
                     value={activeSlide.teacherNotes || ''}
-                    onChange={(e) => updateCurrentSlide({teacherNotes: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 p-2.5 text-sm"
+                    onChange={(nextHtml) => updateCurrentSlide({teacherNotes: nextHtml})}
                     placeholder="Gợi ý dẫn dắt, phân bổ thời gian trên lớp..."
+                    compactToolbar
+                    minHeightClass="min-h-[84px]"
+                    defaultSpellCheck="vi"
                   />
                 </div>
               </div>
@@ -1225,7 +1235,7 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             {inspectorTab === 'questions' && activeSlide && (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-900">Chỉnh sửa câu hỏi</span>
+                  <span className="font-semibold text-slate-900">Chỉnh sửa câu hỏi trực quan</span>
                   <button
                     type="button"
                     onClick={() => addQuestionToSlide('mcq')}
@@ -1235,8 +1245,8 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                   </button>
                 </div>
 
-                <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2">
-                  Mẹo: Để giữ gạch chân phát âm/lỗi sai, bọc chữ bằng thẻ <code className="font-mono-tabular">&lt;u&gt;...&lt;/u&gt;</code> (ví dụ: <code className="font-mono-tabular">cook&lt;u&gt;ed&lt;/u&gt;</code>).
+                <p className="text-xs text-blue-900 bg-blue-50/70 border border-blue-200 rounded-lg p-2.5">
+                  Bôi đen ký tự cần gạch chân (ví dụ <strong>br</strong> trong <strong>breadwinner</strong>) rồi bấm nút <strong>U</strong> hoặc <strong>Ctrl+U</strong>. Nhấn vào từng phương án A–D để hiện thanh định dạng và chèn phiên âm IPA.
                 </p>
 
                 {(activeSlide.questions || []).map((q, qIdx) => (
@@ -1272,59 +1282,95 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                       </div>
                     </div>
 
-                    <textarea
-                      rows={2}
+                    <RichTextEditor
                       value={q.prompt}
-                      onChange={(e) => updateQuestion(qIdx, {prompt: e.target.value})}
-                      className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs"
+                      onChange={(nextHtml) => updateQuestion(qIdx, {prompt: nextHtml})}
                       placeholder="Nội dung câu hỏi..."
+                      compactToolbar
+                      allowFullscreen
+                      minHeightClass="min-h-[72px]"
+                      defaultSpellCheck={q.type === 'error_correction' ? 'off' : 'en-GB'}
+                      disableProofreadHints={q.type === 'error_correction'}
                     />
 
                     {q.options && q.options.length > 0 && (
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         {q.options.map((opt, oIdx) => (
-                          <div key={opt.id} className="flex items-center gap-1.5">
-                            <span className="font-semibold text-xs w-5">{opt.label}.</span>
-                            <input
-                              type="text"
+                          <div key={opt.id} className="space-y-1">
+                            <CompactAnswerEditor
+                              label={opt.label}
                               value={opt.text}
-                              onChange={(e) => {
+                              placeholder={`Phương án ${opt.label}...`}
+                              spellCheckLang="off"
+                              onChange={(nextHtml) => {
                                 const opts = structuredClone(q.options || []);
-                                opts[oIdx].text = e.target.value;
+                                opts[oIdx].text = nextHtml;
                                 updateQuestion(qIdx, {options: opts});
                               }}
-                              className="flex-1 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                             />
-                            <input
-                              type="text"
-                              value={opt.ipa || ''}
-                              onChange={(e) => {
-                                const opts = structuredClone(q.options || []);
-                                opts[oIdx].ipa = e.target.value;
-                                updateQuestion(qIdx, {options: opts});
-                              }}
-                              placeholder="/IPA/"
-                              className="w-24 rounded border border-slate-300 bg-white px-2 py-1 text-xs font-mono-tabular"
-                            />
+                            <div className="flex items-center gap-1.5 pl-7">
+                              <input
+                                type="text"
+                                value={opt.ipa || ''}
+                                onChange={(e) => {
+                                  const opts = structuredClone(q.options || []);
+                                  opts[oIdx].ipa = e.target.value;
+                                  updateQuestion(qIdx, {options: opts});
+                                }}
+                                placeholder="Phiên âm /IPA/ (tùy chọn)"
+                                className="flex-1 rounded border border-slate-200 bg-white px-2 py-1 text-xs font-ipa"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenIpaTarget(
+                                    openIpaTarget === `q-${q.id}-opt-${opt.id}`
+                                      ? null
+                                      : `q-${q.id}-opt-${opt.id}`,
+                                  )
+                                }
+                                className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-[#2563EB] hover:bg-blue-50"
+                              >
+                                IPA
+                              </button>
+                            </div>
+                            {openIpaTarget === `q-${q.id}-opt-${opt.id}` && (
+                              <div className="pl-7 pt-1">
+                                <EnglishIPAPicker
+                                  initialTab="ipa"
+                                  onInsert={(sym) => {
+                                    const opts = structuredClone(q.options || []);
+                                    opts[oIdx].ipa = `${opts[oIdx].ipa || ''}${sym}`;
+                                    updateQuestion(qIdx, {options: opts});
+                                  }}
+                                  onWrapSelection={(left: string, right: string) => {
+                                    const opts = structuredClone(q.options || []);
+                                    const curr = (opts[oIdx].ipa || '').trim();
+                                    opts[oIdx].ipa = curr ? `${left}${curr}${right}` : `${left}${right}`;
+                                    updateQuestion(qIdx, {options: opts});
+                                  }}
+                                  onClose={() => setOpenIpaTarget(null)}
+                                />
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-1 gap-2 pt-1">
                       <input
                         type="text"
                         value={q.correctAnswer}
                         onChange={(e) => updateQuestion(qIdx, {correctAnswer: e.target.value})}
                         placeholder="Đáp án đúng (VD: A, True, hoặc cụm từ)..."
-                        className="w-full rounded border border-emerald-300 bg-white px-2.5 py-1.5 text-xs"
+                        className="w-full rounded border border-emerald-300 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-800"
                       />
-                      <input
-                        type="text"
+                      <CompactAnswerEditor
                         value={q.explanation || ''}
-                        onChange={(e) => updateQuestion(qIdx, {explanation: e.target.value})}
-                        placeholder="Lời giải thích ngắn..."
-                        className="w-full rounded border border-slate-300 bg-white px-2.5 py-1.5 text-xs"
+                        onChange={(nextHtml) => updateQuestion(qIdx, {explanation: nextHtml})}
+                        placeholder="Lời giải thích ngắn (hỗ trợ IPA, in đậm, gạch chân)..."
+                        spellCheckLang="vi"
                       />
                     </div>
                   </div>
@@ -1361,23 +1407,21 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                   placeholder="Tiêu đề bài đọc..."
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
-                <textarea
-                  rows={10}
-                  value={(activeSlide.passage?.paragraphs || []).join('\n\n')}
-                  onChange={(e) =>
+                <RichTextEditor
+                  value={joinParagraphsToRichHtml(activeSlide.passage?.paragraphs)}
+                  onChange={(nextHtml) =>
                     updateCurrentSlide({
                       passage: {
                         title: activeSlide.passage?.title || 'Reading Passage',
-                        paragraphs: e.target.value
-                          .split(/\n{2,}/)
-                          .map((p) => p.trim())
-                          .filter(Boolean),
+                        paragraphs: splitRichHtmlToParagraphs(nextHtml),
                         sourceNote: activeSlide.passage?.sourceNote,
                       },
                     })
                   }
-                  placeholder="Dán nguyên văn bài đọc (mỗi đoạn cách nhau 1 dòng trống)..."
-                  className="w-full rounded-lg border border-slate-300 p-3 text-sm leading-relaxed"
+                  placeholder="Nhập hoặc dán nguyên văn bài đọc tiếng Anh (hỗ trợ bôi đậm, tô màu, gạch chân từ khóa)..."
+                  allowFullscreen
+                  minHeightClass="min-h-[220px]"
+                  defaultSpellCheck="en-GB"
                 />
               </div>
             )}
@@ -1479,22 +1523,23 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 </label>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    Transcript bài nghe (dùng cho giọng đọc tổng hợp hoặc đối chiếu)
-                  </label>
-                  <textarea
-                    rows={8}
+                  <RichTextEditor
+                    label="Transcript bài nghe (dùng cho giọng đọc tổng hợp hoặc đối chiếu)"
                     value={activeSlide.audio?.transcript || ''}
-                    onChange={(e) =>
+                    onChange={(nextHtml) =>
                       updateCurrentSlide({
                         audio: {
                           ...(activeSlide.audio || {}),
-                          transcript: e.target.value,
+                          transcript: nextHtml,
                         },
                       })
                     }
                     placeholder="Nhập hoặc dán transcript Tiếng Anh..."
-                    className="w-full rounded-lg border border-slate-300 p-2.5 text-sm"
+                    allowAudio
+                    allowFullscreen
+                    compactToolbar
+                    minHeightClass="min-h-[150px]"
+                    defaultSpellCheck="en-GB"
                   />
                 </div>
               </div>
@@ -1514,18 +1559,17 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                 </div>
                 {(activeSlide.vocabItems || []).map((v, vIdx) => (
                   <div key={v.id} className="rounded-xl border border-slate-200 p-3 space-y-2 bg-slate-50/50">
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        value={v.word}
-                        onChange={(e) => {
-                          const list = structuredClone(activeSlide.vocabItems || []);
-                          list[vIdx].word = e.target.value;
-                          updateCurrentSlide({vocabItems: list});
-                        }}
-                        placeholder="Từ tiếng Anh"
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-semibold"
-                      />
+                    <CompactAnswerEditor
+                      value={v.word}
+                      onChange={(nextHtml) => {
+                        const list = structuredClone(activeSlide.vocabItems || []);
+                        list[vIdx].word = nextHtml;
+                        updateCurrentSlide({vocabItems: list});
+                      }}
+                      placeholder="Từ tiếng Anh (có thể gạch chân âm tiết / trọng âm)..."
+                      spellCheckLang="en-GB"
+                    />
+                    <div className="flex items-center gap-1.5">
                       <input
                         type="text"
                         value={v.ipa}
@@ -1535,30 +1579,54 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                           updateCurrentSlide({vocabItems: list});
                         }}
                         placeholder="/IPA/"
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-mono-tabular"
+                        className="flex-1 rounded border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-ipa"
                       />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenIpaTarget(openIpaTarget === `vocab-${v.id}` ? null : `vocab-${v.id}`)
+                        }
+                        className="rounded border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-[#2563EB] hover:bg-blue-100"
+                      >
+                        Bảng IPA
+                      </button>
                     </div>
-                    <input
-                      type="text"
+                    {openIpaTarget === `vocab-${v.id}` && (
+                      <EnglishIPAPicker
+                        initialTab="ipa"
+                        onInsert={(sym) => {
+                          const list = structuredClone(activeSlide.vocabItems || []);
+                          list[vIdx].ipa = `${list[vIdx].ipa || ''}${sym}`;
+                          updateCurrentSlide({vocabItems: list});
+                        }}
+                        onWrapSelection={(left: string, right: string) => {
+                          const list = structuredClone(activeSlide.vocabItems || []);
+                          const curr = (list[vIdx].ipa || '').trim();
+                          list[vIdx].ipa = curr ? `${left}${curr}${right}` : `${left}${right}`;
+                          updateCurrentSlide({vocabItems: list});
+                        }}
+                        onClose={() => setOpenIpaTarget(null)}
+                      />
+                    )}
+                    <CompactAnswerEditor
                       value={v.meaningVi}
-                      onChange={(e) => {
+                      onChange={(nextHtml) => {
                         const list = structuredClone(activeSlide.vocabItems || []);
-                        list[vIdx].meaningVi = e.target.value;
+                        list[vIdx].meaningVi = nextHtml;
                         updateCurrentSlide({vocabItems: list});
                       }}
-                      placeholder="Nghĩa tiếng Việt"
-                      className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                      placeholder="Nghĩa tiếng Việt..."
+                      spellCheckLang="vi"
                     />
-                    <input
-                      type="text"
+                    <CompactAnswerEditor
                       value={v.example}
-                      onChange={(e) => {
+                      onChange={(nextHtml) => {
                         const list = structuredClone(activeSlide.vocabItems || []);
-                        list[vIdx].example = e.target.value;
+                        list[vIdx].example = nextHtml;
                         updateCurrentSlide({vocabItems: list});
                       }}
-                      placeholder="Câu ví dụ"
-                      className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                      placeholder="Câu ví dụ minh họa..."
+                      spellCheckLang="en-GB"
                     />
                   </div>
                 ))}
@@ -1568,36 +1636,41 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             {inspectorTab === 'speaking' && activeSlide && (
               <div className="space-y-3">
                 <span className="font-semibold text-slate-900 block">Cấu hình hoạt động Speaking</span>
-                <textarea
-                  rows={4}
+                <RichTextEditor
+                  label="Đề bài Speaking / Tình huống giao tiếp"
                   value={activeSlide.speakingTask?.prompt || ''}
-                  onChange={(e) =>
+                  onChange={(nextHtml) =>
                     updateCurrentSlide({
                       speakingTask: {
                         ...(activeSlide.speakingTask || {rubricCriteria: DEFAULT_SPEAKING_RUBRIC}),
-                        prompt: e.target.value,
+                        prompt: nextHtml,
                       },
                     })
                   }
                   placeholder="Nhập đề bài Speaking / Tình huống giao tiếp..."
-                  className="w-full rounded-lg border border-slate-300 p-2.5 text-sm"
+                  compactToolbar
+                  allowFullscreen
+                  minHeightClass="min-h-[100px]"
+                  defaultSpellCheck="en-GB"
                 />
-                <textarea
-                  rows={4}
-                  value={(activeSlide.speakingTask?.cues || []).join('\n')}
-                  onChange={(e) =>
+                <RichTextEditor
+                  label="Các câu hỏi gợi ý triển khai ý"
+                  value={joinParagraphsToRichHtml(activeSlide.speakingTask?.cues)}
+                  onChange={(nextHtml) =>
                     updateCurrentSlide({
                       speakingTask: {
                         ...(activeSlide.speakingTask || {
                           prompt: '',
                           rubricCriteria: DEFAULT_SPEAKING_RUBRIC,
                         }),
-                        cues: e.target.value.split('\n').filter(Boolean),
+                        cues: splitRichHtmlToParagraphs(nextHtml),
                       },
                     })
                   }
-                  placeholder="Các câu hỏi gợi ý (mỗi dòng 1 ý)..."
-                  className="w-full rounded-lg border border-slate-300 p-2.5 text-sm"
+                  placeholder="Nhập các câu hỏi gợi ý (mỗi đoạn 1 ý)..."
+                  compactToolbar
+                  minHeightClass="min-h-[90px]"
+                  defaultSpellCheck="en-GB"
                 />
               </div>
             )}
@@ -1605,10 +1678,10 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
             {inspectorTab === 'writing' && activeSlide && (
               <div className="space-y-3">
                 <span className="font-semibold text-slate-900 block">Cấu hình hoạt động Writing</span>
-                <textarea
-                  rows={4}
+                <RichTextEditor
+                  label="Đề bài Writing"
                   value={activeSlide.writingTask?.prompt || ''}
-                  onChange={(e) =>
+                  onChange={(nextHtml) =>
                     updateCurrentSlide({
                       writingTask: {
                         ...(activeSlide.writingTask || {
@@ -1618,12 +1691,15 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                           usefulExpressions: [],
                           rubricCriteria: DEFAULT_WRITING_RUBRIC,
                         }),
-                        prompt: e.target.value,
+                        prompt: nextHtml,
                       },
                     })
                   }
                   placeholder="Nhập đề bài Writing..."
-                  className="w-full rounded-lg border border-slate-300 p-2.5 text-sm"
+                  compactToolbar
+                  allowFullscreen
+                  minHeightClass="min-h-[100px]"
+                  defaultSpellCheck="en-GB"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -1673,10 +1749,10 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     />
                   </div>
                 </div>
-                <textarea
-                  rows={4}
-                  value={(activeSlide.writingTask?.outlineHints || []).join('\n')}
-                  onChange={(e) =>
+                <RichTextEditor
+                  label="Gợi ý dàn ý & cấu trúc viết"
+                  value={joinParagraphsToRichHtml(activeSlide.writingTask?.outlineHints)}
+                  onChange={(nextHtml) =>
                     updateCurrentSlide({
                       writingTask: {
                         ...(activeSlide.writingTask || {
@@ -1687,12 +1763,14 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                           usefulExpressions: [],
                           rubricCriteria: DEFAULT_WRITING_RUBRIC,
                         }),
-                        outlineHints: e.target.value.split('\n').filter(Boolean),
+                        outlineHints: splitRichHtmlToParagraphs(nextHtml),
                       },
                     })
                   }
-                  placeholder="Gợi ý dàn ý (mỗi dòng 1 ý)..."
-                  className="w-full rounded-lg border border-slate-300 p-2.5 text-sm"
+                  placeholder="Nhập các gợi ý dàn ý (mỗi đoạn 1 ý)..."
+                  compactToolbar
+                  minHeightClass="min-h-[90px]"
+                  defaultSpellCheck="en-GB"
                 />
               </div>
             )}

@@ -24,7 +24,11 @@ import type {
   ExportFormatOptions,
 } from '../types/exam';
 import {EXAM_FORMAT_LABELS, EXAM_SKILL_LABELS} from '../types/exam';
-import {parseFormattedSegments, stripFormattingTags} from '../utils/richText';
+import {stripFormattingTags} from '../utils/richText';
+import {
+  richHtmlToDocxRuns,
+  richHtmlToPrintableHtml,
+} from './documentExportAdapter';
 import {getMatrixSummary, recalculateMatrixRow} from './examEngine';
 
 function triggerDownload(blob: Blob, fileName: string) {
@@ -60,19 +64,7 @@ function buildRichRuns(
     color?: string;
   },
 ): TextRun[] {
-  const segments = parseFormattedSegments(text);
-  return segments.map(
-    (seg) =>
-      new TextRun({
-        text: seg.text,
-        font: options.font,
-        size: options.sizeHalfPt,
-        bold: seg.bold || options.bold,
-        italics: options.italics,
-        underline: seg.underline ? {type: UnderlineType.SINGLE} : undefined,
-        color: options.color ?? '0F172A',
-      }),
-  );
+  return richHtmlToDocxRuns(text, options);
 }
 
 const THIN_BORDER = {
@@ -1311,9 +1303,11 @@ export function printExamHtmlInIframe(htmlContent: string, landscape = false) {
 <head>
 <meta charset="utf-8" />
 <title>In hồ sơ đề kiểm tra — English Lesson Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Charis+SIL:ital,wght@0,400;0,700;1,400&display=swap" />
 <style>
   @page { size: A4 ${landscape ? 'landscape' : 'portrait'}; margin: 16mm; }
-  body { font-family: "Times New Roman", Times, serif; font-size: 13pt; line-height: 1.45; color: #0f172a; margin: 0; }
+  body { font-family: "Times New Roman", "Charis SIL", Times, serif; font-size: 13pt; line-height: 1.45; color: #0f172a; margin: 0; }
+  .ipa-inline { font-family: "Charis SIL", "Doulos SIL", "DejaVu Sans", serif; }
   h1, h2, h3 { margin: 0 0 8px 0; }
   table { width: 100%; border-collapse: collapse; margin: 10px 0 16px 0; font-size: 11.5pt; }
   th, td { border: 1px solid #64748b; padding: 6px 8px; vertical-align: top; }
@@ -1325,6 +1319,7 @@ export function printExamHtmlInIframe(htmlContent: string, landscape = false) {
   .opts { margin-left: 18px; margin-top: 4px; }
   .center { text-align: center; }
   u { text-decoration: underline; text-underline-offset: 2px; }
+  mark { padding: 0 2px; border-radius: 2px; }
 </style>
 </head>
 <body>${htmlContent}</body>
@@ -1341,13 +1336,7 @@ export function printExamHtmlInIframe(htmlContent: string, landscape = false) {
 }
 
 function escapeHtmlPreservingUnderline(text: string): string {
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  return escaped
-    .replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/gi, '<u>$1</u>')
-    .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/gi, '<strong>$1</strong>');
+  return richHtmlToPrintableHtml(text);
 }
 
 export function printStudentExamPdf(dossier: ExamDossier, versionCode?: string) {

@@ -544,7 +544,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                       <span>{q.orderItems.join(q.type === 'word_order' ? ' ' : ' → ')}</span>
                     ) : (
                       <span className="font-bold text-[#059669] dark:text-emerald-300">
-                        {q.correctAnswer || 'Chưa thiết lập'}
+                        <RenderFormattedText text={q.correctAnswer || 'Chưa thiết lập'} />
                       </span>
                     )}
                   </div>
@@ -552,7 +552,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                 {showExplanations && q.explanation && (
                   <div className={darkSurface ? 'text-slate-200' : 'text-slate-700'}>
                     <span className="font-bold">Lời giải: </span>
-                    {q.explanation}
+                    <RenderFormattedText text={q.explanation} />
                   </div>
                 )}
               </div>

@@ -29,6 +29,7 @@ import {
   recalculateMatrixRow,
 } from '../../services/examEngine';
 import {downloadMatrixDocx, printMatrixOrSpecPdf} from '../../services/examExporters';
+import {CompactAnswerEditor} from '../editor/CompactAnswerEditor';
 
 interface ExamMatrixStepProps {
   dossier: ExamDossier;
@@ -378,19 +379,19 @@ export const ExamMatrixStep: React.FC<ExamMatrixStepProps> = ({
                       />
                     </td>
                     <td className="p-2.5">
-                      <textarea
-                        rows={2}
+                      <CompactAnswerEditor
                         value={row.testContent}
-                        onChange={(e) => updateRow(row.id, {testContent: e.target.value})}
-                        className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm leading-snug"
+                        onChange={(nextHtml) => updateRow(row.id, {testContent: nextHtml})}
+                        placeholder="Nội dung kiểm tra..."
+                        spellCheckLang="vi"
                       />
                     </td>
                     <td className="p-2.5">
-                      <textarea
-                        rows={2}
+                      <CompactAnswerEditor
                         value={row.knowledgeUnit}
-                        onChange={(e) => updateRow(row.id, {knowledgeUnit: e.target.value})}
-                        className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm leading-snug"
+                        onChange={(nextHtml) => updateRow(row.id, {knowledgeUnit: nextHtml})}
+                        placeholder="Đơn vị kiến thức..."
+                        spellCheckLang="vi"
                       />
                     </td>
                     <td className="p-2.5">

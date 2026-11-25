@@ -13,6 +13,9 @@ import type {Exam, ExamDossier, ExamRubric, MarkingGuide} from '../../types/exam
 import {DEFAULT_EXPORT_OPTIONS, EXAM_SKILL_LABELS} from '../../types/exam';
 import {auditExamAnswers} from '../../services/examEngine';
 import {downloadAnswerKeyDocx} from '../../services/examExporters';
+import {RenderFormattedText} from '../../utils/richText';
+import {RichTextEditor} from '../editor/RichTextEditor';
+import {CompactAnswerEditor} from '../editor/CompactAnswerEditor';
 
 interface ExamAnswerRubricStepProps {
   dossier: ExamDossier;
@@ -42,13 +45,26 @@ export const ExamAnswerRubricStep: React.FC<ExamAnswerRubricStepProps> = ({
   const updateRubricCriterion = (
     kind: 'writing' | 'speaking',
     criterionId: string,
-    patch: {name?: string; weightPercent?: number; maxScore?: number},
+    patch: {name?: string; weightPercent?: number; maxScore?: number; level0Description?: string},
   ) => {
     const target: ExamRubric =
       kind === 'writing' ? markingGuide.writingRubric : markingGuide.speakingRubric;
-    const nextCriteria = target.criteria.map((c) =>
-      c.id === criterionId ? {...c, ...patch} : c,
-    );
+    const nextCriteria = target.criteria.map((c) => {
+      if (c.id !== criterionId) return c;
+      const nextLevels =
+        patch.level0Description !== undefined
+          ? c.levels.map((lv, idx) =>
+              idx === 0 ? {...lv, description: patch.level0Description!} : lv,
+            )
+          : c.levels;
+      return {
+        ...c,
+        ...(patch.name !== undefined ? {name: patch.name} : {}),
+        ...(patch.weightPercent !== undefined ? {weightPercent: patch.weightPercent} : {}),
+        ...(patch.maxScore !== undefined ? {maxScore: patch.maxScore} : {}),
+        levels: nextLevels,
+      };
+    });
     const nextTotal = Math.round(nextCriteria.reduce((s, c) => s + c.maxScore, 0) * 100) / 100;
     const updatedRubric: ExamRubric = {...target, totalScore: nextTotal, criteria: nextCriteria};
     onUpdateMarkingGuide(
@@ -156,14 +172,25 @@ export const ExamAnswerRubricStep: React.FC<ExamAnswerRubricStepProps> = ({
                     {COGNITIVE_LABELS[entry.cognitiveLevel]}
                   </td>
                   <td className="p-2.5">
-                    <input
-                      type="text"
-                      value={entry.correctAnswer}
-                      onChange={(e) =>
-                        updateQuestionField(entry.questionId, {correctAnswer: e.target.value})
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm font-bold text-emerald-800"
-                    />
+                    {entry.correctAnswer.trim().length <= 3 ? (
+                      <input
+                        type="text"
+                        value={entry.correctAnswer}
+                        onChange={(e) =>
+                          updateQuestionField(entry.questionId, {correctAnswer: e.target.value})
+                        }
+                        className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm font-bold text-emerald-800"
+                      />
+                    ) : (
+                      <CompactAnswerEditor
+                        value={entry.correctAnswer}
+                        onChange={(nextHtml) =>
+                          updateQuestionField(entry.questionId, {correctAnswer: nextHtml})
+                        }
+                        placeholder="Nhập đáp án chuẩn..."
+                        spellCheckLang="en-GB"
+                      />
+                    )}
                   </td>
                   <td className="p-2.5">
                     <input
@@ -185,13 +212,13 @@ export const ExamAnswerRubricStep: React.FC<ExamAnswerRubricStepProps> = ({
                     {entry.points.toFixed(2)}
                   </td>
                   <td className="p-2.5">
-                    <input
-                      type="text"
+                    <CompactAnswerEditor
                       value={entry.explanation}
-                      onChange={(e) =>
-                        updateQuestionField(entry.questionId, {explanation: e.target.value})
+                      onChange={(nextHtml) =>
+                        updateQuestionField(entry.questionId, {explanation: nextHtml})
                       }
-                      className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm text-slate-700"
+                      placeholder="Nhập giải thích chi tiết / IPA..."
+                      spellCheckLang="vi"
                     />
                   </td>
                 </tr>
@@ -199,6 +226,24 @@ export const ExamAnswerRubricStep: React.FC<ExamAnswerRubricStepProps> = ({
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* General Marking Guide Instructions */}
+      <div className="rounded-[18px] border border-slate-200 bg-white p-5 space-y-3 shadow-xs">
+        <RichTextEditor
+          label="Hướng dẫn chấm chung (in đầu tài liệu Đáp án & Biểu điểm)"
+          value={markingGuide.generalInstructions || ''}
+          onChange={(nextHtml) =>
+            onUpdateMarkingGuide({
+              ...markingGuide,
+              generalInstructions: nextHtml,
+            })
+          }
+          placeholder="Nhập quy ước chấm điểm, làm tròn điểm, xử lý đáp án tương đương..."
+          compactToolbar
+          minHeightClass="min-h-[90px]"
+          defaultSpellCheck="vi"
+        />
       </div>
 
       {/* Listening Transcripts for Answer Key */}
@@ -211,9 +256,9 @@ export const ExamAnswerRubricStep: React.FC<ExamAnswerRubricStepProps> = ({
           {markingGuide.listeningTranscripts.map((tr) => (
             <div key={tr.groupId} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1">
               <div className="font-bold text-sm text-[#1E40AF]">{tr.title}</div>
-              <p className="text-[15px] text-slate-800 leading-relaxed whitespace-pre-line">
-                {tr.transcript}
-              </p>
+              <div className="text-[15px] text-slate-800 leading-relaxed">
+                <RenderFormattedText text={tr.transcript} />
+              </div>
             </div>
           ))}
         </div>
@@ -246,11 +291,18 @@ export const ExamAnswerRubricStep: React.FC<ExamAnswerRubricStepProps> = ({
                 {rubric.criteria.map((c) => (
                   <div
                     key={c.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-1.5"
+                    className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-bold text-sm text-[#0F172A]">{c.name}</span>
-                      <div className="flex items-center gap-2 text-xs font-semibold">
+                      <div className="flex-1 min-w-[180px]">
+                        <CompactAnswerEditor
+                          value={c.name}
+                          onChange={(nextHtml) => updateRubricCriterion(kind, c.id, {name: nextHtml})}
+                          placeholder="Tên tiêu chí..."
+                          spellCheckLang="vi"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-semibold shrink-0">
                         <label className="flex items-center gap-1">
                           Tỷ trọng %:
                           <input
@@ -284,9 +336,18 @@ export const ExamAnswerRubricStep: React.FC<ExamAnswerRubricStepProps> = ({
                         </label>
                       </div>
                     </div>
-                    <div className="text-xs text-[#475569]">
-                      <CheckCircle2 className="w-3.5 h-3.5 inline text-emerald-600 mr-1" />
-                      {c.levels[0]?.description}
+                    <div className="flex items-start gap-1.5 text-xs text-[#475569]">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-2.5" />
+                      <div className="flex-1">
+                        <CompactAnswerEditor
+                          value={c.levels[0]?.description || ''}
+                          onChange={(nextHtml) =>
+                            updateRubricCriterion(kind, c.id, {level0Description: nextHtml})
+                          }
+                          placeholder="Mô tả mức đạt tối đa của tiêu chí..."
+                          spellCheckLang="vi"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -20,6 +20,8 @@ import {
   getSubmissionsByLesson,
   saveSubmissionToDB,
 } from '../../services/storage';
+import {RenderFormattedText} from '../../utils/richText';
+import {stripHtmlToPlainText} from '../../services/documentExportAdapter';
 
 interface WritingWidgetProps {
   lessonId: string;
@@ -76,7 +78,7 @@ export const WritingWidget: React.FC<WritingWidgetProps> = ({
     setAiLoading(true);
     setAiError(null);
     const res = await requestWritingFeedbackAI({
-      promptText: task.prompt,
+      promptText: stripHtmlToPlainText(task.prompt),
       studentText: text,
       grade,
     });
@@ -150,7 +152,9 @@ export const WritingWidget: React.FC<WritingWidgetProps> = ({
               Yêu cầu: {task.minWords}–{task.maxWords} từ
             </span>
           </div>
-          <p className="leading-relaxed text-sm">{task.prompt}</p>
+          <div className="leading-relaxed text-sm">
+            <RenderFormattedText text={task.prompt} />
+          </div>
 
           {imageUrl && (
             <figure className="space-y-1.5">
@@ -179,7 +183,9 @@ export const WritingWidget: React.FC<WritingWidgetProps> = ({
             <div className="space-y-3 pt-1 text-sm">
               <ul className="list-disc pl-5 space-y-1">
                 {task.outlineHints.map((hint, idx) => (
-                  <li key={idx}>{hint}</li>
+                  <li key={idx}>
+                    <RenderFormattedText text={hint} />
+                  </li>
                 ))}
               </ul>
 

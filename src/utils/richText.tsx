@@ -1,75 +1,65 @@
 import React from 'react';
+import {RichTextRenderer} from '../components/editor/RichTextRenderer';
+import {
+  parseRichInlineRuns,
+  stripHtmlToPlainText,
+} from '../services/documentExportAdapter';
 
 /**
- * Safely renders text containing <u>...</u> (for underlined letters in Pronunciation/Grammar)
- * and **...** (for bold emphasis) without using dangerouslySetInnerHTML.
- * Strictly preserves exact underlined characters from original source documents.
+ * Safely renders rich-text HTML (from Tiptap WYSIWYG editor) and legacy
+ * `<u>...</u>` / `**...**` text without using dangerouslySetInnerHTML.
+ * Strictly preserves underlined pronunciation characters, IPA symbols, colors, highlights, tables, lists, and images.
  */
 export function RenderFormattedText({
   text,
   className,
+  inline = true,
 }: {
   text: string;
   className?: string;
+  inline?: boolean;
 }) {
   if (!text) return null;
-
-  const tokens = text.split(/(<u>[\s\S]*?<\/u>|\*\*[\s\S]*?\*\*)/g);
-
-  return (
-    <span className={className}>
-      {tokens.map((token, idx) => {
-        if (token.startsWith('<u>') && token.endsWith('</u>')) {
-          const inner = token.slice(3, -4);
-          return (
-            <u key={idx} className="pron-underline">
-              {inner}
-            </u>
-          );
-        }
-        if (token.startsWith('**') && token.endsWith('**')) {
-          const inner = token.slice(2, -2);
-          return (
-            <strong key={idx} className="font-semibold">
-              {inner}
-            </strong>
-          );
-        }
-        return <React.Fragment key={idx}>{token}</React.Fragment>;
-      })}
-    </span>
-  );
+  return <RichTextRenderer content={text} className={className} inline={inline} />;
 }
 
 /**
- * Strips formatting tags for plain text comparisons or exports where needed.
+ * Strips HTML and legacy formatting tags for plain text comparisons or search.
  */
 export function stripFormattingTags(text: string): string {
-  return text.replace(/<\/?u>/g, '').replace(/\*\*/g, '');
+  return stripHtmlToPlainText(text);
 }
 
 /**
- * Splits text into segments preserving underline state for DOCX / PPTX export.
+ * Splits rich text into styled segments preserving underline, bold, italic, strike, color, highlight, etc.
  */
 export interface FormattedSegment {
   text: string;
   underline: boolean;
   bold: boolean;
+  italic?: boolean;
+  strike?: boolean;
+  superscript?: boolean;
+  subscript?: boolean;
+  color?: string;
+  highlight?: string;
+  fontFamily?: string;
+  fontSizePt?: number;
 }
 
 export function parseFormattedSegments(text: string): FormattedSegment[] {
   if (!text) return [];
-  const tokens = text.split(/(<u>[\s\S]*?<\/u>|\*\*[\s\S]*?\*\*)/g);
-  const segments: FormattedSegment[] = [];
-  for (const token of tokens) {
-    if (!token) continue;
-    if (token.startsWith('<u>') && token.endsWith('</u>')) {
-      segments.push({text: token.slice(3, -4), underline: true, bold: true});
-    } else if (token.startsWith('**') && token.endsWith('**')) {
-      segments.push({text: token.slice(2, -2), underline: false, bold: true});
-    } else {
-      segments.push({text: token, underline: false, bold: false});
-    }
-  }
-  return segments;
+  return parseRichInlineRuns(text).map((run) => ({
+    text: run.text,
+    underline: Boolean(run.underline),
+    bold: Boolean(run.bold),
+    italic: run.italic,
+    strike: run.strike,
+    superscript: run.superscript,
+    subscript: run.subscript,
+    color: run.color,
+    highlight: run.highlight,
+    fontFamily: run.fontFamily,
+    fontSizePt: run.fontSizePt,
+  }));
 }
