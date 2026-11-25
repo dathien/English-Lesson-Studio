@@ -356,7 +356,7 @@ export default function App() {
     {id: 'samples', label: 'Kho bài mẫu'},
     {id: 'my_lessons', label: 'Bài của tôi'},
     {id: 'assessment', label: 'Soạn đề & Đánh giá'},
-    {id: 'interactive_lab', label: 'Học tương tác'},
+    {id: 'interactive_lab', label: 'Học tương tác 2D/3D'},
     {id: 'guide', label: 'Hướng dẫn'},
     {id: 'settings', label: 'Cài đặt'},
   ];
@@ -365,7 +365,8 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F172A]">
       {/* Blue Gradient Header */}
       <header className="sticky top-0 z-30 bg-gradient-to-r from-[#1E40AF] via-[#2563EB] to-[#0284C7] text-white shadow-md shadow-blue-950/15">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 min-h-[68px] py-2.5 flex items-center justify-between gap-4 lg:gap-8">
+        <style>{` .els-desktop-actions,.els-desktop-nav{display:none} .els-mobile-toggle,.els-mobile-drawer{display:block} @media(min-width:768px){.els-desktop-actions,.els-desktop-nav{display:flex}.els-mobile-toggle,.els-mobile-drawer{display:none}} `}</style>
+        <div className="bg-white"><div className="max-w-7xl mx-auto px-4 sm:px-6 min-h-[68px] py-2.5 flex items-center justify-between gap-2 sm:gap-4 bg-white text-slate-900">
           {/* Left: Logo + Official Name + Concise Descriptor */}
           <button
             type="button"
@@ -373,25 +374,42 @@ export default function App() {
               setRoute('home');
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-3 text-left min-w-0 shrink-0 focus-visible:outline-2 focus-visible:outline-white/80 rounded-xl"
+            className="flex items-center gap-3 text-left min-w-0 focus-visible:outline-2 focus-visible:outline-blue-600 rounded-xl"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-blue-700 border border-blue-600 flex items-center justify-center shrink-0 shadow-xs">
               <GraduationCap className="w-6 h-6 text-white" />
             </div>
             <div className="min-w-0">
-              <div className="font-display text-lg sm:text-[19px] font-extrabold tracking-tight leading-tight whitespace-nowrap">
+              <div className="font-display text-lg sm:text-[19px] font-extrabold tracking-tight leading-tight text-blue-900">
                 English Lesson Studio
               </div>
-              <div className="text-xs text-blue-100/90 leading-tight truncate hidden sm:block mt-0.5">
+              <div className="text-[13px] text-slate-600 leading-tight hidden sm:block mt-0.5">
                 Hệ thống soạn bài &amp; trình chiếu Tiếng Anh THPT · Lớp 10 · 11 · 12
               </div>
             </div>
           </button>
 
+          <div className="els-desktop-actions items-center gap-2 shrink-0">
+            <button type="button" onClick={() => handleCreateNewLesson()} className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-[15px] font-semibold text-white hover:bg-blue-800">
+              <FilePlus2 className="w-4 h-4" /> Tạo bài mới
+            </button>
+          </div>
+          {/* Compact Mobile / Tablet Menu Toggle */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
+            className="els-mobile-toggle p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100 transition-colors shrink-0"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div></div>
+
           {/* Right: 6 Clean Single-Line Nav Links */}
           <nav
             aria-label="Điều hướng chính"
-            className="hidden 2xl:flex items-center gap-1 text-[14px] xl:text-[15px] font-medium"
+            className="els-desktop-nav max-w-7xl mx-auto px-4 sm:px-6 py-2 items-center flex-wrap gap-1 text-[15px] font-medium"
           >
             {navItems.map((item) => {
               const active = route === item.id;
@@ -399,8 +417,9 @@ export default function App() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setRoute(item.id)}
-                  className={`px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap shrink-0 ${
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => { setRoute(item.id); setMobileMenuOpen(false); }}
+                  className={`px-2.5 lg:px-3 py-2 rounded-lg transition-all duration-150 whitespace-nowrap shrink-0 ${
                     active
                       ? 'bg-white text-[#1E40AF] font-bold shadow-xs'
                       : 'text-blue-50 hover:bg-white/15 hover:text-white'
@@ -412,20 +431,9 @@ export default function App() {
             })}
           </nav>
 
-          {/* Compact Mobile / Tablet Menu Toggle */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-label={mobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
-            className="2xl:hidden p-2.5 rounded-xl bg-white/15 border border-white/25 text-white hover:bg-white/25 transition-colors shrink-0"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-
         {/* Collapsible Mobile / Tablet Drawer */}
         {mobileMenuOpen && (
-          <div className="2xl:hidden border-t border-white/15 bg-[#1E40AF] px-4 py-3 space-y-1.5">
+          <div className="els-mobile-drawer border-t border-white/15 bg-[#1E40AF] px-4 py-3 space-y-1.5 max-h-[70vh] overflow-y-auto">
             {navItems.map((item) => (
               <button
                 key={item.id}
