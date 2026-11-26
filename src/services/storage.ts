@@ -1,6 +1,11 @@
 import {openDB, type DBSchema, type IDBPDatabase} from 'idb';
 import type {AppSettings, LessonProject, StudentSubmission} from '../types/lesson';
 import type {BankQuestionRecord, ExamDossier} from '../types/exam';
+import type {
+  LabOfflinePackRecord,
+  LabUserProgress,
+  TeacherCustomization,
+} from '../types/interactiveLab';
 
 interface SlideStudioDB extends DBSchema {
   lessons: {
@@ -27,10 +32,24 @@ interface SlideStudioDB extends DBSchema {
     value: BankQuestionRecord;
     indexes: {'by-grade': number; 'by-skill': string; 'by-updated': number};
   };
+  labCustomizations: {
+    key: string;
+    value: TeacherCustomization;
+    indexes: {'by-target': string; 'by-updated': number};
+  };
+  labProgress: {
+    key: string;
+    value: LabUserProgress;
+  };
+  labOfflinePacks: {
+    key: string;
+    value: LabOfflinePackRecord;
+    indexes: {'by-cached': number};
+  };
 }
 
 const DB_NAME = 'english-slide-studio-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   defaultGrade: 10,
@@ -70,6 +89,18 @@ function getDB() {
           bankStore.createIndex('by-grade', 'grade');
           bankStore.createIndex('by-skill', 'skill');
           bankStore.createIndex('by-updated', 'updatedAt');
+        }
+        if (!db.objectStoreNames.contains('labCustomizations')) {
+          const customStore = db.createObjectStore('labCustomizations', {keyPath: 'id'});
+          customStore.createIndex('by-target', 'targetId');
+          customStore.createIndex('by-updated', 'updatedAt');
+        }
+        if (!db.objectStoreNames.contains('labProgress')) {
+          db.createObjectStore('labProgress', {keyPath: 'id'});
+        }
+        if (!db.objectStoreNames.contains('labOfflinePacks')) {
+          const packStore = db.createObjectStore('labOfflinePacks', {keyPath: 'id'});
+          packStore.createIndex('by-cached', 'cachedAt');
         }
       },
     });
@@ -261,4 +292,86 @@ export async function deleteBankQuestionFromDB(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('questionBank', id);
 }
+
+// --- English Interactive Lab (IndexedDB v3, offline-first) ---
+
+export const DEFAULT_LAB_PROGRESS: LabUserProgress = {
+  id: 'default-user',
+  favorites: [],
+  recentIds: [],
+  completedIds: [],
+  quizScores: {},
+  writingDrafts: {},
+  updatedAt: 0,
+};
+
+export async function loadLabProgressFromDB(): Promise<LabUserProgress> {
+  const db = await getDB();
+  const stored = await db.get('labProgress', 'default-user');
+  return stored ? {...DEFAULT_LAB_PROGRESS, ...stored} : {...DEFAULT_LAB_PROGRESS};
+}
+
+export async function saveLabProgressToDB(progress: LabUserProgress): Promise<LabUserProgress> {
+  const db = await getDB();
+  const record: LabUserProgress = {...progress, id: 'default-user', updatedAt: Date.now()};
+  await db.put('labProgress', record);
+  return record;
+}
+
+export async function getAllLabCustomizations(): Promise<TeacherCustomization[]> {
+  const db = await getDB();
+  const list = await db.getAll('labCustomizations');
+  return list.sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+export async function getLabCustomizationByTarget(
+  targetId: string,
+): Promise<TeacherCustomization | undefined> {
+  const db = await getDB();
+  return db.get('labCustomizations', `custom::${targetId}`);
+}
+
+export async function saveLabCustomizationToDB(
+  custom: TeacherCustomization,
+): Promise<TeacherCustomization> {
+  const db = await getDB();
+  const record: TeacherCustomization = {
+    ...custom,
+    id: custom.id || `custom::${custom.targetId}`,
+    updatedAt: Date.now(),
+  };
+  await db.put('labCustomizations', record);
+  return record;
+}
+
+export async function deleteLabCustomizationFromDB(targetId: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('labCustomizations', `custom::${targetId}`);
+}
+
+export async function getAllLabOfflinePacks(): Promise<LabOfflinePackRecord[]> {
+  const db = await getDB();
+  const list = await db.getAll('labOfflinePacks');
+  return list.sort((a, b) => b.cachedAt - a.cachedAt);
+}
+
+export async function saveLabOfflinePackToDB(
+  pack: LabOfflinePackRecord,
+): Promise<LabOfflinePackRecord> {
+  const db = await getDB();
+  const record: LabOfflinePackRecord = {...pack, cachedAt: Date.now()};
+  await db.put('labOfflinePacks', record);
+  return record;
+}
+
+export async function deleteLabOfflinePackFromDB(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('labOfflinePacks', id);
+}
+
+export async function clearAllLabOfflinePacks(): Promise<void> {
+  const db = await getDB();
+  await db.clear('labOfflinePacks');
+}
+
 

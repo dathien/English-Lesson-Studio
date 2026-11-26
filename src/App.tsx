@@ -1,20 +1,25 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {Suspense, lazy, useEffect, useMemo, useState} from 'react';
 import {motion} from 'motion/react';
 import {
   ArrowRight,
   BookOpen,
+  Box,
   Check,
   ClipboardCheck,
   Clock,
   Copy,
   Edit3,
   FilePlus2,
+  FolderOpen,
   GraduationCap,
   Headphones,
+  HelpCircle,
+  Home,
   Menu,
   Mic,
   PenTool,
   Play,
+  Settings,
   X,
 } from 'lucide-react';
 import type {AppSettings, Grade, LessonProject, SkillCategory} from './types/lesson';
@@ -47,13 +52,15 @@ import {SettingsView} from './components/SettingsView';
 import {SlideEditor} from './components/SlideEditor';
 import {SlidePresenter} from './components/SlidePresenter';
 
-import {EnglishInteractiveLab} from './components/EnglishInteractiveLab';
+const InteractiveLabHome = lazy(
+  () => import('./components/interactiveLab/InteractiveLabHome')
+);
 
 type ActiveRoute =
-  | 'interactive_lab'
   | 'home'
   | 'samples'
   | 'my_lessons'
+  | 'interactive_lab'
   | 'assessment'
   | 'editor'
   | 'guide'
@@ -351,134 +358,172 @@ export default function App() {
     setSelectedGrade(next.defaultGrade);
   };
 
-  const navItems: Array<{id: ActiveRoute; label: string}> = [
-    {id: 'home', label: 'Trang chủ'},
-    {id: 'samples', label: 'Kho bài mẫu'},
-    {id: 'my_lessons', label: 'Bài của tôi'},
-    {id: 'assessment', label: 'Soạn đề & Đánh giá'},
-    {id: 'interactive_lab', label: 'Học tương tác 2D/3D'},
-    {id: 'guide', label: 'Hướng dẫn'},
-    {id: 'settings', label: 'Cài đặt'},
+  const [labFullscreen, setLabFullscreen] = useState(false);
+
+  const primaryNavItems: Array<{
+    id: ActiveRoute;
+    label: string;
+    icon: React.ComponentType<{className?: string}>;
+  }> = [
+    {id: 'home', label: 'Trang chủ', icon: Home},
+    {id: 'samples', label: 'Kho bài mẫu', icon: BookOpen},
+    {id: 'my_lessons', label: 'Bài của tôi', icon: FolderOpen},
+    {id: 'interactive_lab', label: 'Thế giới 2D/3D', icon: Box},
+    {id: 'assessment', label: 'Soạn đề & Đánh giá', icon: ClipboardCheck},
+    {id: 'guide', label: 'Hướng dẫn', icon: HelpCircle},
   ];
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F172A]">
-      {/* Blue Gradient Header */}
-      <header className="sticky top-0 z-30 bg-gradient-to-r from-[#1E40AF] via-[#2563EB] to-[#0284C7] text-white shadow-md shadow-blue-950/15">
-        <style>{` .els-desktop-actions,.els-desktop-nav{display:none} .els-mobile-toggle,.els-mobile-drawer{display:block} @media(min-width:768px){.els-desktop-actions,.els-desktop-nav{display:flex}.els-mobile-toggle,.els-mobile-drawer{display:none}} `}</style>
-        <div className="bg-white"><div className="max-w-7xl mx-auto px-4 sm:px-6 min-h-[68px] py-2.5 flex items-center justify-between gap-2 sm:gap-4 bg-white text-slate-900">
-          {/* Left: Logo + Official Name + Concise Descriptor */}
-          <button
-            type="button"
-            onClick={() => {
-              setRoute('home');
-              setMobileMenuOpen(false);
-            }}
-            className="flex items-center gap-3 text-left min-w-0 focus-visible:outline-2 focus-visible:outline-blue-600 rounded-xl"
-          >
-            <div className="w-10 h-10 rounded-xl bg-blue-700 border border-blue-600 flex items-center justify-center shrink-0 shadow-xs">
-              <GraduationCap className="w-6 h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-display text-lg sm:text-[19px] font-extrabold tracking-tight leading-tight text-blue-900">
-                English Lesson Studio
-              </div>
-              <div className="text-[13px] text-slate-600 leading-tight hidden sm:block mt-0.5">
-                Hệ thống soạn bài &amp; trình chiếu Tiếng Anh THPT · Lớp 10 · 11 · 12
-              </div>
-            </div>
-          </button>
+  const handleNavigate = (target: ActiveRoute) => {
+    setLabFullscreen(false);
+    setRoute(target);
+    setMobileMenuOpen(false);
+  };
 
-          <div className="els-desktop-actions items-center gap-2 shrink-0">
-            <button type="button" onClick={() => handleCreateNewLesson()} className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-[15px] font-semibold text-white hover:bg-blue-800">
-              <FilePlus2 className="w-4 h-4" /> Tạo bài mới
+  return (
+    <div className="min-h-screen w-full max-w-full flex flex-col bg-[#F8FAFC] text-[#0F172A]">
+      {/* Tier 1: Brand Identity & Settings Bar (70–76px) */}
+      {!labFullscreen && (
+        <header className="sticky top-0 z-30 lg:static w-full bg-gradient-to-r from-[#1E40AF] via-[#2563EB] to-[#0284C7] text-white shadow-sm shadow-blue-950/15">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 xl:px-6 min-h-[70px] lg:min-h-[74px] py-2.5 flex items-center justify-between gap-4 box-border">
+            {/* Left: Education Logo + App Name (22–24px) + Description (15px) */}
+            <button
+              type="button"
+              onClick={() => handleNavigate('home')}
+              className="flex items-center gap-3.5 text-left min-w-0 flex-1 lg:flex-initial focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 rounded-xl"
+            >
+              <div className="w-11 h-11 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 shadow-xs">
+                <GraduationCap className="w-6 h-6 text-white" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <div className="font-display text-[20px] sm:text-[22px] lg:text-[24px] font-bold tracking-tight leading-[1.2] text-white">
+                  English Lesson Studio
+                </div>
+                <p className="text-[13px] sm:text-[15px] font-normal text-blue-100/95 leading-snug mt-0.5">
+                  Hệ thống soạn bài &amp; trình chiếu Tiếng Anh THPT · Lớp 10 – 11 – 12
+                </p>
+              </div>
+            </button>
+
+            {/* Right (Desktop >= 1024px): Settings Action Button */}
+            <button
+              type="button"
+              onClick={() => handleNavigate('settings')}
+              aria-current={route === 'settings' ? 'page' : undefined}
+              className={`hidden lg:inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] text-[15px] font-semibold whitespace-nowrap shrink-0 transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                route === 'settings'
+                  ? 'bg-white text-[#1E40AF] shadow-xs'
+                  : 'bg-white/15 border border-white/25 text-white hover:bg-white/25'
+              }`}
+            >
+              <Settings className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />
+              <span>Cài đặt</span>
+            </button>
+
+            {/* Right (Tablet & Mobile < 1024px): Hamburger Menu Toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-primary-nav"
+              aria-label={mobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
+              className="lg:hidden min-w-[44px] min-h-[44px] px-2.5 rounded-[10px] bg-white/15 border border-white/25 text-white hover:bg-white/25 transition-colors duration-150 shrink-0 inline-flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" aria-hidden="true" />
+              ) : (
+                <Menu className="w-5 h-5" aria-hidden="true" />
+              )}
             </button>
           </div>
-          {/* Compact Mobile / Tablet Menu Toggle */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
-            className="els-mobile-toggle p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100 transition-colors shrink-0"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div></div>
 
-          {/* Right: 6 Clean Single-Line Nav Links */}
-          <nav
-            aria-label="Điều hướng chính"
-            className="els-desktop-nav max-w-7xl mx-auto px-4 sm:px-6 py-2 items-center flex-wrap gap-1 text-[15px] font-medium"
-          >
-            {navItems.map((item) => {
+          {/* Collapsible Hamburger Menu (< 1024px) */}
+          {mobileMenuOpen && (
+            <nav
+              id="mobile-primary-nav"
+              aria-label="Menu điều hướng di động"
+              className="lg:hidden w-full max-h-[calc(100vh-80px)] overflow-y-auto border-t border-slate-200 bg-white text-slate-800 shadow-lg"
+            >
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-1.5 box-border">
+                {primaryNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = route === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNavigate(item.id)}
+                      aria-current={active ? 'page' : undefined}
+                      className={`w-full flex items-center gap-3 rounded-[10px] px-4 py-3 text-[15.5px] font-semibold transition-colors duration-150 ${
+                        active
+                          ? 'bg-[#2563EB] text-white shadow-xs'
+                          : 'text-slate-700 hover:bg-[#EFF6FF] hover:text-[#1D4ED8]'
+                      }`}
+                    >
+                      <Icon className="w-[19px] h-[19px] shrink-0" aria-hidden="true" />
+                      <span className="text-left">{item.label}</span>
+                    </button>
+                  );
+                })}
+
+                <div className="pt-2 mt-2 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => handleNavigate('settings')}
+                    aria-current={route === 'settings' ? 'page' : undefined}
+                    className={`w-full flex items-center gap-3 rounded-[10px] px-4 py-3 text-[15.5px] font-semibold transition-colors duration-150 ${
+                      route === 'settings'
+                        ? 'bg-[#2563EB] text-white shadow-xs'
+                        : 'text-slate-700 hover:bg-[#EFF6FF] hover:text-[#1D4ED8]'
+                    }`}
+                  >
+                    <Settings className="w-[19px] h-[19px] shrink-0" aria-hidden="true" />
+                    <span className="text-left">Cài đặt</span>
+                  </button>
+                </div>
+              </div>
+            </nav>
+          )}
+        </header>
+      )}
+
+      {/* Tier 2: Functional Horizontal Navigation Bar (>= 1024px, 50–56px, sticky on scroll) */}
+      {!labFullscreen && (
+        <nav
+          aria-label="Điều hướng chức năng"
+          className="hidden lg:block sticky top-0 z-30 w-full bg-white border-b border-slate-200/90 shadow-[0_2px_10px_-4px_rgba(15,23,42,0.08)]"
+        >
+          <div className="w-full max-w-7xl mx-auto px-4 xl:px-6 min-h-[54px] py-1.5 flex items-center justify-start gap-1 xl:gap-2 box-border">
+            {primaryNavItems.map((item) => {
+              const Icon = item.icon;
               const active = route === item.id;
               return (
                 <button
                   key={item.id}
                   type="button"
+                  onClick={() => handleNavigate(item.id)}
                   aria-current={active ? 'page' : undefined}
-                  onClick={() => { setRoute(item.id); setMobileMenuOpen(false); }}
-                  className={`px-2.5 lg:px-3 py-2 rounded-lg transition-all duration-150 whitespace-nowrap shrink-0 ${
+                  className={`inline-flex items-center gap-2 h-[40px] px-2.5 xl:px-4 rounded-[10px] text-[15px] xl:text-[15.5px] font-semibold whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] ${
                     active
-                      ? 'bg-white text-[#1E40AF] font-bold shadow-xs'
-                      : 'text-blue-50 hover:bg-white/15 hover:text-white'
+                      ? 'bg-[#2563EB] text-white shadow-xs shadow-blue-600/20'
+                      : 'text-slate-700 hover:bg-[#EFF6FF] hover:text-[#1D4ED8]'
                   }`}
                 >
-                  {item.label}
+                  <Icon
+                    className={`w-[18px] h-[18px] shrink-0 ${
+                      active ? 'text-white' : 'text-slate-500'
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span>{item.label}</span>
                 </button>
               );
             })}
-          </nav>
-
-        {/* Collapsible Mobile / Tablet Drawer */}
-        {mobileMenuOpen && (
-          <div className="els-mobile-drawer border-t border-white/15 bg-[#1E40AF] px-4 py-3 space-y-1.5 max-h-[70vh] overflow-y-auto">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setRoute(item.id);
-                  setMobileMenuOpen(false);
-                }}
-                className={`block w-full text-left rounded-xl px-4 py-3 text-[15px] font-semibold transition-colors ${
-                  route === item.id
-                    ? 'bg-white text-[#1E40AF]'
-                    : 'text-blue-50 hover:bg-white/10'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-            <div className="pt-2 border-t border-white/15 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => handleCreateNewLesson()}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#06B6D4] px-3.5 py-2.5 text-sm font-bold text-slate-950"
-              >
-                <FilePlus2 className="w-4 h-4" />
-                Tạo bài mới
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRoute('assessment');
-                  setMobileMenuOpen(false);
-                }}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/15 px-3.5 py-2.5 text-sm font-semibold text-white"
-              >
-                <ClipboardCheck className="w-4 h-4" />
-                Kiểm tra
-              </button>
-            </div>
           </div>
-        )}
-      </header>
+        </nav>
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0">
-        {route === 'interactive_lab' && <EnglishInteractiveLab />}
         {route === 'home' && (
           <motion.div
             key="route-home"
@@ -583,6 +628,14 @@ export default function App() {
                         <ClipboardCheck className="w-4 h-4 text-[#10B981]" />
                         Soạn đề &amp; Đánh giá
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setRoute('interactive_lab')}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors whitespace-nowrap shadow-xs"
+                      >
+                        <Box className="w-4 h-4" />
+                        Thế giới 2D/3D
+                      </button>
                     </div>
                     <PWAInstallButton compact />
                   </div>
@@ -601,7 +654,7 @@ export default function App() {
             </section>
 
             {/* SAMPLE LIBRARY PREVIEW SECTION */}
-            <section id="sample-showcase" className="space-y-5">
+            <section id="sample-showcase" className="scroll-mt-20 space-y-5">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="space-y-1">
                   <div className="text-xs font-bold text-[#2563EB]">
@@ -1020,16 +1073,29 @@ export default function App() {
             />
           </motion.div>
         )}
+        {route === 'interactive_lab' && (
+          <Suspense
+            fallback={
+              <div className="mx-auto max-w-5xl px-6 py-16 text-center text-[15px] font-medium text-slate-600">
+                Đang tải Không gian học Tiếng Anh tương tác 2D/3D...
+              </div>
+            }
+          >
+            <InteractiveLabHome onFullscreenChange={setLabFullscreen} />
+          </Suspense>
+        )}
       </main>
 
-      {/* Required Centered Copyright Footer (Visible on Home & all management/editor views; never covers Fullscreen Presenter) */}
-      <footer className="border-t border-slate-200/90 bg-white mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center">
-          <p className="text-sm font-medium text-[#475569]">
-            Copyright © 2025 - Phát triển bởi Thầy Hồ Nguyễn Đa Thiện
-          </p>
-        </div>
-      </footer>
+      {/* Required Centered Copyright Footer (Hidden automatically during Fullscreen simulation mode) */}
+      {!labFullscreen && (
+        <footer className="border-t border-slate-200/90 bg-white mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center">
+            <p className="text-sm font-medium text-[#475569]">
+              Copyright © 2025 - Phát triển bởi Thầy Hồ Nguyễn Đa Thiện
+            </p>
+          </div>
+        </footer>
+      )}
 
       {/* Fullscreen Interactive Presentation Overlay */}
       {presentingState && (

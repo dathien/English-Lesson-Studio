@@ -35,6 +35,7 @@ import {ReadingSplitView} from './interactive/ReadingSplitView';
 import {SpeakingWidget} from './interactive/SpeakingWidget';
 import {VocabFlashcards} from './interactive/VocabFlashcards';
 import {WritingWidget} from './interactive/WritingWidget';
+import {EmbeddedLabPlayer} from './interactiveLab/EmbeddedLabPlayer';
 
 interface SlidePresenterProps {
   lesson: LessonProject;
@@ -274,6 +275,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
       currentSlide?.speakingTask ||
       currentSlide?.writingTask ||
       currentSlide?.audio ||
+      currentSlide?.interactiveLabRef ||
       (currentSlide?.vocabItems && currentSlide.vocabItems.length > 0),
   );
 
@@ -694,6 +696,11 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                   imageCaption={currentSlide.imageCaption}
                   darkSurface={theme.dark}
                 />
+              )}
+
+              {/* Embedded Live 2D/3D Interactive World Simulation */}
+              {currentSlide.interactiveLabRef && (
+                <EmbeddedLabPlayer labRef={currentSlide.interactiveLabRef} />
               )}
 
               {/* Standalone Illustration on Question / Listening Slides (Especially vivid for Primary & Secondary) */}

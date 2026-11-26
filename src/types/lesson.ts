@@ -109,7 +109,8 @@ export type ActivityType =
   // General
   | 'title_slide'
   | 'theory_slide'
-  | 'review_mixed';
+  | 'review_mixed'
+  | 'interactive_lab_sim';
 
 export type QuestionType =
   | 'mcq'
@@ -258,6 +259,16 @@ export interface Slide {
   vocabItems?: VocabCardItem[];
   speakingTask?: SpeakingTaskConfig;
   writingTask?: WritingTaskConfig;
+  interactiveLabRef?: {
+    simulationId: string;
+    category: 'sim_2d' | 'sim_3d' | 'grammar' | 'pronunciation' | 'roleplay';
+    titleEn: string;
+    titleVi: string;
+    grade: HighSchoolGrade;
+    unitId?: string;
+    unitNumber?: number;
+    summaryVi?: string;
+  };
 }
 
 export interface LessonProject {
@@ -430,6 +441,7 @@ export const ACTIVITY_LABELS: Record<ActivityType, string> = {
   title_slide: 'Trang bìa bài giảng',
   theory_slide: 'Kiến thức trọng tâm',
   review_mixed: 'Ôn tập tổng hợp',
+  interactive_lab_sim: 'Mô phỏng tương tác 2D/3D',
 };
 
 export const COGNITIVE_LABELS: Record<CognitiveLevel, string> = {

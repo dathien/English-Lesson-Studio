@@ -949,6 +949,34 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                     />
                   </div>
 
+                  {/* Interactive 2D/3D World Embedded Reference Preview */}
+                  {activeSlide.interactiveLabRef && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 flex flex-wrap items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                          Mô phỏng tương tác 2D/3D đã gắn ({activeSlide.interactiveLabRef.simulationId})
+                        </div>
+                        <div className="text-[15px] font-bold text-slate-900">
+                          {activeSlide.interactiveLabRef.titleEn}
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          {activeSlide.interactiveLabRef.titleVi} · Lớp {activeSlide.interactiveLabRef.grade}
+                          {activeSlide.interactiveLabRef.unitNumber
+                            ? ` · Unit ${activeSlide.interactiveLabRef.unitNumber}`
+                            : ''}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onPresent(draft, selectedIdx)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                      >
+                        <Play className="w-4 h-4" />
+                        Chạy mô phỏng khi trình chiếu
+                      </button>
+                    </div>
+                  )}
+
                   {/* Media Preview */}
                   {activeSlide.imageUrl && (
                     <div

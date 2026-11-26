@@ -115,6 +115,28 @@ export async function exportLessonToWord(
       });
     }
 
+    if (slide.interactiveLabRef) {
+      children.push(
+        new Paragraph({
+          spacing: {before: 80, after: 100},
+          children: [
+            new TextRun({
+              text: `[Hoạt động Mô phỏng Tương tác 2D/3D · Lớp ${slide.interactiveLabRef.grade}${
+                slide.interactiveLabRef.unitNumber ? ` · Unit ${slide.interactiveLabRef.unitNumber}` : ''
+              }] `,
+              bold: true,
+              color: '1D4ED8',
+              size: 22,
+            }),
+            new TextRun({
+              text: `${slide.interactiveLabRef.titleEn} — ${slide.interactiveLabRef.titleVi}. Mở trên English Lesson Studio để tương tác trực tiếp.`,
+              size: 22,
+            }),
+          ],
+        }),
+      );
+    }
+
     if (slide.passage) {
       if (slide.passage.title) {
         children.push(
@@ -433,6 +455,30 @@ export async function exportLessonToPowerPoint(lesson: LessonProject): Promise<v
       }
     }
 
+    if (slideData.interactiveLabRef) {
+      pptSlide.addShape(pptx.ShapeType.roundRect, {
+        x: 0.5,
+        y: 5.2,
+        w: 12.3,
+        h: 1.45,
+        fill: {color: 'EFF6FF'},
+        line: {color: '2563EB', width: 1.2},
+      });
+      pptSlide.addText(
+        `Mô phỏng tương tác 2D/3D: ${slideData.interactiveLabRef.titleEn} (${slideData.interactiveLabRef.titleVi})\nTrình chiếu trực tiếp trên English Lesson Studio để tương tác vật thể, âm thanh và nhiệm vụ.`,
+        {
+          x: 0.75,
+          y: 5.35,
+          w: 11.8,
+          h: 1.15,
+          fontSize: 14,
+          color: '1E3A8A',
+          fontFace: 'Calibri',
+          valign: 'middle',
+        },
+      );
+    }
+
     // Reading Split View: Passage on left, Questions on right
     if (slideData.passage) {
       const passageText = [
@@ -684,10 +730,18 @@ export function printLessonAsPDF(
             </div>`
           : '';
 
+      const labHtml = slide.interactiveLabRef
+        ? `<div class="task-box">
+            <p><strong>Mô phỏng tương tác 2D/3D (${escapeHtml(slide.interactiveLabRef.simulationId)}):</strong> ${escapeHtml(slide.interactiveLabRef.titleEn)} — ${escapeHtml(slide.interactiveLabRef.titleVi)}</p>
+            ${slide.interactiveLabRef.summaryVi ? `<p>${escapeHtml(slide.interactiveLabRef.summaryVi)}</p>` : ''}
+          </div>`
+        : '';
+
       return `<section class="slide-block">
         <h2>${idx + 1}. ${escapeHtml(slide.title)}</h2>
         ${slide.instruction ? `<p class="instruction">${renderHtmlWithUnderlines(slide.instruction)}</p>` : ''}
         ${slide.bullets?.length ? `<ul>${slide.bullets.map((b) => `<li>${renderHtmlWithUnderlines(b)}</li>`).join('')}</ul>` : ''}
+        ${labHtml}
         ${passageHtml}
         ${vocabHtml}
         ${questionsHtml}
