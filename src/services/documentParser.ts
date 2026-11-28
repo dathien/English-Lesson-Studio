@@ -21,6 +21,46 @@ import {
   getEducationLevelFromGrade,
 } from '../types/lesson';
 import {ocrImagesWithAI, refineDocumentWithAI} from './aiService';
+import {inferTransformationMeta} from './sentenceTransformationEngine';
+
+const TRANSFORMATION_SECTION_REGEX =
+  /(?:rewrite\s+(?:the\s+following|each|these|the)\s+sentences?|complete\s+the\s+second\s+sentence|finish\s+each\s+of\s+the\s+following\s+sentences?|sentence\s+transformation|sentence\s+rewrit(?:ing|e)|combine\s+(?:each\s+pair\s+of|the\s+following|these)\s+sentences?|do\s+not\s+change\s+the\s+(?:word|form\s+of\s+the\s+word)\s+given|without\s+changing\s+(?:its|their|the)\s+meaning|so\s+that\s+it\s+(?:has\s+a\s+similar|means\s+the\s+same)|use\s+the\s+word\s+(?:given|in\s+(?:brackets|capitals|bold))|viết\s+lại\s+câu|kết\s+hợp\s+câu|chuyển\s+đổi\s+câu)/i;
+
+const WORD_NUM_LOOKUP: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
+
+function parseSectionWordLimit(text: string): {min?: number; max?: number} | undefined {
+  const betweenMatch = text.match(
+    /between\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+and\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+words?/i,
+  );
+  if (betweenMatch) {
+    const min = Number(betweenMatch[1]) || WORD_NUM_LOOKUP[betweenMatch[1].toLowerCase()];
+    const max = Number(betweenMatch[2]) || WORD_NUM_LOOKUP[betweenMatch[2].toLowerCase()];
+    if (min && max) return {min, max};
+  }
+  const rangeMatch = text.match(/\b(\d+)\s*[-–]\s*(\d+)\s*(?:words?|từ)\b/i);
+  if (rangeMatch) {
+    return {min: Number(rangeMatch[1]), max: Number(rangeMatch[2])};
+  }
+  const maxMatch = text.match(
+    /(?:no\s+more\s+than|at\s+most|maximum\s+of|tối\s+đa|không\s+quá)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s*(?:words?|từ)/i,
+  );
+  if (maxMatch) {
+    const max = Number(maxMatch[1]) || WORD_NUM_LOOKUP[maxMatch[1].toLowerCase()];
+    if (max) return {max};
+  }
+  return undefined;
+}
 
 if (typeof pdfWorkerUrl === 'string') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
@@ -433,6 +473,7 @@ export function parseStructuredEnglishText(
 
   // Extract explicit answer key block if present at the bottom
   const answerKeyMap = new Map<number, string>();
+  const acceptedKeyMap = new Map<number, string[]>();
   const explanationMap = new Map<number, string>();
   const keySectionIdx = lines.findIndex((l) =>
     /^(ANSWER\s*KEY|KEYS?|ĐÁP\s*ÁN|BẢNG\s*ĐÁP\s*ÁN)\s*:?$/i.test(l),
@@ -442,6 +483,29 @@ export function parseStructuredEnglishText(
   if (keySectionIdx >= 0) {
     const keyLines = lines.slice(keySectionIdx + 1);
     for (const kl of keyLines) {
+      // Single full-sentence answer line (preserves commas inside English sentences & splits | alternatives)
+      const singleLineMatch = kl.match(/^(?:Question|Câu)?\s*(\d{1,3})\s*[.):\-–]\s*(.+)$/i);
+      const hasMultipleNumbered =
+        singleLineMatch &&
+        /(?:,|;|\s{2,})\s*(?:Question|Câu)?\s*\d{1,3}\s*[.):\-–]\s*(?:[A-D]\b|True\b|False\b|T\b|F\b)/i.test(
+          singleLineMatch[2],
+        );
+      if (singleLineMatch && !hasMultipleNumbered) {
+        const num = Number(singleLineMatch[1]);
+        const rawVal = singleLineMatch[2].trim();
+        const variants = rawVal
+          .split(/\s*\|\s*|\s+\/\s+/)
+          .map((v) => v.trim())
+          .filter(Boolean);
+        if (variants.length > 0) {
+          answerKeyMap.set(num, variants[0]);
+          if (variants.length > 1) {
+            acceptedKeyMap.set(num, variants.slice(1));
+          }
+        }
+        continue;
+      }
+
       const multiMatches = Array.from(
         kl.matchAll(/(?:Question|Câu)?\s*(\d{1,3})\s*[.):\-–]\s*([A-D]|True|False|T|F|[^,;|]+)/gi),
       );
@@ -482,6 +546,15 @@ export function parseStructuredEnglishText(
     if (!currentQuestion.correctAnswer && answerKeyMap.has(currentQuestion.number)) {
       currentQuestion.correctAnswer = answerKeyMap.get(currentQuestion.number) || '';
     }
+    if (acceptedKeyMap.has(currentQuestion.number)) {
+      const existingAccepted = currentQuestion.acceptedAnswers || [];
+      const mergedAccepted = Array.from(
+        new Set([...existingAccepted, ...(acceptedKeyMap.get(currentQuestion.number) || [])]),
+      ).filter((a) => a && a !== currentQuestion!.correctAnswer);
+      if (mergedAccepted.length > 0) {
+        currentQuestion.acceptedAnswers = mergedAccepted;
+      }
+    }
     if (!currentQuestion.explanation && explanationMap.has(currentQuestion.number)) {
       currentQuestion.explanation = explanationMap.get(currentQuestion.number);
     }
@@ -504,7 +577,16 @@ export function parseStructuredEnglishText(
         currentQuestion.type = 'true_false';
       }
     } else if (!currentQuestion.options || currentQuestion.options.length === 0) {
-      if (/\s\/\s/.test(currentQuestion.prompt)) {
+      const isTransformationContext =
+        TRANSFORMATION_SECTION_REGEX.test(currentSectionInstruction) ||
+        TRANSFORMATION_SECTION_REGEX.test(currentQuestion.prompt) ||
+        /(?:→|->|=>)/.test(currentQuestion.prompt) ||
+        (currentQuestion.prompt.includes('\n') &&
+          /(?:_{3,}|\.{4,}|\([A-Z][A-Z\s'-]{1,22}\)|\[[A-Z][A-Z\s'-]{1,22}\])/.test(
+            currentQuestion.prompt,
+          ));
+
+      if (/\s\/\s/.test(currentQuestion.prompt) && !isTransformationContext) {
         currentQuestion.type = 'word_order';
         const parts = currentQuestion.prompt
           .split(/\s*\/\s*/)
@@ -519,10 +601,29 @@ export function parseStructuredEnglishText(
             currentQuestion.orderItems = parts;
           }
         }
+      } else if (isTransformationContext) {
+        currentQuestion.type = 'transformation';
+        const inferred = inferTransformationMeta(currentQuestion);
+        const sectionKeepUnchanged =
+          /do\s+not\s+change\s+the\s+(?:word|form)|không\s+(?:biến\s+đổi|thay\s+đổi)\s+(?:dạng\s+)?từ/i.test(
+            currentSectionInstruction,
+          );
+        const sectionWordLimit = parseSectionWordLimit(currentSectionInstruction);
+        if (sectionKeepUnchanged && inferred.keyword) {
+          inferred.keepKeywordUnchanged = true;
+          if (inferred.subtype === 'keyword') {
+            inferred.subtype = 'keyword_unchanged';
+          }
+        }
+        if (sectionWordLimit && !inferred.wordLimit) {
+          inferred.wordLimit = sectionWordLimit;
+        }
+        if (currentSectionInstruction && !inferred.instruction) {
+          inferred.instruction = currentSectionInstruction;
+        }
+        currentQuestion.transformation = inferred;
       } else if (/_{2,}|\(\.\.\.\)|\[\s*\]/.test(currentQuestion.prompt)) {
         currentQuestion.type = 'gap_fill';
-      } else if (/rewrite|transform|viết lại câu|so that it means/i.test(contextInstr)) {
-        currentQuestion.type = 'transformation';
       } else if (/true\s*\/\s*false|t\s*\/\s*f|yes\s*\/\s*no/i.test(contextInstr)) {
         currentQuestion.type = 'true_false';
         currentQuestion.options = [
@@ -584,14 +685,33 @@ export function parseStructuredEnglishText(
     }
 
     // Detect Instruction / Part / Activity lines across Grades 1–12
+    const isTransformationHeaderLine =
+      TRANSFORMATION_SECTION_REGEX.test(line) &&
+      !/^(?:Question|Câu)?\s*\d{1,3}\s*[.):]/i.test(line) &&
+      !/^(?:→|->|=>)/.test(line);
+
     if (
-      /^(Read the (following )?passage|Read and (circle|tick|match|answer|write|complete)|Look,\s*read|Look\s+and\s+(choose|match|circle|tick|write|number)|Mark the letter|Choose the (best|correct|odd)|Circle the|Listen and|Complete the|Fill in|Rewrite the|Find the mistake|Put the words|Reorder|Unscramble|Match the|Part\s+[IVX0-9]+|Exercise\s+\d+|Task\s+\d+|Activity\s+\d+|Section\s+[A-Z0-9]+|I{1,3}\.|[IVX]+\.)/i.test(
+      isTransformationHeaderLine ||
+      /^(Read the (following )?passage|Read and (circle|tick|match|answer|write|complete)|Look,\s*read|Look\s+and\s+(choose|match|circle|tick|write|number)|Mark the letter|Choose the (best|correct|odd)|Circle the|Listen and|Complete the|Finish each of|Fill in|Rewrite (the|each|these)|Combine (the|each|these)|Use the word|Do not change|Sentence (transformation|rewriting)|Viết lại câu|Kết hợp câu|Find the mistake|Put the words|Reorder|Unscramble|Match the|Part\s+[IVX0-9]+|Exercise\s+\d+|Task\s+\d+|Activity\s+\d+|Section\s+[A-Z0-9]+|I{1,3}\.|[IVX]+\.)/i.test(
         line,
       )
     ) {
       if (collectingTranscript && /^(Question|Câu|1\.)/i.test(line)) {
         collectingTranscript = false;
       }
+      // If a secondary transformation instruction line immediately follows a transformation header (e.g. "Do not change the word given. Use between 2 and 5 words."), append instead of overwriting
+      const isSecondaryTransformRule =
+        !currentQuestion &&
+        TRANSFORMATION_SECTION_REGEX.test(currentSectionInstruction) &&
+        /^(?:Do not change|Use (?:between|no more than|the word)|You must use|Write between|Không (?:biến đổi|thay đổi)|Sử dụng)/i.test(
+          line,
+        );
+      if (isSecondaryTransformRule) {
+        currentSectionInstruction = `${currentSectionInstruction} ${line}`.trim();
+        instructions = instructions ? `${instructions}\n${line}` : line;
+        continue;
+      }
+
       flushPassage();
       flushMatchingPairs();
       flushQuestion();
@@ -662,7 +782,17 @@ export function parseStructuredEnglishText(
     // Detect Answer / Explanation inline under a question
     const ansInline = line.match(/^(?:Answer|Key|Đáp án)\s*:\s*(.+)$/i);
     if (ansInline && currentQuestion) {
-      currentQuestion.correctAnswer = ansInline[1].trim();
+      const rawAns = ansInline[1].trim();
+      const variants = rawAns
+        .split(/\s*\|\s*/)
+        .map((v) => v.trim())
+        .filter(Boolean);
+      currentQuestion.correctAnswer = variants[0] || rawAns;
+      if (variants.length > 1) {
+        currentQuestion.acceptedAnswers = Array.from(
+          new Set([...(currentQuestion.acceptedAnswers || []), ...variants.slice(1)]),
+        );
+      }
       continue;
     }
     const expInline = line.match(/^(?:Explanation|Giải thích|Hướng dẫn)\s*:\s*(.+)$/i);
@@ -672,7 +802,13 @@ export function parseStructuredEnglishText(
     }
 
     // Detect Option lines: "A. ...", "B. ...", or "A. ... B. ... C. ... D. ..."
-    if (currentQuestion && /^[A-D][.)]\s+/.test(line)) {
+    // Guard: inside a Sentence Transformation section, a rewrite starter line (e.g. "→ ..." or blank line) must NEVER be misparsed as MCQ options
+    const inTransformSection = TRANSFORMATION_SECTION_REGEX.test(currentSectionInstruction);
+    if (
+      currentQuestion &&
+      /^[A-D][.)]\s+/.test(line) &&
+      !(inTransformSection && !currentQuestion.options?.length && !/\bB[.)]\s+/.test(line))
+    ) {
       const multi = Array.from(line.matchAll(/\b([A-D])[.)]\s+([\s\S]*?)(?=(?:\s+[A-D][.)]\s+)|$)/g));
       if (multi.length > 0) {
         currentQuestion.options = currentQuestion.options || [];
@@ -697,15 +833,25 @@ export function parseStructuredEnglishText(
 
     // Passage paragraph (keep intact — lower threshold 110 chars for shorter Primary/Secondary passages)
     const minPassageLen = resolvedLevel === 'primary' ? 95 : 150;
-    if (collectingPassage || (!currentQuestion && line.length >= minPassageLen)) {
+    if (
+      !inTransformSection &&
+      (collectingPassage || (!currentQuestion && line.length >= minPassageLen))
+    ) {
       collectingPassage = true;
       currentPassageParagraphs.push(line);
       continue;
     }
 
     // Append continuation text to current question prompt
+    // Preserve newline separator for transformation starters/blanks/keywords so inferTransformationMeta separates Line 1 (original) & Line 2 (starter/template)
     if (currentQuestion && (!currentQuestion.options || currentQuestion.options.length === 0)) {
-      currentQuestion.prompt = `${currentQuestion.prompt} ${line}`.trim();
+      const isTransformContinuation =
+        inTransformSection ||
+        /^(?:→|->|=>)/.test(line) ||
+        /(?:_{3,}|\.{4,})/.test(line) ||
+        /^(?:\([A-Z][A-Z\s'-]{1,22}\)|\[[A-Z][A-Z\s'-]{1,22}\])$/.test(line);
+      const joiner = isTransformContinuation ? '\n' : ' ';
+      currentQuestion.prompt = `${currentQuestion.prompt}${joiner}${line}`.trim();
     } else if (collectingPassage) {
       currentPassageParagraphs.push(line);
     }

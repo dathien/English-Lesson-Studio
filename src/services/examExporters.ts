@@ -30,6 +30,7 @@ import {
   richHtmlToPrintableHtml,
 } from './documentExportAdapter';
 import {getMatrixSummary, recalculateMatrixRow} from './examEngine';
+import {inferTransformationMeta} from './sentenceTransformationEngine';
 
 function triggerDownload(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);
@@ -580,9 +581,102 @@ export async function buildStudentExamDocxBlob(
     }
 
     for (const q of groupQs) {
+      if (q.format === 'transformation') {
+        // Compute structured metadata WITHOUT passing answer data into the student paper
+        const meta =
+          q.transformation ||
+          inferTransformationMeta({
+            prompt: q.prompt,
+            correctAnswer: '',
+            acceptedAnswers: [],
+          });
+
+        const stemRuns: TextRun[] = [
+          new TextRun({
+            text: `Question ${q.number}. `,
+            font,
+            size: sizeHalfPt,
+            bold: true,
+          }),
+          ...buildRichRuns(meta.originalSentence || q.prompt, {font, sizeHalfPt}),
+        ];
+
+        if (meta.keyword) {
+          stemRuns.push(
+            new TextRun({
+              text: `  (${meta.keyword})`,
+              font,
+              size: sizeHalfPt,
+              bold: true,
+            }),
+          );
+        }
+
+        const constraintNotes: string[] = [];
+        if (meta.keepKeywordUnchanged && meta.keyword) {
+          constraintNotes.push('do not change the word given');
+        }
+        if (meta.wordLimit?.min && meta.wordLimit?.max) {
+          constraintNotes.push(`use between ${meta.wordLimit.min} and ${meta.wordLimit.max} words`);
+        } else if (meta.wordLimit?.max) {
+          constraintNotes.push(`no more than ${meta.wordLimit.max} words`);
+        }
+        if (constraintNotes.length > 0) {
+          stemRuns.push(
+            new TextRun({
+              text: ` [${constraintNotes.join('; ')}]`,
+              font,
+              size: sizeHalfPt - 2,
+              italics: true,
+            }),
+          );
+        }
+
+        children.push(
+          new Paragraph({
+            spacing: {before: 110, after: 45},
+            keepNext: true,
+            keepLines: true,
+            children: stemRuns,
+          }),
+        );
+
+        let writeLineText =
+          '→ ...........................................................................................................................';
+        if (meta.subtype === 'gap_completion' && meta.gapTemplate) {
+          const cleanTemplate = meta.gapTemplate.replace(
+            /_{2,}|\.{4,}/g,
+            ' ........................................ ',
+          );
+          writeLineText = `→ ${cleanTemplate.replace(/\s{2,}/g, ' ').trim()}`;
+        } else if (meta.givenStart || meta.givenEnd) {
+          const startPart = meta.givenStart ? `${meta.givenStart} ` : '';
+          const endPart = meta.givenEnd ? ` ${meta.givenEnd}` : '.';
+          writeLineText = `→ ${startPart}......................................................................................${endPart}`;
+        }
+
+        children.push(
+          new Paragraph({
+            indent: {left: 260},
+            spacing: {after: 95},
+            keepLines: true,
+            children: [
+              new TextRun({
+                text: writeLineText,
+                font,
+                size: sizeHalfPt,
+              }),
+            ],
+          }),
+        );
+        continue;
+      }
+
       children.push(
         new Paragraph({
           spacing: {before: 100, after: 40},
+          keepNext: true,
+          keepLines: true,
           children: [
             new TextRun({
               text: `Question ${q.number}. `,
@@ -625,7 +719,7 @@ export async function buildStudentExamDocxBlob(
             );
           }
         }
-      } else if (q.format === 'transformation' || q.format === 'short_answer' || q.format === 'gap_fill') {
+      } else if (q.format === 'short_answer' || q.format === 'gap_fill') {
         children.push(
           new Paragraph({
             indent: {left: 260},
@@ -771,10 +865,16 @@ export async function buildAnswerKeyDocxBlob(
   ];
 
   for (const entry of dossier.answerKey.entries) {
+    const cleanedAccepted = (entry.acceptedAnswers || []).filter(
+      (a) => a && a.trim() !== entry.correctAnswer.trim(),
+    );
     const equiv =
-      entry.acceptedAnswers && entry.acceptedAnswers.length > 0
-        ? `\nChấp nhận tương đương: ${entry.acceptedAnswers.join(' | ')}`
+      cleanedAccepted.length > 0
+        ? `\nChấp nhận tương đương: ${cleanedAccepted.join(' | ')}`
         : '';
+    const patternNote = entry.transformation?.structurePattern
+      ? `\nCấu trúc: ${entry.transformation.structurePattern}`
+      : '';
     keyTableRows.push(
       new TableRow({
         children: [
@@ -782,7 +882,7 @@ export async function buildAnswerKeyDocxBlob(
           makeCell(COGNITIVE_LABELS[entry.cognitiveLevel], {font, sizeHalfPt: sizeHalfPt - 2, align: AlignmentType.CENTER}),
           makeCell(entry.correctAnswer, {font, sizeHalfPt: sizeHalfPt - 2, bold: true}),
           makeCell(entry.points.toFixed(2), {font, sizeHalfPt: sizeHalfPt - 2, align: AlignmentType.CENTER}),
-          makeCell(`${entry.explanation}${equiv}`, {font, sizeHalfPt: sizeHalfPt - 2}),
+          makeCell(`${entry.explanation}${patternNote}${equiv}`, {font, sizeHalfPt: sizeHalfPt - 2}),
         ],
       }),
     );
@@ -1370,6 +1470,27 @@ export function printStudentExamPdf(dossier: ExamDossier, versionCode?: string) 
           : '';
       const qHtml = qs
         .map((q) => {
+          if (q.format === 'transformation') {
+            const meta =
+              q.transformation ||
+              inferTransformationMeta({prompt: q.prompt, correctAnswer: '', acceptedAnswers: []});
+            const kwHtml = meta.keyword
+              ? ` <strong>(${escapeHtmlPreservingUnderline(meta.keyword)})</strong>`
+              : '';
+            const limitHtml =
+              meta.wordLimit?.min && meta.wordLimit?.max
+                ? ` <em>[use ${meta.wordLimit.min}–${meta.wordLimit.max} words${meta.keepKeywordUnchanged ? '; do not change the word given' : ''}]</em>`
+                : meta.keepKeywordUnchanged && meta.keyword
+                  ? ' <em>[do not change the word given]</em>'
+                  : '';
+            const lineHtml =
+              meta.subtype === 'gap_completion' && meta.gapTemplate
+                ? `→ ${escapeHtmlPreservingUnderline(meta.gapTemplate).replace(/_{2,}|\.{4,}/g, ' .................................... ')}`
+                : meta.givenStart || meta.givenEnd
+                  ? `→ ${escapeHtmlPreservingUnderline(meta.givenStart || '')} .............................................................................. ${escapeHtmlPreservingUnderline(meta.givenEnd || '')}`
+                  : '→ .......................................................................................................';
+            return `<div class="q-block" style="page-break-inside:avoid;"><div><strong>Question ${q.number}.</strong> ${escapeHtmlPreservingUnderline(meta.originalSentence || q.prompt)}${kwHtml}${limitHtml}</div><div style="padding-left:18px;margin-top:4px;">${lineHtml}</div></div>`;
+          }
           const opts =
             q.options && q.options.length > 0
               ? `<div class="opts">${q.options

@@ -38,6 +38,8 @@ import {
   processUploadedFiles,
 } from '../services/documentParser';
 import {CompactAnswerEditor} from './editor/CompactAnswerEditor';
+import {TransformationFieldsEditor} from './editor/TransformationFieldsEditor';
+import {inferTransformationMeta} from '../services/sentenceTransformationEngine';
 
 interface ImportWizardProps {
   defaultGrade: Grade;
@@ -912,62 +914,95 @@ export const ImportWizard: React.FC<ImportWizardProps> = ({
                       </div>
                     </div>
 
-                    <CompactAnswerEditor
-                      value={q.prompt}
-                      onChange={(nextHtml) => {
-                        const next = structuredClone(draft);
-                        next.questions[qIdx].prompt = nextHtml;
-                        setDraft(next);
-                      }}
-                      placeholder="Nội dung câu hỏi..."
-                      spellCheckLang="en-GB"
-                    />
+                    {q.type === 'transformation' ? (
+                      <TransformationFieldsEditor
+                        compact
+                        showGradeUnitFields={draft.grade >= 10}
+                        value={{
+                          prompt: q.prompt,
+                          correctAnswer: q.correctAnswer,
+                          acceptedAnswers: q.acceptedAnswers || [],
+                          explanation: q.explanation || '',
+                          cognitiveLevel: q.cognitiveLevel || 'comprehension',
+                          grade: draft.grade >= 10 ? (draft.grade as 10 | 11 | 12) : 10,
+                          unitId: q.transformation?.unitId,
+                          transformation: inferTransformationMeta(q),
+                        }}
+                        onChange={(nextVal) => {
+                          const next = structuredClone(draft);
+                          next.questions[qIdx] = {
+                            ...next.questions[qIdx],
+                            prompt: nextVal.prompt,
+                            correctAnswer: nextVal.correctAnswer,
+                            acceptedAnswers: nextVal.acceptedAnswers,
+                            explanation: nextVal.explanation,
+                            cognitiveLevel: nextVal.cognitiveLevel,
+                            transformation: nextVal.transformation,
+                            uncertain: !nextVal.correctAnswer.trim(),
+                          };
+                          setDraft(next);
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <CompactAnswerEditor
+                          value={q.prompt}
+                          onChange={(nextHtml) => {
+                            const next = structuredClone(draft);
+                            next.questions[qIdx].prompt = nextHtml;
+                            setDraft(next);
+                          }}
+                          placeholder="Nội dung câu hỏi..."
+                          spellCheckLang="en-GB"
+                        />
 
-                    {q.options && q.options.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {q.options.map((opt, oIdx) => (
-                          <CompactAnswerEditor
-                            key={opt.id}
-                            label={opt.label}
-                            value={opt.text}
-                            placeholder={`Phương án ${opt.label}...`}
-                            spellCheckLang="off"
-                            onChange={(nextHtml) => {
+                        {q.options && q.options.length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {q.options.map((opt, oIdx) => (
+                              <CompactAnswerEditor
+                                key={opt.id}
+                                label={opt.label}
+                                value={opt.text}
+                                placeholder={`Phương án ${opt.label}...`}
+                                spellCheckLang="off"
+                                onChange={(nextHtml) => {
+                                  const next = structuredClone(draft);
+                                  if (next.questions[qIdx].options) {
+                                    next.questions[qIdx].options![oIdx].text = nextHtml;
+                                  }
+                                  setDraft(next);
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={q.correctAnswer}
+                            onChange={(e) => {
                               const next = structuredClone(draft);
-                              if (next.questions[qIdx].options) {
-                                next.questions[qIdx].options![oIdx].text = nextHtml;
-                              }
+                              next.questions[qIdx].correctAnswer = e.target.value;
+                              next.questions[qIdx].uncertain = !e.target.value.trim();
                               setDraft(next);
                             }}
+                            placeholder="Đáp án đúng..."
+                            className="rounded-lg border border-emerald-300 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-800"
                           />
-                        ))}
-                      </div>
+                          <CompactAnswerEditor
+                            value={q.explanation || ''}
+                            onChange={(nextHtml) => {
+                              const next = structuredClone(draft);
+                              next.questions[qIdx].explanation = nextHtml;
+                              setDraft(next);
+                            }}
+                            placeholder="Giải thích (tùy chọn)..."
+                            spellCheckLang="vi"
+                          />
+                        </div>
+                      </>
                     )}
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        value={q.correctAnswer}
-                        onChange={(e) => {
-                          const next = structuredClone(draft);
-                          next.questions[qIdx].correctAnswer = e.target.value;
-                          next.questions[qIdx].uncertain = !e.target.value.trim();
-                          setDraft(next);
-                        }}
-                        placeholder="Đáp án đúng..."
-                        className="rounded-lg border border-emerald-300 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-800"
-                      />
-                      <CompactAnswerEditor
-                        value={q.explanation || ''}
-                        onChange={(nextHtml) => {
-                          const next = structuredClone(draft);
-                          next.questions[qIdx].explanation = nextHtml;
-                          setDraft(next);
-                        }}
-                        placeholder="Giải thích (tùy chọn)..."
-                        spellCheckLang="vi"
-                      />
-                    </div>
                   </div>
                 ))}
               </div>

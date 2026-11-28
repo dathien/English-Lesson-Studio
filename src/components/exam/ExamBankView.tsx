@@ -33,6 +33,8 @@ import {GLOBAL_SUCCESS_UNITS} from '../../data/examCurriculum';
 import {RenderFormattedText as FormattedText} from '../../utils/richText';
 import {RichTextEditor} from '../editor/RichTextEditor';
 import {CompactAnswerEditor} from '../editor/CompactAnswerEditor';
+import {TransformationFieldsEditor} from '../editor/TransformationFieldsEditor';
+import {inferTransformationMeta} from '../../services/sentenceTransformationEngine';
 import {isRichHtmlEmpty, stripHtmlToPlainText} from '../../services/documentExportAdapter';
 
 interface ExamBankViewProps {
@@ -742,120 +744,161 @@ export const ExamBankView: React.FC<ExamBankViewProps> = ({
               </label>
             </div>
 
-            <RichTextEditor
-              label="Nội dung câu hỏi (bôi đen chữ và bấm U hoặc Ctrl+U để gạch chân, chèn IPA trực tiếp)"
-              value={editingItem.prompt}
-              onChange={(nextHtml) => setEditingItem({...editingItem, prompt: nextHtml})}
-              placeholder="Nhập nội dung câu hỏi tiếng Anh..."
-              minHeightClass="min-h-[100px]"
-              allowAudio={editingItem.skill === 'listening'}
-              allowFullscreen
-              defaultSpellCheck="en-GB"
-              draftKey={`bank-q-${editingItem.id}`}
-            />
+            {editingItem.format === 'transformation' ? (
+              <TransformationFieldsEditor
+                showGradeUnitFields
+                showPointsField
+                value={{
+                  prompt: editingItem.prompt,
+                  correctAnswer: editingItem.correctAnswer,
+                  acceptedAnswers: editingItem.acceptedAnswers || [],
+                  explanation: editingItem.explanation || '',
+                  cognitiveLevel: editingItem.cognitiveLevel,
+                  points: editingItem.points,
+                  grade: editingItem.grade,
+                  unitId: editingItem.unitId,
+                  transformation: inferTransformationMeta({
+                    prompt: editingItem.prompt,
+                    correctAnswer: editingItem.correctAnswer,
+                    acceptedAnswers: editingItem.acceptedAnswers,
+                    explanation: editingItem.explanation,
+                    transformation: editingItem.transformation,
+                  }),
+                }}
+                onChange={(nextVal) =>
+                  setEditingItem({
+                    ...editingItem,
+                    prompt: nextVal.prompt,
+                    correctAnswer: nextVal.correctAnswer,
+                    acceptedAnswers: nextVal.acceptedAnswers,
+                    explanation: nextVal.explanation,
+                    cognitiveLevel: nextVal.cognitiveLevel,
+                    points: nextVal.points ?? editingItem.points,
+                    grade: nextVal.grade ?? editingItem.grade,
+                    unitId: nextVal.unitId ?? editingItem.unitId,
+                    questionType: 'transformation',
+                    transformation: nextVal.transformation,
+                  })
+                }
+              />
+            ) : (
+              <>
+                <RichTextEditor
+                  label="Nội dung câu hỏi (bôi đen chữ và bấm U hoặc Ctrl+U để gạch chân, chèn IPA trực tiếp)"
+                  value={editingItem.prompt}
+                  onChange={(nextHtml) => setEditingItem({...editingItem, prompt: nextHtml})}
+                  placeholder="Nhập nội dung câu hỏi tiếng Anh..."
+                  minHeightClass="min-h-[100px]"
+                  allowAudio={editingItem.skill === 'listening'}
+                  allowFullscreen
+                  defaultSpellCheck="en-GB"
+                  draftKey={`bank-q-${editingItem.id}`}
+                />
 
-            {(editingItem.format === 'mcq' ||
-              editingItem.format === 'true_false' ||
-              editingItem.format === 'ordering') && (
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-xs font-semibold text-slate-700">
-                    Các phương án lựa chọn (bấm vào từng ô để gạch chân ký tự hoặc chèn IPA)
+                {(editingItem.format === 'mcq' ||
+                  editingItem.format === 'true_false' ||
+                  editingItem.format === 'ordering') && (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="text-xs font-semibold text-slate-700">
+                        Các phương án lựa chọn (bấm vào từng ô để gạch chân ký tự hoặc chèn IPA)
+                      </div>
+                      {modalOptionsEdited && (
+                        <span className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-0.5">
+                          Đã sửa phương án — hãy kiểm tra lại Đáp án đúng.
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {(editingItem.options || [
+                        {id: 'a', label: 'A', text: ''},
+                        {id: 'b', label: 'B', text: ''},
+                        {id: 'c', label: 'C', text: ''},
+                        {id: 'd', label: 'D', text: ''},
+                      ]).map((opt, idx) => (
+                        <CompactAnswerEditor
+                          key={opt.id}
+                          label={opt.label}
+                          value={opt.text}
+                          placeholder={`Nhập phương án ${opt.label}...`}
+                          spellCheckLang="off"
+                          onFirstEditNotice={() => setModalOptionsEdited(true)}
+                          onChange={(nextHtml) => {
+                            setModalOptionsEdited(true);
+                            const baseOpts = editingItem.options || [
+                              {id: 'a', label: 'A', text: ''},
+                              {id: 'b', label: 'B', text: ''},
+                              {id: 'c', label: 'C', text: ''},
+                              {id: 'd', label: 'D', text: ''},
+                            ];
+                            const nextOpts = [...baseOpts];
+                            nextOpts[idx] = {...opt, text: nextHtml};
+                            setEditingItem({...editingItem, options: nextOpts});
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  {modalOptionsEdited && (
-                    <span className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-0.5">
-                      Đã sửa phương án — hãy kiểm tra lại Đáp án đúng.
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {(editingItem.options || [
-                    {id: 'a', label: 'A', text: ''},
-                    {id: 'b', label: 'B', text: ''},
-                    {id: 'c', label: 'C', text: ''},
-                    {id: 'd', label: 'D', text: ''},
-                  ]).map((opt, idx) => (
-                    <CompactAnswerEditor
-                      key={opt.id}
-                      label={opt.label}
-                      value={opt.text}
-                      placeholder={`Nhập phương án ${opt.label}...`}
-                      spellCheckLang="off"
-                      onFirstEditNotice={() => setModalOptionsEdited(true)}
-                      onChange={(nextHtml) => {
-                        setModalOptionsEdited(true);
-                        const baseOpts = editingItem.options || [
-                          {id: 'a', label: 'A', text: ''},
-                          {id: 'b', label: 'B', text: ''},
-                          {id: 'c', label: 'C', text: ''},
-                          {id: 'd', label: 'D', text: ''},
-                        ];
-                        const nextOpts = [...baseOpts];
-                        nextOpts[idx] = {...opt, text: nextHtml};
-                        setEditingItem({...editingItem, options: nextOpts});
-                      }}
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <label className="text-xs font-semibold text-slate-700 space-y-1">
+                    <span>Đáp án đúng</span>
+                    <input
+                      type="text"
+                      value={editingItem.correctAnswer}
+                      onChange={(e) => setEditingItem({...editingItem, correctAnswer: e.target.value})}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold"
                     />
-                  ))}
+                  </label>
+
+                  <label className="text-xs font-semibold text-slate-700 space-y-1">
+                    <span>Điểm câu hỏi</span>
+                    <input
+                      type="number"
+                      step="0.05"
+                      min="0"
+                      max="10"
+                      value={editingItem.points}
+                      onChange={(e) =>
+                        setEditingItem({...editingItem, points: Number(e.target.value) || 0.25})
+                      }
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono-tabular"
+                    />
+                  </label>
+
+                  <label className="text-xs font-semibold text-slate-700 space-y-1">
+                    <span>Trạng thái xác minh</span>
+                    <select
+                      value={editingItem.verificationStatus}
+                      onChange={(e) =>
+                        setEditingItem({
+                          ...editingItem,
+                          verificationStatus: e.target.value as VerificationStatus,
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white"
+                    >
+                      {(Object.keys(VERIFICATION_STATUS_LABELS) as VerificationStatus[]).map((st) => (
+                        <option key={st} value={st}>
+                          {VERIFICATION_STATUS_LABELS[st].label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
-              </div>
+
+                <RichTextEditor
+                  label="Giải thích đáp án chi tiết"
+                  value={editingItem.explanation}
+                  onChange={(nextHtml) => setEditingItem({...editingItem, explanation: nextHtml})}
+                  placeholder="Nhập giải thích đáp án, phiên âm IPA hoặc cấu trúc trọng tâm..."
+                  compactToolbar
+                  minHeightClass="min-h-[80px]"
+                  defaultSpellCheck="vi"
+                />
+              </>
             )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <label className="text-xs font-semibold text-slate-700 space-y-1">
-                <span>Đáp án đúng</span>
-                <input
-                  type="text"
-                  value={editingItem.correctAnswer}
-                  onChange={(e) => setEditingItem({...editingItem, correctAnswer: e.target.value})}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold"
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-slate-700 space-y-1">
-                <span>Điểm câu hỏi</span>
-                <input
-                  type="number"
-                  step="0.05"
-                  min="0"
-                  max="10"
-                  value={editingItem.points}
-                  onChange={(e) =>
-                    setEditingItem({...editingItem, points: Number(e.target.value) || 0.25})
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono-tabular"
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-slate-700 space-y-1">
-                <span>Trạng thái xác minh</span>
-                <select
-                  value={editingItem.verificationStatus}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      verificationStatus: e.target.value as VerificationStatus,
-                    })
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white"
-                >
-                  {(Object.keys(VERIFICATION_STATUS_LABELS) as VerificationStatus[]).map((st) => (
-                    <option key={st} value={st}>
-                      {VERIFICATION_STATUS_LABELS[st].label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <RichTextEditor
-              label="Giải thích đáp án chi tiết"
-              value={editingItem.explanation}
-              onChange={(nextHtml) => setEditingItem({...editingItem, explanation: nextHtml})}
-              placeholder="Nhập giải thích đáp án, phiên âm IPA hoặc cấu trúc trọng tâm..."
-              compactToolbar
-              minHeightClass="min-h-[80px]"
-              defaultSpellCheck="vi"
-            />
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
               <button

@@ -23,6 +23,7 @@ import {
   syncAnswerKeyAndMarkingGuide,
   syncSpecificationFromBlueprint,
 } from '../../services/examEngine';
+import {inferTransformationMeta} from '../../services/sentenceTransformationEngine';
 
 export interface SimpleMCQSpec {
   prompt: string;
@@ -411,6 +412,12 @@ export function buildPeriodicSampleDossier(seed: PeriodicPackSeed): ExamDossier 
 
   // Q31–34: Sentence Transformation
   for (const item of seed.transformationItems) {
+    const inferredMeta = inferTransformationMeta({
+      prompt: item.prompt,
+      correctAnswer: item.answer,
+      acceptedAnswers: item.acceptedAnswers,
+      explanation: item.explanation,
+    });
     pushQuestion({
       grade: seed.grade,
       textbookId: 'global-success',
@@ -431,6 +438,13 @@ export function buildPeriodicSampleDossier(seed: PeriodicPackSeed): ExamDossier 
       sectionOrder: 7,
       verificationStatus: 'teacher_authored',
       tags: [`Lớp ${seed.grade}`, 'Writing Transformation'],
+      transformation: {
+        ...inferredMeta,
+        grade: seed.grade,
+        unitId: item.unitId,
+        grammarTopic: seed.topicSummary,
+        points: 0.25,
+      },
     });
   }
 

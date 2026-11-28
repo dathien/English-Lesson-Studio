@@ -9,6 +9,7 @@ import {
   EyeOff,
   FileText,
   HelpCircle,
+  Lightbulb,
   ListChecks,
   Maximize,
   Minimize,
@@ -171,6 +172,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
   const [checkedSlides, setCheckedSlides] = useState<Record<string, boolean>>({});
   const [showAnswersSlides, setShowAnswersSlides] = useState<Record<string, boolean>>({});
   const [showExplanationsSlides, setShowExplanationsSlides] = useState<Record<string, boolean>>({});
+  const [hintLevelSlides, setHintLevelSlides] = useState<Record<string, number>>({});
 
   const [themeId, setThemeId] = useState<SlideThemeId>(
     initialTheme || lesson.themeId || 'light_classroom',
@@ -267,8 +269,12 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
   const isChecked = currentSlide ? Boolean(checkedSlides[currentSlide.id]) : false;
   const isShowAnswers = currentSlide ? Boolean(showAnswersSlides[currentSlide.id]) : false;
   const isShowExplanations = currentSlide ? Boolean(showExplanationsSlides[currentSlide.id]) : false;
+  const currentHintLevel = currentSlide ? hintLevelSlides[currentSlide.id] || 0 : 0;
 
   const hasQuestions = Boolean(currentSlide?.questions && currentSlide.questions.length > 0);
+  const hasTransformationQuestions = Boolean(
+    currentSlide?.questions?.some((q) => q.type === 'transformation'),
+  );
   const isReadingLayout = Boolean(currentSlide?.passage);
   const isWideActivity = Boolean(
     currentSlide?.passage ||
@@ -307,6 +313,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
     setCheckedSlides((prev) => ({...prev, [currentSlide.id]: false}));
     setShowAnswersSlides((prev) => ({...prev, [currentSlide.id]: false}));
     setShowExplanationsSlides((prev) => ({...prev, [currentSlide.id]: false}));
+    setHintLevelSlides((prev) => ({...prev, [currentSlide.id]: 0}));
   };
 
   if (!currentSlide) {
@@ -737,6 +744,7 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
                   checked={isChecked}
                   showAnswers={isShowAnswers}
                   showExplanations={isShowExplanations}
+                  presenterHintLevel={currentHintLevel}
                   onJumpToTimestamp={(sec) => setJumpAudioSec(sec)}
                   darkSurface={theme.dark}
                   fontScale={fontScale}
@@ -914,6 +922,28 @@ export const SlidePresenter: React.FC<SlidePresenterProps> = ({
               <RotateCcw className="w-4 h-4" />
               Try Again
             </button>
+            {hasTransformationQuestions && (
+              <button
+                type="button"
+                onClick={() =>
+                  setHintLevelSlides((p) => ({
+                    ...p,
+                    [currentSlide.id]: ((p[currentSlide.id] || 0) + 1) % 4,
+                  }))
+                }
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                  currentHintLevel > 0
+                    ? 'border-amber-400 bg-amber-50 text-amber-900'
+                    : theme.dark
+                      ? 'border-slate-700 hover:bg-slate-800 text-slate-200'
+                      : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
+                }`}
+                title="Mở gợi ý từng bước trên màn hình trình chiếu"
+              >
+                <Lightbulb className="w-4 h-4" />
+                {currentHintLevel > 0 ? `Gợi ý (${currentHintLevel}/3)` : 'Gợi ý'}
+              </button>
+            )}
             <button
               type="button"
               onClick={() =>

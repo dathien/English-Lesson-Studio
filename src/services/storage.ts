@@ -1,5 +1,10 @@
 import {openDB, type DBSchema, type IDBPDatabase} from 'idb';
-import type {AppSettings, LessonProject, StudentSubmission} from '../types/lesson';
+import type {
+  AppSettings,
+  LessonProject,
+  StudentSubmission,
+  TransformationAttemptRecord,
+} from '../types/lesson';
 import type {BankQuestionRecord, ExamDossier} from '../types/exam';
 import type {
   LabOfflinePackRecord,
@@ -46,10 +51,15 @@ interface SlideStudioDB extends DBSchema {
     value: LabOfflinePackRecord;
     indexes: {'by-cached': number};
   };
+  transformationAttempts: {
+    key: string;
+    value: TransformationAttemptRecord;
+    indexes: {'by-question': string; 'by-unit': string; 'by-updated': number};
+  };
 }
 
 const DB_NAME = 'english-slide-studio-db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   defaultGrade: 10,
@@ -101,6 +111,12 @@ function getDB() {
         if (!db.objectStoreNames.contains('labOfflinePacks')) {
           const packStore = db.createObjectStore('labOfflinePacks', {keyPath: 'id'});
           packStore.createIndex('by-cached', 'cachedAt');
+        }
+        if (!db.objectStoreNames.contains('transformationAttempts')) {
+          const attemptStore = db.createObjectStore('transformationAttempts', {keyPath: 'id'});
+          attemptStore.createIndex('by-question', 'questionId');
+          attemptStore.createIndex('by-unit', 'unitId');
+          attemptStore.createIndex('by-updated', 'updatedAt');
         }
       },
     });
@@ -373,5 +389,91 @@ export async function clearAllLabOfflinePacks(): Promise<void> {
   const db = await getDB();
   await db.clear('labOfflinePacks');
 }
+
+// --- Sentence Transformation Attempt & Mistake History (IndexedDB v4 + safe fallback) ---
+
+const TRANSFORMATION_ATTEMPTS_LS_KEY = 'els_transformation_attempts_v1';
+
+function readAttemptsFallback(): TransformationAttemptRecord[] {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem(TRANSFORMATION_ATTEMPTS_LS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    }
+  } catch {
+    // Ignore storage error
+  }
+  return [];
+}
+
+function writeAttemptsFallback(records: TransformationAttemptRecord[]): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(TRANSFORMATION_ATTEMPTS_LS_KEY, JSON.stringify(records));
+    }
+  } catch {
+    // Ignore storage error
+  }
+}
+
+export async function saveTransformationAttempt(
+  attempt: Omit<TransformationAttemptRecord, 'id' | 'retryCount' | 'updatedAt'>,
+): Promise<TransformationAttemptRecord> {
+  const id = `tf::${attempt.questionId}`;
+  try {
+    const db = await getDB();
+    const existing = await db.get('transformationAttempts', id);
+    const record: TransformationAttemptRecord = {
+      ...attempt,
+      id,
+      retryCount: existing ? existing.retryCount + 1 : 1,
+      updatedAt: Date.now(),
+    };
+    await db.put('transformationAttempts', record);
+    return record;
+  } catch {
+    const all = readAttemptsFallback();
+    const existing = all.find((r) => r.id === id);
+    const record: TransformationAttemptRecord = {
+      ...attempt,
+      id,
+      retryCount: existing ? existing.retryCount + 1 : 1,
+      updatedAt: Date.now(),
+    };
+    const next = [record, ...all.filter((r) => r.id !== id)];
+    writeAttemptsFallback(next);
+    return record;
+  }
+}
+
+export async function getAllTransformationAttempts(): Promise<TransformationAttemptRecord[]> {
+  try {
+    const db = await getDB();
+    const list = await db.getAll('transformationAttempts');
+    return list.sort((a, b) => b.updatedAt - a.updatedAt);
+  } catch {
+    return readAttemptsFallback().sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+}
+
+export async function getWrongTransformationAttempts(): Promise<TransformationAttemptRecord[]> {
+  const all = await getAllTransformationAttempts();
+  return all.filter((item) => item.status === 'incorrect' || item.status === 'needs_teacher_review');
+}
+
+export async function deleteTransformationAttempt(questionId: string): Promise<void> {
+  const id = `tf::${questionId}`;
+  try {
+    const db = await getDB();
+    await db.delete('transformationAttempts', id);
+  } catch {
+    const next = readAttemptsFallback().filter((r) => r.id !== id);
+    writeAttemptsFallback(next);
+  }
+}
+
 
 

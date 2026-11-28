@@ -144,6 +144,130 @@ export interface MatchingPair {
   right: string;
 }
 
+export type TransformationSubtype =
+  | 'given_start'
+  | 'keyword'
+  | 'full_rewrite'
+  | 'keyword_unchanged'
+  | 'gap_completion';
+
+export const TRANSFORMATION_SUBTYPE_LABELS: Record<
+  TransformationSubtype,
+  {vi: string; en: string; short: string}
+> = {
+  given_start: {
+    vi: 'Viết lại có phần đầu cho trước',
+    en: 'Given-start Rewrite',
+    short: 'Phần đầu cho trước',
+  },
+  keyword: {
+    vi: 'Viết lại sử dụng từ khóa',
+    en: 'Keyword Transformation',
+    short: 'Từ khóa gợi ý',
+  },
+  full_rewrite: {
+    vi: 'Viết lại câu hoàn chỉnh',
+    en: 'Full Sentence Rewrite',
+    short: 'Viết lại hoàn chỉnh',
+  },
+  keyword_unchanged: {
+    vi: 'Từ khóa bắt buộc (không biến đổi từ)',
+    en: 'Unchanged Keyword Transformation',
+    short: 'Từ khóa không đổi',
+  },
+  gap_completion: {
+    vi: 'Hoàn thành chỗ trống trong câu viết lại',
+    en: 'Gap Completion Rewrite',
+    short: 'Điền chỗ trống viết lại',
+  },
+};
+
+export interface TransformationGradingRules {
+  caseSensitive?: boolean;
+  allowContractions?: boolean;
+  strictPunctuation?: boolean;
+  allowBritishAmericanSpelling?: boolean;
+  acceptRemainingOnly?: boolean;
+}
+
+export interface SentenceTransformationMeta {
+  subtype: TransformationSubtype;
+  grade?: HighSchoolGrade;
+  unitId?: string;
+  grammarTopic?: string;
+  originalSentence: string;
+  instruction?: string;
+  givenStart?: string;
+  givenEnd?: string;
+  /** For gap_completion with 1 or more blanks separated by `___` */
+  gapTemplate?: string;
+  keyword?: string;
+  keepKeywordUnchanged?: boolean;
+  wordLimit?: {min?: number; max?: number};
+  hints?: string[];
+  structurePattern?: string;
+  grammarReviewNote?: string;
+  gradingRules?: TransformationGradingRules;
+  points?: number;
+  sourceAttribution?: string;
+}
+
+export type TransformationEvaluationStatus =
+  | 'correct'
+  | 'minor_format_error'
+  | 'incorrect'
+  | 'needs_teacher_review';
+
+export type TransformationErrorCategory =
+  | 'wrong_tense'
+  | 'wrong_verb_form'
+  | 'missing_auxiliary'
+  | 'wrong_passive'
+  | 'wrong_preposition'
+  | 'missing_or_changed_keyword'
+  | 'wrong_word_order'
+  | 'missing_clause_component'
+  | 'word_limit_exceeded'
+  | 'spelling_error'
+  | 'structure_mismatch'
+  | 'meaning_changed'
+  | 'minor_format';
+
+export interface TransformationErrorDiagnostic {
+  category: TransformationErrorCategory;
+  labelVi: string;
+  detailVi: string;
+}
+
+export interface TransformationEvaluationResult {
+  status: TransformationEvaluationStatus;
+  statusLabelVi: string;
+  isPass: boolean;
+  scoreRatio: number;
+  reconstructedSentence: string;
+  matchedAnswer?: string;
+  minorFormatNotes: string[];
+  diagnostics: TransformationErrorDiagnostic[];
+  wordCountUsed?: number;
+  canTeacherApprove: boolean;
+  summaryVi: string;
+}
+
+export interface TransformationAttemptRecord {
+  id: string;
+  questionId: string;
+  unitId?: string;
+  grade?: HighSchoolGrade;
+  grammarTopic?: string;
+  promptPreview: string;
+  userAnswer: string;
+  status: TransformationEvaluationStatus;
+  errorCategories: TransformationErrorCategory[];
+  retryCount: number;
+  scoreRatio: number;
+  updatedAt: number;
+}
+
 export interface QuestionItem {
   id: string;
   number: number;
@@ -159,6 +283,7 @@ export interface QuestionItem {
   timestampSec?: number;
   uncertain?: boolean;
   tags?: string[];
+  transformation?: SentenceTransformationMeta;
 }
 
 export interface ReadingPassage {

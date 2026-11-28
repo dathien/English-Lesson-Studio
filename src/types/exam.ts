@@ -3,6 +3,7 @@ import type {
   HighSchoolGrade,
   QuestionOption,
   QuestionType,
+  SentenceTransformationMeta,
 } from './lesson';
 
 export type ExamSkillKey =
@@ -230,6 +231,7 @@ export interface BankQuestionRecord {
   audioTranscript?: string;
   verificationStatus: VerificationStatus;
   tags: string[];
+  transformation?: SentenceTransformationMeta;
   createdAt: number;
   updatedAt: number;
 }
@@ -279,6 +281,7 @@ export interface AnswerKeyEntry {
   points: number;
   explanation: string;
   sectionTitle: string;
+  transformation?: SentenceTransformationMeta;
 }
 
 export interface AnswerKey {

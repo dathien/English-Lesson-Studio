@@ -20,8 +20,14 @@ import {
   COGNITIVE_LABELS,
   SKILL_LABELS,
   SKILL_SHORT_LABELS,
+  type TransformationAttemptRecord,
 } from '../types/lesson';
 import {buildQuestionBank} from '../data/samples';
+import {
+  bankRecordsToQuestionItems,
+  CURATED_TRANSFORMATION_BANK,
+} from '../data/sentenceTransformationBank';
+import {getWrongTransformationAttempts} from '../services/storage';
 import {exportLessonToWord, printLessonAsPDF} from '../services/exporters';
 import {
   evaluateQuestion,
@@ -50,7 +56,19 @@ export const AssessmentCenter: React.FC<AssessmentCenterProps> = ({
   defaultGrade,
   onConvertToLesson,
 }) => {
-  const bank = useMemo(() => buildQuestionBank(allLessons), [allLessons]);
+  const bank = useMemo(() => {
+    const fromLessons = buildQuestionBank(allLessons);
+    const seen = new Set(fromLessons.map((b) => b.question.id));
+    const tfExtras = CURATED_TRANSFORMATION_BANK.filter((r) => !seen.has(r.id)).map((r) => ({
+      lessonId: `curated-${r.unitId}`,
+      lessonTitle: r.sourceLabel,
+      grade: r.grade as Grade,
+      skill: 'writing' as SkillCategory,
+      topic: r.topic,
+      question: bankRecordsToQuestionItems([r])[0],
+    }));
+    return [...fromLessons, ...tfExtras];
+  }, [allLessons]);
 
   const [examMode, setExamMode] = useState<ExamMode>('regular');
   const [grade, setGrade] = useState<Grade>(defaultGrade);
@@ -65,6 +83,11 @@ export const AssessmentCenter: React.FC<AssessmentCenterProps> = ({
   const [answers, setAnswers] = useState<QuestionAnswerMap>({});
   const [submitted, setSubmitted] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
+  const [wrongTfHistory, setWrongTfHistory] = useState<TransformationAttemptRecord[]>([]);
+
+  useEffect(() => {
+    void getWrongTransformationAttempts().then(setWrongTfHistory);
+  }, [submitted, activeQuestions]);
 
   const filteredPool = useMemo(() => {
     return bank.filter((entry) => {
@@ -109,10 +132,37 @@ export const AssessmentCenter: React.FC<AssessmentCenterProps> = ({
   const handleGenerateTest = () => {
     const selected = filteredPool.slice(0, Math.min(questionCount, filteredPool.length)).map((e, idx) => ({
       ...structuredClone(e.question),
-      id: `test-q-${idx}-${Date.now()}`,
+      id: e.question.type === 'transformation' ? e.question.id : `test-q-${idx}-${Date.now()}`,
       number: idx + 1,
     }));
     setActiveQuestions(selected);
+    setAnswers({});
+    setSubmitted(false);
+    setSecondsLeft(durationMin * 60);
+  };
+
+  const handleRetrySavedWrongTransformations = () => {
+    const wrongIds = new Set(wrongTfHistory.map((h) => h.questionId));
+    const matched = bank
+      .filter((entry) => entry.question.type === 'transformation' && wrongIds.has(entry.question.id))
+      .map((entry, idx) => ({
+        ...structuredClone(entry.question),
+        number: idx + 1,
+      }));
+    if (matched.length === 0) return;
+    setActiveQuestions(matched);
+    setAnswers({});
+    setSubmitted(false);
+    setSecondsLeft(Math.max(10, matched.length * 2) * 60);
+  };
+
+  const handleRetryCurrentWrong = () => {
+    if (!activeQuestions) return;
+    const wrongOnly = activeQuestions
+      .filter((q) => evaluateQuestion(q, answers[q.id]) !== true)
+      .map((q, idx) => ({...q, number: idx + 1}));
+    if (wrongOnly.length === 0) return;
+    setActiveQuestions(wrongOnly);
     setAnswers({});
     setSubmitted(false);
     setSecondsLeft(durationMin * 60);
@@ -311,6 +361,17 @@ export const AssessmentCenter: React.FC<AssessmentCenterProps> = ({
               <Play className="w-4 h-4" />
               Bắt đầu làm bài / Tạo đề ({Math.min(questionCount, filteredPool.length)} câu)
             </button>
+
+            {wrongTfHistory.length > 0 && (
+              <button
+                type="button"
+                onClick={handleRetrySavedWrongTransformations}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 py-2.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Luyện lại câu Viết lại câu từng sai ({wrongTfHistory.length} câu)
+              </button>
+            )}
           </div>
 
           {/* Bank Preview Table */}
@@ -433,10 +494,10 @@ export const AssessmentCenter: React.FC<AssessmentCenterProps> = ({
               <div>
                 <div className="text-sm font-semibold text-emerald-950">Kết quả chấm tự động</div>
                 <p className="text-xs text-emerald-800 mt-0.5">
-                  Đáp án đúng và lời giải thích chi tiết đã được hiển thị bên dưới từng câu hỏi.
+                  Đáp án đúng, phân tích lỗi viết lại câu và lời giải chi tiết đã được hiển thị bên dưới từng câu hỏi.
                 </p>
               </div>
-              <div className="flex items-center gap-6 font-mono-tabular">
+              <div className="flex flex-wrap items-center gap-5 font-mono-tabular">
                 <div>
                   <span className="text-xs text-emerald-800 block">Số câu đúng</span>
                   <span className="text-2xl font-bold text-emerald-950">
@@ -447,6 +508,16 @@ export const AssessmentCenter: React.FC<AssessmentCenterProps> = ({
                   <span className="text-xs text-emerald-800 block">Quy đổi thang 10</span>
                   <span className="text-2xl font-bold text-[#0F4C81]">{resultStats.score10}</span>
                 </div>
+                {resultStats.correct < resultStats.total && (
+                  <button
+                    type="button"
+                    onClick={handleRetryCurrentWrong}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-700 font-sans"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Luyện lại {resultStats.total - resultStats.correct} câu sai
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -458,6 +529,7 @@ export const AssessmentCenter: React.FC<AssessmentCenterProps> = ({
             checked={submitted}
             showAnswers={submitted}
             showExplanations={submitted}
+            officialExamMode={!submitted}
           />
         </div>
       )}

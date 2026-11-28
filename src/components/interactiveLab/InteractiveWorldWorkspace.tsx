@@ -55,6 +55,12 @@ import {VisualVocabDrawer} from './engines/VisualVocabDrawer';
 import {TeacherLabEditor} from './TeacherLabEditor';
 import {InsertToLessonModal} from './InsertToLessonModal';
 import {RichTextEditor} from '../editor/RichTextEditor';
+import {QuestionRenderer, type QuestionAnswerMap} from '../interactive/QuestionRenderer';
+import {
+  bankRecordsToQuestionItems,
+  getTransformationsByUnit,
+  TRANSFORMATION_BANK_ATTRIBUTION,
+} from '../../data/sentenceTransformationBank';
 import {stripHtmlToPlainText} from '../../services/documentExportAdapter';
 import {
   bulkSaveBankQuestionsToDB,
@@ -172,6 +178,21 @@ export const InteractiveWorldWorkspace: React.FC<InteractiveWorldWorkspaceProps>
       if (c?.customAudioDataUrl) setCustomAudioUrl(c.customAudioDataUrl);
     });
   }, [targetSimId]);
+
+  const unitCodeId = `gs${bundle.grade}-u${bundle.unitNumber}`;
+  const unitTransformationItems = useMemo(
+    () => bankRecordsToQuestionItems(getTransformationsByUnit(unitCodeId)),
+    [unitCodeId],
+  );
+  const [tfAnswers, setTfAnswers] = useState<QuestionAnswerMap>({});
+  const [tfChecked, setTfChecked] = useState(false);
+  const [tfShowKey, setTfShowKey] = useState(false);
+
+  useEffect(() => {
+    setTfAnswers({});
+    setTfChecked(false);
+    setTfShowKey(false);
+  }, [unitCodeId]);
 
   // Challenge timer
   useEffect(() => {
@@ -1397,6 +1418,65 @@ export const InteractiveWorldWorkspace: React.FC<InteractiveWorldWorkspaceProps>
                         </button>
                       </div>
                     </div>
+
+                    {/* Curated Unit Sentence Transformation Practice (only for Units with matching grammar) */}
+                    {unitTransformationItems.length > 0 && (
+                      <div className="mt-6 pt-5 border-t border-slate-200 space-y-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <h4 className="text-[16px] font-bold text-slate-900 flex items-center gap-2">
+                              <Sparkles className="h-4 w-4 text-blue-600" />
+                              Thực hành Viết lại câu đồng nghĩa — Lớp {bundle.grade} · Unit {bundle.unitNumber}
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {TRANSFORMATION_BANK_ATTRIBUTION}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setTfChecked(true)}
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                              Kiểm tra câu viết lại
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTfShowKey((v) => !v)}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                              {tfShowKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                              {tfShowKey ? 'Ẩn đáp án' : 'Đáp án & Lời giải'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTfAnswers({});
+                                setTfChecked(false);
+                                setTfShowKey(false);
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              Làm lại
+                            </button>
+                          </div>
+                        </div>
+
+                        <QuestionRenderer
+                          questions={unitTransformationItems}
+                          answers={tfAnswers}
+                          onChangeAnswer={(qId, val) => {
+                            setTfAnswers((prev) => ({...prev, [qId]: val}));
+                            setTfChecked(false);
+                          }}
+                          checked={tfChecked}
+                          showAnswers={tfShowKey}
+                          showExplanations={tfShowKey}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -53,6 +53,8 @@ import {
   exportLessonToWord,
   printLessonAsPDF,
 } from '../services/exporters';
+import {TransformationFieldsEditor} from './editor/TransformationFieldsEditor';
+import {inferTransformationMeta} from '../services/sentenceTransformationEngine';
 import {exportLessonAsJson} from '../services/storage';
 import {RenderFormattedText} from '../utils/richText';
 import {ListeningWidget} from './interactive/ListeningWidget';
@@ -1310,97 +1312,126 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({
                       </div>
                     </div>
 
-                    <RichTextEditor
-                      value={q.prompt}
-                      onChange={(nextHtml) => updateQuestion(qIdx, {prompt: nextHtml})}
-                      placeholder="Nội dung câu hỏi..."
-                      compactToolbar
-                      allowFullscreen
-                      minHeightClass="min-h-[72px]"
-                      defaultSpellCheck={q.type === 'error_correction' ? 'off' : 'en-GB'}
-                      disableProofreadHints={q.type === 'error_correction'}
-                    />
+                    {q.type === 'transformation' ? (
+                      <TransformationFieldsEditor
+                        compact
+                        showGradeUnitFields={draft.grade >= 10}
+                        value={{
+                          prompt: q.prompt,
+                          correctAnswer: q.correctAnswer,
+                          acceptedAnswers: q.acceptedAnswers || [],
+                          explanation: q.explanation || '',
+                          cognitiveLevel: q.cognitiveLevel || 'comprehension',
+                          grade: draft.grade >= 10 ? (draft.grade as 10 | 11 | 12) : 10,
+                          unitId: q.transformation?.unitId,
+                          transformation: inferTransformationMeta(q),
+                        }}
+                        onChange={(nextVal) =>
+                          updateQuestion(qIdx, {
+                            prompt: nextVal.prompt,
+                            correctAnswer: nextVal.correctAnswer,
+                            acceptedAnswers: nextVal.acceptedAnswers,
+                            explanation: nextVal.explanation,
+                            cognitiveLevel: nextVal.cognitiveLevel,
+                            transformation: nextVal.transformation,
+                          })
+                        }
+                      />
+                    ) : (
+                      <>
+                        <RichTextEditor
+                          value={q.prompt}
+                          onChange={(nextHtml) => updateQuestion(qIdx, {prompt: nextHtml})}
+                          placeholder="Nội dung câu hỏi..."
+                          compactToolbar
+                          allowFullscreen
+                          minHeightClass="min-h-[72px]"
+                          defaultSpellCheck={q.type === 'error_correction' ? 'off' : 'en-GB'}
+                          disableProofreadHints={q.type === 'error_correction'}
+                        />
 
-                    {q.options && q.options.length > 0 && (
-                      <div className="space-y-2">
-                        {q.options.map((opt, oIdx) => (
-                          <div key={opt.id} className="space-y-1">
-                            <CompactAnswerEditor
-                              label={opt.label}
-                              value={opt.text}
-                              placeholder={`Phương án ${opt.label}...`}
-                              spellCheckLang="off"
-                              onChange={(nextHtml) => {
-                                const opts = structuredClone(q.options || []);
-                                opts[oIdx].text = nextHtml;
-                                updateQuestion(qIdx, {options: opts});
-                              }}
-                            />
-                            <div className="flex items-center gap-1.5 pl-7">
-                              <input
-                                type="text"
-                                value={opt.ipa || ''}
-                                onChange={(e) => {
-                                  const opts = structuredClone(q.options || []);
-                                  opts[oIdx].ipa = e.target.value;
-                                  updateQuestion(qIdx, {options: opts});
-                                }}
-                                placeholder="Phiên âm /IPA/ (tùy chọn)"
-                                className="flex-1 rounded border border-slate-200 bg-white px-2 py-1 text-xs font-ipa"
-                              />
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOpenIpaTarget(
-                                    openIpaTarget === `q-${q.id}-opt-${opt.id}`
-                                      ? null
-                                      : `q-${q.id}-opt-${opt.id}`,
-                                  )
-                                }
-                                className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-[#2563EB] hover:bg-blue-50"
-                              >
-                                IPA
-                              </button>
-                            </div>
-                            {openIpaTarget === `q-${q.id}-opt-${opt.id}` && (
-                              <div className="pl-7 pt-1">
-                                <EnglishIPAPicker
-                                  initialTab="ipa"
-                                  onInsert={(sym) => {
+                        {q.options && q.options.length > 0 && (
+                          <div className="space-y-2">
+                            {q.options.map((opt, oIdx) => (
+                              <div key={opt.id} className="space-y-1">
+                                <CompactAnswerEditor
+                                  label={opt.label}
+                                  value={opt.text}
+                                  placeholder={`Phương án ${opt.label}...`}
+                                  spellCheckLang="off"
+                                  onChange={(nextHtml) => {
                                     const opts = structuredClone(q.options || []);
-                                    opts[oIdx].ipa = `${opts[oIdx].ipa || ''}${sym}`;
+                                    opts[oIdx].text = nextHtml;
                                     updateQuestion(qIdx, {options: opts});
                                   }}
-                                  onWrapSelection={(left: string, right: string) => {
-                                    const opts = structuredClone(q.options || []);
-                                    const curr = (opts[oIdx].ipa || '').trim();
-                                    opts[oIdx].ipa = curr ? `${left}${curr}${right}` : `${left}${right}`;
-                                    updateQuestion(qIdx, {options: opts});
-                                  }}
-                                  onClose={() => setOpenIpaTarget(null)}
                                 />
+                                <div className="flex items-center gap-1.5 pl-7">
+                                  <input
+                                    type="text"
+                                    value={opt.ipa || ''}
+                                    onChange={(e) => {
+                                      const opts = structuredClone(q.options || []);
+                                      opts[oIdx].ipa = e.target.value;
+                                      updateQuestion(qIdx, {options: opts});
+                                    }}
+                                    placeholder="Phiên âm /IPA/ (tùy chọn)"
+                                    className="flex-1 rounded border border-slate-200 bg-white px-2 py-1 text-xs font-ipa"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setOpenIpaTarget(
+                                        openIpaTarget === `q-${q.id}-opt-${opt.id}`
+                                          ? null
+                                          : `q-${q.id}-opt-${opt.id}`,
+                                      )
+                                    }
+                                    className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-[#2563EB] hover:bg-blue-50"
+                                  >
+                                    IPA
+                                  </button>
+                                </div>
+                                {openIpaTarget === `q-${q.id}-opt-${opt.id}` && (
+                                  <div className="pl-7 pt-1">
+                                    <EnglishIPAPicker
+                                      initialTab="ipa"
+                                      onInsert={(sym) => {
+                                        const opts = structuredClone(q.options || []);
+                                        opts[oIdx].ipa = `${opts[oIdx].ipa || ''}${sym}`;
+                                        updateQuestion(qIdx, {options: opts});
+                                      }}
+                                      onWrapSelection={(left: string, right: string) => {
+                                        const opts = structuredClone(q.options || []);
+                                        const curr = (opts[oIdx].ipa || '').trim();
+                                        opts[oIdx].ipa = curr ? `${left}${curr}${right}` : `${left}${right}`;
+                                        updateQuestion(qIdx, {options: opts});
+                                      }}
+                                      onClose={() => setOpenIpaTarget(null)}
+                                    />
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        )}
 
-                    <div className="grid grid-cols-1 gap-2 pt-1">
-                      <input
-                        type="text"
-                        value={q.correctAnswer}
-                        onChange={(e) => updateQuestion(qIdx, {correctAnswer: e.target.value})}
-                        placeholder="Đáp án đúng (VD: A, True, hoặc cụm từ)..."
-                        className="w-full rounded border border-emerald-300 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-800"
-                      />
-                      <CompactAnswerEditor
-                        value={q.explanation || ''}
-                        onChange={(nextHtml) => updateQuestion(qIdx, {explanation: nextHtml})}
-                        placeholder="Lời giải thích ngắn (hỗ trợ IPA, in đậm, gạch chân)..."
-                        spellCheckLang="vi"
-                      />
-                    </div>
+                        <div className="grid grid-cols-1 gap-2 pt-1">
+                          <input
+                            type="text"
+                            value={q.correctAnswer}
+                            onChange={(e) => updateQuestion(qIdx, {correctAnswer: e.target.value})}
+                            placeholder="Đáp án đúng (VD: A, True, hoặc cụm từ)..."
+                            className="w-full rounded border border-emerald-300 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-800"
+                          />
+                          <CompactAnswerEditor
+                            value={q.explanation || ''}
+                            onChange={(nextHtml) => updateQuestion(qIdx, {explanation: nextHtml})}
+                            placeholder="Lời giải thích ngắn (hỗ trợ IPA, in đậm, gạch chân)..."
+                            spellCheckLang="vi"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

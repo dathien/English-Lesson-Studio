@@ -32,6 +32,7 @@ import type {
   SpecificationRow,
 } from '../types/exam';
 import {EXAM_FORMAT_LABELS, EXAM_SKILL_LABELS} from '../types/exam';
+import {inferTransformationMeta} from './sentenceTransformationEngine';
 import {
   createDefaultSpeakingRubric,
   createDefaultWritingRubric,
@@ -376,18 +377,25 @@ export function syncAnswerKeyAndMarkingGuide(
   const groupMap = new Map(exam.groups.map((g) => [g.id, g]));
   const sortedQuestions = [...exam.questions].sort((a, b) => a.number - b.number);
 
-  const entries: AnswerKeyEntry[] = sortedQuestions.map((q) => ({
-    questionNumber: q.number,
-    questionId: q.id,
-    skill: q.skill,
-    cognitiveLevel: q.cognitiveLevel,
-    questionFormat: q.format,
-    correctAnswer: q.correctAnswer,
-    acceptedAnswers: q.acceptedAnswers,
-    points: q.points,
-    explanation: q.explanation,
-    sectionTitle: (q.groupId && groupMap.get(q.groupId)?.title) || EXAM_SKILL_LABELS[q.skill].vi,
-  }));
+  const entries: AnswerKeyEntry[] = sortedQuestions.map((q) => {
+    const cleanedAccepted = (q.acceptedAnswers || []).filter(
+      (a) => a && a.trim() !== q.correctAnswer.trim(),
+    );
+
+    return {
+      questionNumber: q.number,
+      questionId: q.id,
+      skill: q.skill,
+      cognitiveLevel: q.cognitiveLevel,
+      questionFormat: q.format,
+      correctAnswer: q.correctAnswer,
+      acceptedAnswers: cleanedAccepted.length > 0 ? cleanedAccepted : undefined,
+      transformation: q.transformation,
+      points: q.points,
+      explanation: q.explanation,
+      sectionTitle: (q.groupId && groupMap.get(q.groupId)?.title) || EXAM_SKILL_LABELS[q.skill].vi,
+    };
+  });
 
   const totalPoints = ROUND2(entries.reduce((sum, e) => sum + e.points, 0));
 
@@ -852,14 +860,18 @@ export function shuffleExamVersions(
         .sort((a, b) => a.number - b.number);
 
       // CRITICAL PROTECTION:
-      // Never shuffle questions inside protected groups (Reading passages, Listening scripts, Notice/Leaflet Cloze, Text Completion, Sequential Ordering)
+      // Never shuffle questions inside protected groups (Reading passages, Listening scripts, Notice/Leaflet Cloze, Text Completion, Sequential Ordering, Essay/Speaking)
+      // Standalone Sentence Transformation items inside a shared-instruction group (protectOrder === false) CAN safely shuffle order while preserving all prompts, keywords, given starts, and 1-to-1 answer keys.
+      const isPureTransformationGroup =
+        groupQuestions.length > 1 &&
+        groupQuestions.every((q) => q.format === 'transformation');
+
       const canShuffleInsideGroup =
         options.shuffleStandaloneQuestions &&
         codeIndex > 0 &&
         !group.protectOrder &&
         group.groupType === 'standalone_section' &&
-        group.skill !== 'writing' &&
-        group.skill !== 'speaking';
+        ((group.skill !== 'writing' && group.skill !== 'speaking') || isPureTransformationGroup);
 
       const arrangedGroupQs = canShuffleInsideGroup
         ? shuffleWithRng(groupQuestions, rng)
@@ -869,6 +881,19 @@ export function shuffleExamVersions(
         let clonedQ: ExamQuestionItem = {
           ...origQ,
           options: origQ.options ? origQ.options.map((o) => ({...o})) : undefined,
+          acceptedAnswers: origQ.acceptedAnswers ? [...origQ.acceptedAnswers] : undefined,
+          transformation: origQ.transformation
+            ? {
+                ...origQ.transformation,
+                hints: origQ.transformation.hints ? [...origQ.transformation.hints] : undefined,
+                gradingRules: origQ.transformation.gradingRules
+                  ? {...origQ.transformation.gradingRules}
+                  : undefined,
+                wordLimit: origQ.transformation.wordLimit
+                  ? {...origQ.transformation.wordLimit}
+                  : undefined,
+              }
+            : undefined,
           number: qNumber++,
         };
 
@@ -1411,6 +1436,19 @@ function pickBankQuestion(
       number: qNum,
       points,
       cognitiveLevel: criteria.level,
+      acceptedAnswers: match.acceptedAnswers ? [...match.acceptedAnswers] : undefined,
+      transformation: match.transformation
+        ? {
+            ...match.transformation,
+            hints: match.transformation.hints ? [...match.transformation.hints] : undefined,
+            gradingRules: match.transformation.gradingRules
+              ? {...match.transformation.gradingRules}
+              : undefined,
+            wordLimit: match.transformation.wordLimit
+              ? {...match.transformation.wordLimit}
+              : undefined,
+          }
+        : undefined,
       matrixRowId,
       specRowId,
       groupId,
@@ -1424,6 +1462,11 @@ function pickBankQuestion(
   const isSpeaking = criteria.format === 'speaking';
   const isTF = criteria.format === 'true_false';
   const isTrans = criteria.format === 'transformation';
+
+  const fallbackTransPrompt =
+    'Students should practise English every day to improve fluency.\n→ English ________________________________________.';
+  const fallbackTransAnswer =
+    'English should be practised every day by students to improve fluency.';
 
   return {
     id: `gen-q-${Date.now()}-${qNum}`,
@@ -1449,7 +1492,7 @@ function pickBankQuestion(
       : isSpeaking
         ? `Present your opinion on a key theme from Grade ${criteria.grade} English (2 minutes) and respond to two follow-up questions.`
         : isTrans
-          ? `Students should practise English every day to improve fluency. (Rewrite using passive voice)`
+          ? fallbackTransPrompt
           : isTF
             ? `The speaker emphasizes that consistent daily habits lead to better learning outcomes.`
             : `Choose the best option to complete the sentence for Grade ${criteria.grade} English.`,
@@ -1472,10 +1515,21 @@ function pickBankQuestion(
       : isSpeaking
         ? 'Chấm theo Rubric Speaking 5 tiêu chí.'
         : isTrans
-          ? 'English should be practised every day by students to improve fluency.'
+          ? fallbackTransAnswer
           : isTF
             ? 'T'
             : 'A',
+    acceptedAnswers: isTrans
+      ? ['English should be practised by students every day to improve fluency.']
+      : undefined,
+    transformation: isTrans
+      ? inferTransformationMeta({
+          prompt: fallbackTransPrompt,
+          correctAnswer: fallbackTransAnswer,
+          acceptedAnswers: ['English should be practised by students every day to improve fluency.'],
+          explanation: 'Câu bị động với động từ khuyết thiếu: should + be + V3/ed.',
+        })
+      : undefined,
     explanation: 'Câu hỏi mẫu tự biên soạn — giáo viên có thể chỉnh sửa trực tiếp trong trình soạn đề.',
     points,
     sourceLabel: 'Tự biên soạn trong hệ thống',

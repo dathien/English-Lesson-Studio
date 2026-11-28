@@ -29,6 +29,8 @@ import {processUploadedFiles} from '../../services/documentParser';
 import {generateExamItemsAI} from '../../services/aiService';
 import {RichTextEditor} from '../editor/RichTextEditor';
 import {CompactAnswerEditor} from '../editor/CompactAnswerEditor';
+import {TransformationFieldsEditor} from '../editor/TransformationFieldsEditor';
+import {inferTransformationMeta} from '../../services/sentenceTransformationEngine';
 import {
   joinParagraphsToRichHtml,
   splitRichHtmlToParagraphs,
@@ -51,6 +53,20 @@ const QuestionInlineEditor: React.FC<QuestionInlineEditorProps> = ({
     question.options ? question.options.map((o) => ({...o})) : undefined,
   );
   const [draftAnswer, setDraftAnswer] = useState(question.correctAnswer);
+  const [draftAcceptedAnswers, setDraftAcceptedAnswers] = useState<string[]>(
+    question.acceptedAnswers || [],
+  );
+  const [draftTransformation, setDraftTransformation] = useState(
+    question.format === 'transformation'
+      ? inferTransformationMeta({
+          prompt: question.prompt,
+          correctAnswer: question.correctAnswer,
+          acceptedAnswers: question.acceptedAnswers,
+          explanation: question.explanation,
+          transformation: question.transformation,
+        })
+      : question.transformation,
+  );
   const [draftLevel, setDraftLevel] = useState<CognitiveLevel>(question.cognitiveLevel);
   const [draftPoints, setDraftPoints] = useState<number>(question.points);
   const [draftExplanation, setDraftExplanation] = useState(question.explanation || '');
@@ -65,6 +81,8 @@ const QuestionInlineEditor: React.FC<QuestionInlineEditorProps> = ({
     draftPoints !== question.points ||
     draftExplanation !== (question.explanation || '') ||
     draftSample !== (question.sampleAnswer || '') ||
+    JSON.stringify(draftAcceptedAnswers) !== JSON.stringify(question.acceptedAnswers || []) ||
+    JSON.stringify(draftTransformation) !== JSON.stringify(question.transformation) ||
     JSON.stringify(draftOptions) !== JSON.stringify(question.options);
 
   const handleRequestCancel = () => {
@@ -80,6 +98,10 @@ const QuestionInlineEditor: React.FC<QuestionInlineEditorProps> = ({
       prompt: draftPrompt,
       options: draftOptions,
       correctAnswer: draftAnswer,
+      acceptedAnswers:
+        question.format === 'transformation' ? draftAcceptedAnswers : question.acceptedAnswers,
+      transformation:
+        question.format === 'transformation' ? draftTransformation : question.transformation,
       cognitiveLevel: draftLevel,
       points: draftPoints,
       explanation: draftExplanation,
@@ -138,18 +160,45 @@ const QuestionInlineEditor: React.FC<QuestionInlineEditorProps> = ({
         </div>
       </div>
 
-      <RichTextEditor
-        label="Nội dung câu hỏi"
-        value={draftPrompt}
-        onChange={setDraftPrompt}
-        placeholder="Nhập nội dung câu hỏi tiếng Anh..."
-        minHeightClass="min-h-[90px]"
-        allowAudio={question.skill === 'listening'}
-        allowFullscreen
-        defaultSpellCheck={isErrorId ? 'off' : 'en-GB'}
-        disableProofreadHints={isErrorId}
-        draftKey={`exam-q-${question.id}`}
-      />
+      {question.format === 'transformation' && draftTransformation ? (
+        <TransformationFieldsEditor
+          showGradeUnitFields
+          showPointsField
+          value={{
+            prompt: draftPrompt,
+            correctAnswer: draftAnswer,
+            acceptedAnswers: draftAcceptedAnswers,
+            explanation: draftExplanation,
+            cognitiveLevel: draftLevel,
+            points: draftPoints,
+            grade: question.grade,
+            unitId: question.unitId,
+            transformation: draftTransformation,
+          }}
+          onChange={(nextVal) => {
+            setDraftPrompt(nextVal.prompt);
+            setDraftAnswer(nextVal.correctAnswer);
+            setDraftAcceptedAnswers(nextVal.acceptedAnswers);
+            setDraftExplanation(nextVal.explanation);
+            setDraftLevel(nextVal.cognitiveLevel);
+            if (typeof nextVal.points === 'number') setDraftPoints(nextVal.points);
+            setDraftTransformation(nextVal.transformation);
+          }}
+        />
+      ) : (
+        <RichTextEditor
+          label="Nội dung câu hỏi"
+          value={draftPrompt}
+          onChange={setDraftPrompt}
+          placeholder="Nhập nội dung câu hỏi tiếng Anh..."
+          minHeightClass="min-h-[90px]"
+          allowAudio={question.skill === 'listening'}
+          allowFullscreen
+          defaultSpellCheck={isErrorId ? 'off' : 'en-GB'}
+          disableProofreadHints={isErrorId}
+          draftKey={`exam-q-${question.id}`}
+        />
+      )}
 
       {draftOptions && draftOptions.length > 0 && (
         <div className="space-y-2">
@@ -448,6 +497,7 @@ export const ExamComposerStep: React.FC<ExamComposerStepProps> = ({
         sectionOrder: newGroup.order,
         verificationStatus: 'reference_sourced',
         tags: [`Lớp ${scope.grade}`, 'Nhập tài liệu'],
+        transformation: dq.transformation,
         createdAt: Date.now(),
         updatedAt: Date.now(),
         locked: true,

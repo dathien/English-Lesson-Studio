@@ -16,6 +16,7 @@ import {
   richHtmlToPptxTextRuns,
   richHtmlToPrintableHtml,
 } from './documentExportAdapter';
+import {inferTransformationMeta} from './sentenceTransformationEngine';
 
 function triggerDownload(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);
@@ -50,10 +51,10 @@ function buildDocxRuns(text: string, baseOptions?: {size?: number; bold?: boolea
  * preserving intact reading passages, numbered questions, exact underlined characters,
  * rubrics, and an optional Answer Key section.
  */
-export async function exportLessonToWord(
+export async function buildLessonDocxBlob(
   lesson: LessonProject,
   options: {includeAnswers?: boolean} = {includeAnswers: true},
-): Promise<void> {
+): Promise<Blob> {
   const children: Paragraph[] = [];
 
   children.push(
@@ -80,7 +81,14 @@ export async function exportLessonToWord(
     }),
   );
 
-  const answerSummary: Array<{slideTitle: string; num: number; answer: string; explanation?: string}> = [];
+  const answerSummary: Array<{
+    slideTitle: string;
+    num: number;
+    answer: string;
+    acceptedAnswers?: string[];
+    structurePattern?: string;
+    explanation?: string;
+  }> = [];
 
   lesson.slides.forEach((slide, idx) => {
     children.push(
@@ -189,51 +197,117 @@ export async function exportLessonToWord(
 
     if (slide.questions && slide.questions.length > 0) {
       slide.questions.forEach((q) => {
-        children.push(
-          new Paragraph({
-            spacing: {before: 100, after: 60},
-            children: [
-              new TextRun({text: `Question ${q.number}. `, bold: true, size: 22}),
-              ...buildDocxRuns(q.prompt, {size: 22}),
-            ],
-          }),
-        );
+        if (q.type === 'transformation') {
+          const meta =
+            q.transformation ||
+            inferTransformationMeta({prompt: q.prompt, correctAnswer: '', acceptedAnswers: []});
 
-        if (q.options && q.options.length > 0) {
-          q.options.forEach((opt) => {
-            children.push(
-              new Paragraph({
-                indent: {left: 360},
-                spacing: {after: 40},
-                children: [
-                  new TextRun({text: `${opt.label}. `, bold: true, size: 22}),
-                  ...buildDocxRuns(opt.text, {size: 22}),
-                  ...(opt.ipa ? [new TextRun({text: `  ${opt.ipa}`, color: '64748B', size: 20})] : []),
-                ],
+          const runs: TextRun[] = [
+            new TextRun({text: `Question ${q.number}. `, bold: true, size: 22}),
+            ...buildDocxRuns(meta.originalSentence || q.prompt, {size: 22}),
+          ];
+          if (meta.keyword) {
+            runs.push(new TextRun({text: `  (${meta.keyword})`, bold: true, size: 22}));
+          }
+          const notes: string[] = [];
+          if (meta.keepKeywordUnchanged && meta.keyword) {
+            notes.push('không biến đổi dạng từ');
+          }
+          if (meta.wordLimit?.min && meta.wordLimit?.max) {
+            notes.push(`${meta.wordLimit.min}–${meta.wordLimit.max} từ`);
+          } else if (meta.wordLimit?.max) {
+            notes.push(`tối đa ${meta.wordLimit.max} từ`);
+          }
+          if (notes.length > 0) {
+            runs.push(
+              new TextRun({
+                text: ` [${notes.join('; ')}]`,
+                italics: true,
+                color: '475569',
+                size: 20,
               }),
             );
-          });
-        }
+          }
 
-        if (q.matchingPairs && q.matchingPairs.length > 0) {
-          q.matchingPairs.forEach((pair, pIdx) => {
-            children.push(
-              new Paragraph({
-                indent: {left: 360},
-                spacing: {after: 40},
-                children: [
-                  new TextRun({text: `${pIdx + 1}. ${pair.left}   ↔   ${pair.right}`, size: 22}),
-                ],
-              }),
-            );
-          });
+          children.push(
+            new Paragraph({
+              spacing: {before: 100, after: 45},
+              keepNext: true,
+              keepLines: true,
+              children: runs,
+            }),
+          );
+
+          const writeLine =
+            meta.subtype === 'gap_completion' && meta.gapTemplate
+              ? `→ ${meta.gapTemplate.replace(/_{2,}|\.{4,}/g, ' .................................... ')}`
+              : meta.givenStart || meta.givenEnd
+                ? `→ ${meta.givenStart ? `${meta.givenStart} ` : ''}.................................................................................${meta.givenEnd ? ` ${meta.givenEnd}` : '.'}`
+                : '→ ..........................................................................................................';
+
+          children.push(
+            new Paragraph({
+              indent: {left: 360},
+              spacing: {after: 90},
+              keepLines: true,
+              children: [new TextRun({text: writeLine, size: 22})],
+            }),
+          );
+        } else {
+          children.push(
+            new Paragraph({
+              spacing: {before: 100, after: 60},
+              keepNext: true,
+              keepLines: true,
+              children: [
+                new TextRun({text: `Question ${q.number}. `, bold: true, size: 22}),
+                ...buildDocxRuns(q.prompt, {size: 22}),
+              ],
+            }),
+          );
+
+          if (q.options && q.options.length > 0) {
+            q.options.forEach((opt) => {
+              children.push(
+                new Paragraph({
+                  indent: {left: 360},
+                  spacing: {after: 40},
+                  children: [
+                    new TextRun({text: `${opt.label}. `, bold: true, size: 22}),
+                    ...buildDocxRuns(opt.text, {size: 22}),
+                    ...(opt.ipa ? [new TextRun({text: `  ${opt.ipa}`, color: '64748B', size: 20})] : []),
+                  ],
+                }),
+              );
+            });
+          }
+
+          if (q.matchingPairs && q.matchingPairs.length > 0) {
+            q.matchingPairs.forEach((pair, pIdx) => {
+              children.push(
+                new Paragraph({
+                  indent: {left: 360},
+                  spacing: {after: 40},
+                  children: [
+                    new TextRun({text: `${pIdx + 1}. ${pair.left}   ↔   ${pair.right}`, size: 22}),
+                  ],
+                }),
+              );
+            });
+          }
         }
 
         if (q.correctAnswer) {
+          const cleanedAccepted = (q.acceptedAnswers || []).filter(
+            (a) => a && a.trim() !== q.correctAnswer.trim(),
+          );
+
           answerSummary.push({
             slideTitle: slide.title,
             num: q.number,
             answer: q.correctAnswer,
+            acceptedAnswers: cleanedAccepted.length > 0 ? cleanedAccepted : undefined,
+            structurePattern: q.transformation?.structurePattern,
             explanation: q.explanation,
           });
         }
@@ -312,16 +386,35 @@ export async function exportLessonToWord(
     answerSummary.forEach((item) => {
       children.push(
         new Paragraph({
-          spacing: {after: 60},
+          spacing: {after: item.acceptedAnswers?.length ? 30 : 60},
           children: [
             new TextRun({text: `Câu ${item.num}: `, bold: true, size: 22}),
             new TextRun({text: `${item.answer} `, bold: true, color: '059669', size: 22}),
+            ...(item.structurePattern
+              ? [new TextRun({text: `[${item.structurePattern}] `, italics: true, color: '0F4C81', size: 20})]
+              : []),
             ...(item.explanation
               ? [new TextRun({text: `— ${item.explanation}`, size: 21, color: '334155'})]
               : []),
           ],
         }),
       );
+      if (item.acceptedAnswers && item.acceptedAnswers.length > 0) {
+        children.push(
+          new Paragraph({
+            indent: {left: 360},
+            spacing: {after: 60},
+            children: [
+              new TextRun({
+                text: `Phương án chấp nhận khác: ${item.acceptedAnswers.join(' | ')}`,
+                italics: true,
+                color: '475569',
+                size: 20,
+              }),
+            ],
+          }),
+        );
+      }
     });
   }
 
@@ -344,7 +437,14 @@ export async function exportLessonToWord(
     sections: [{children}],
   });
 
-  const blob = await Packer.toBlob(doc);
+  return Packer.toBlob(doc);
+}
+
+export async function exportLessonToWord(
+  lesson: LessonProject,
+  options: {includeAnswers?: boolean} = {includeAnswers: true},
+): Promise<void> {
+  const blob = await buildLessonDocxBlob(lesson, options);
   triggerDownload(blob, `${sanitizeFileName(lesson.title)}.docx`);
 }
 

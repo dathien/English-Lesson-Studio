@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -11,6 +11,11 @@ import {
 } from 'lucide-react';
 import type {GrammarComponentToken, GrammarSimulation} from '../../../types/interactiveLab';
 import {playLabSoundEffect, speakLabText} from '../../../services/labAudioService';
+import {
+  bankRecordsToQuestionItems,
+  getTransformationsByTopicKeywords,
+} from '../../../data/sentenceTransformationBank';
+import {QuestionRenderer, type QuestionAnswerMap} from '../../interactive/QuestionRenderer';
 
 interface GrammarDynamicEngineProps {
   grammar: GrammarSimulation;
@@ -45,6 +50,39 @@ export const GrammarDynamicEngine: React.FC<GrammarDynamicEngineProps> = ({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
+  // Matching Sentence Transformation practice for this grammar topic
+  const matchingTransformations = useMemo(() => {
+    const rawWords = `${grammar.titleEn} ${grammar.titleVi} ${grammar.id}`
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) =>
+        [
+          'passive',
+          'reported',
+          'conditional',
+          'relative',
+          'participle',
+          'gerund',
+          'cleft',
+          'comparative',
+          'superlative',
+          'modal',
+          'causative',
+          'perfect',
+          'continuous',
+          'unless',
+          'despite',
+          'infinitive',
+        ].includes(w),
+      );
+    if (rawWords.length === 0) return [];
+    return bankRecordsToQuestionItems(getTransformationsByTopicKeywords(rawWords).slice(0, 4));
+  }, [grammar.titleEn, grammar.titleVi, grammar.id]);
+
+  const [tfAnswers, setTfAnswers] = useState<QuestionAnswerMap>({});
+  const [tfChecked, setTfChecked] = useState(false);
+  const [tfShowKey, setTfShowKey] = useState(false);
+
   useEffect(() => {
     setExampleIdx(0);
     setShowTransformed(false);
@@ -52,6 +90,9 @@ export const GrammarDynamicEngine: React.FC<GrammarDynamicEngineProps> = ({
     setBuilderChecked(null);
     setAnswers({});
     setQuizSubmitted(false);
+    setTfAnswers({});
+    setTfChecked(false);
+    setTfShowKey(false);
   }, [grammar.id]);
 
   const currentExample = grammar.examples[exampleIdx] ?? grammar.examples[0];
@@ -440,6 +481,57 @@ export const GrammarDynamicEngine: React.FC<GrammarDynamicEngineProps> = ({
           )}
         </div>
       </div>
+
+      {/* 4. Matching Sentence Transformation Practice */}
+      {matchingTransformations.length > 0 && (
+        <div className="rounded-2xl border border-indigo-200 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              Vận dụng Viết lại câu đồng nghĩa ({matchingTransformations.length} câu)
+            </h4>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setTfChecked(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700"
+              >
+                Kiểm tra
+              </button>
+              <button
+                type="button"
+                onClick={() => setTfShowKey((v) => !v)}
+                className="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50"
+              >
+                {tfShowKey ? 'Ẩn đáp án' : 'Đáp án & Lời giải'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTfAnswers({});
+                  setTfChecked(false);
+                  setTfShowKey(false);
+                }}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50"
+              >
+                Làm lại
+              </button>
+            </div>
+          </div>
+
+          <QuestionRenderer
+            questions={matchingTransformations}
+            answers={tfAnswers}
+            onChangeAnswer={(qId, val) => {
+              setTfAnswers((p) => ({...p, [qId]: val}));
+              setTfChecked(false);
+            }}
+            checked={tfChecked}
+            showAnswers={tfShowKey}
+            showExplanations={tfShowKey}
+          />
+        </div>
+      )}
     </div>
   );
 };

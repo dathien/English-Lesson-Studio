@@ -1,5 +1,7 @@
 import type {BankQuestionRecord, ExamDossier} from '../../types/exam';
 import {ALL_SAMPLE_LESSONS} from '../samples';
+import {CURATED_TRANSFORMATION_BANK} from '../sentenceTransformationBank';
+import {inferTransformationMeta} from '../../services/sentenceTransformationEngine';
 import {PERIODIC_GRADE_10_PACKS} from './periodicGrade10';
 import {PERIODIC_GRADE_11_PACKS} from './periodicGrade11';
 import {PERIODIC_GRADE_12_PACKS} from './periodicGrade12';
@@ -63,10 +65,18 @@ export function buildInitialQuestionBank(): BankQuestionRecord[] {
         audioTranscript: q.audioTranscript || grp?.audio?.transcript,
         verificationStatus: q.verificationStatus,
         tags: q.tags,
+        transformation: q.transformation,
         createdAt: q.createdAt,
         updatedAt: q.updatedAt,
       });
     }
+  }
+
+  // Merge curated Global Success 10–11–12 Sentence Transformation bank into the SAME unified bank
+  for (const tfItem of CURATED_TRANSFORMATION_BANK) {
+    if (seenIds.has(tfItem.id)) continue;
+    seenIds.add(tfItem.id);
+    bank.push(tfItem);
   }
 
   // Also enrich with existing 30 THPT sample lesson questions
@@ -120,6 +130,15 @@ export function buildInitialQuestionBank(): BankQuestionRecord[] {
           audioTranscript: slide.audio?.transcript,
           verificationStatus: 'teacher_authored',
           tags: [`Lớp ${grade}`, lesson.skill, lesson.topic],
+          transformation:
+            format === 'transformation'
+              ? sq.transformation || {
+                  ...inferTransformationMeta(sq),
+                  grade,
+                  unitId: `gs${grade}-u1`,
+                  grammarTopic: lesson.topic,
+                }
+              : undefined,
           createdAt: lesson.createdAt,
           updatedAt: lesson.updatedAt,
         });
